@@ -1,0 +1,24 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with gradient -->
+  <rect width="180" height="180" rx="40" fill="url(#gradient)"/>
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="180" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Large sparkle/star icon -->
+  <path d="M90 40L95 70L125 75L95 80L90 110L85 80L55 75L85 70L90 40Z" fill="white" opacity="0.9"/>
+  
+  <!-- Upward arrow -->
+  <path d="M90 75L105 90L100 95L90 85L80 95L75 90L90 75Z" fill="white"/>
+  <rect x="85" y="90" width="10" height="50" fill="white" rx="5"/>
+  
+  <!-- Network nodes suggesting AI -->
+  <circle cx="60" cy="120" r="4" fill="white" opacity="0.6"/>
+  <circle cx="120" cy="120" r="4" fill="white" opacity="0.6"/>
+  <circle cx="90" cy="140" r="4" fill="white" opacity="0.6"/>
+  <line x1="60" y1="120" x2="90" y2="140" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="120" y1="120" x2="90" y2="140" stroke="white" stroke-width="2" opacity="0.4"/>
+</svg>

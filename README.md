@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OptiCommerce AI
 
-## Getting Started
+A full-stack SaaS application for optimizing e-commerce product listings using AI. Built with Next.js 15, Firebase, and Google Gemini 1.5 Flash API.
 
-First, run the development server:
+## Features
+
+- 🤖 AI-powered product listing optimization
+- 📊 SEO scoring (0-100) with detailed improvements
+- 🛍️ Multi-platform support (Amazon, Shopify, Etsy, eBay)
+- 🔐 Secure authentication (Email/Password & Google OAuth)
+- 📈 Usage tracking and tier-based limits
+- 📜 Optimization history
+- 🎨 Modern, responsive UI with Tailwind CSS
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes (serverless)
+- **Database**: Firebase Firestore
+- **Authentication**: Firebase Auth
+- **AI**: Google Gemini 1.5 Flash API
+- **Deployment**: Vercel-ready
+
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Environment Variables
+
+All credentials are already configured in `.env.local`. The file includes:
+- Firebase client configuration
+- Firebase Admin SDK credentials
+- Google Gemini API key
+
+### 3. Set Up Firebase
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project
+3. Enable Firestore Database (production mode)
+4. Enable Authentication (Email/Password and Google)
+5. Apply Firestore security rules (see `SETUP.md`)
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. Build for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Authentication pages
+│   ├── dashboard/         # Dashboard pages
+│   └── api/               # API routes
+├── components/            # React components
+│   ├── auth/             # Auth forms
+│   ├── dashboard/        # Dashboard components
+│   └── ui/               # Reusable UI components
+├── lib/                   # Utilities and configurations
+│   ├── firebase/         # Firebase setup
+│   ├── gemini/           # Gemini AI client
+│   ├── hooks/            # Custom React hooks
+│   └── utils/            # Helper functions
+└── types/                 # TypeScript type definitions
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Subscription Tiers
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Tier | Monthly Cost | Optimizations/Month |
+|------|--------------|---------------------|
+| Free | $0 | 3 |
+| Basic | $19 | 20 |
+| Premium | $49 | 75 |
 
-## Deploy on Vercel
+## Documentation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `requirements.md` - Full requirements specification (EARS notation)
+- `design.md` - Technical design document
+- `tasks.md` - Implementation task list
+- `SETUP.md` - Detailed setup instructions
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+### Vercel
+
+1. Push code to GitHub
+2. Import repository in Vercel
+3. Add environment variables from `.env.local`
+4. Deploy
+
+## Support
+
+For issues or questions, refer to the troubleshooting section in `SETUP.md`.
+
+## License
+
+MIT
