@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
         title: aiResponse.title,
         description: aiResponse.description,
         tags: aiResponse.tags || [],
-        keywords: keywords?.split(',').map(k => k.trim()) || [],
+        keywords: keywords?.split(',').map((k: string) => k.trim()) || [],
         category: '',
         specifications: []
       } as any, platform),
