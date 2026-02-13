@@ -2,9 +2,9 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-let adminApp: App;
-let adminAuth: Auth;
-let adminDb: Firestore;
+let adminApp: App | null = null;
+let adminAuth: Auth | null = null;
+let adminDb: Firestore | null = null;
 
 function initializeFirebaseAdmin() {
   if (getApps().length > 0) {
@@ -16,7 +16,8 @@ function initializeFirebaseAdmin() {
   const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
   if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Firebase Admin credentials are not properly configured in environment variables');
+    console.warn('Firebase Admin credentials are not configured. Some features will be limited.');
+    return null;
   }
 
   return initializeApp({
@@ -29,12 +30,15 @@ function initializeFirebaseAdmin() {
 }
 
 try {
-  adminApp = initializeFirebaseAdmin();
-  adminAuth = getAuth(adminApp);
-  adminDb = getFirestore(adminApp);
+  const app = initializeFirebaseAdmin();
+  if (app) {
+    adminApp = app;
+    adminAuth = getAuth(adminApp);
+    adminDb = getFirestore(adminApp);
+  }
 } catch (error) {
   console.error('Failed to initialize Firebase Admin:', error);
-  throw error;
+  // Don't throw during build - allow the app to build without Firebase Admin
 }
 
 export { adminAuth, adminDb };

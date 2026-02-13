@@ -2,9 +2,30 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/context/ThemeContext';
+import { useState, useEffect } from 'react';
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent hydration mismatch by not rendering theme-dependent content until mounted
+  if (!mounted) {
+    return (
+      <button
+        className="relative p-2 rounded-lg bg-gray-200 dark:bg-gray-700 transition-all duration-300"
+        aria-label="Toggle theme"
+        disabled
+      >
+        <div className="relative w-6 h-6">
+          <Sun className="absolute inset-0 text-yellow-500" size={24} />
+        </div>
+      </button>
+    );
+  }
 
   return (
     <button

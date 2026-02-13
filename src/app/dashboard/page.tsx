@@ -4,24 +4,25 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
-import OptimizationForm from '@/components/dashboard/OptimizationForm';
-import CreateProductForm from '@/components/dashboard/CreateProductForm';
-import UrlOptimizationForm from '@/components/dashboard/UrlOptimizationForm';
+import OptimizationModeSelector, { OptimizationMode } from '@/components/dashboard/OptimizationModeSelector';
+import Mode1OptimizeExisting, { Mode1Data } from '@/components/dashboard/modes/Mode1OptimizeExisting';
+import Mode2CreateNew, { Mode2Data } from '@/components/dashboard/modes/Mode2CreateNew';
+import Mode3AnalyzeUrl, { Mode3Data } from '@/components/dashboard/modes/Mode3AnalyzeUrl';
 import ResultCard from '@/components/dashboard/ResultCard';
+import SimpleResultCard from '@/components/dashboard/SimpleResultCard';
 import UsageStats from '@/components/dashboard/UsageStats';
 import Spinner from '@/components/ui/Spinner';
-import { Sparkles, LogOut, History, Settings, FileText, Plus, Link as LinkIcon, AlertCircle } from 'lucide-react';
+import { Sparkles, LogOut, History, Settings, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-
-type OptimizationMode = 'existing' | 'new' | 'url';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, userData, loading } = useAuth();
-  const [mode, setMode] = useState<OptimizationMode>('existing');
+  const { user, userData, loading, refreshUserData } = useAuth();
+  const [mode, setMode] = useState<OptimizationMode>('optimize-existing');
   const [optimizationResult, setOptimizationResult] = useState<any>(null);
   const [originalData, setOriginalData] = useState<any>(null);
   const [showSetupNotice, setShowSetupNotice] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -41,9 +42,93 @@ export default function DashboardPage() {
     router.push('/');
   };
 
-  const handleOptimizationSuccess = (result: any, original: any) => {
-    setOptimizationResult(result.optimized);
-    setOriginalData(original);
+  const handleMode1Submit = async (data: Mode1Data) => {
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'optimize-existing',
+          title: data.currentTitle,
+          description: data.currentDescription,
+          platform: data.platform,
+          keywords: data.currentKeywords,
+          additionalData: data,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Optimization failed');
+      }
+
+      const result = await response.json();
+      setOptimizationResult(result.optimized);
+      setOriginalData({ title: data.currentTitle, description: data.currentDescription });
+      await refreshUserData();
+    } catch (error: any) {
+      console.error('Optimization error:', error);
+      alert(error.message || 'Failed to optimize listing');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleMode2Submit = async (data: Mode2Data) => {
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'create-new',
+          platform: data.platform,
+          productData: data,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Creation failed');
+      }
+
+      const result = await response.json();
+      setOptimizationResult(result.optimized);
+      setOriginalData(null);
+      await refreshUserData();
+    } catch (error: any) {
+      console.error('Creation error:', error);
+      alert(error.message || 'Failed to create listing');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleMode3Submit = async (data: Mode3Data) => {
+    setSubmitting(true);
+    try {
+      const response = await fetch('/api/analyze-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Analysis failed');
+      }
+
+      const result = await response.json();
+      setOptimizationResult(result.optimized || result.analysis);
+      setOriginalData(result.scrapedData || result.original);
+      await refreshUserData();
+    } catch (error: any) {
+      console.error('Analysis error:', error);
+      alert(error.message || 'Failed to analyze URL');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -62,19 +147,19 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Setup Notice */}
       {showSetupNotice && (
-        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="text-yellow-600" size={20} />
-              <div className="text-sm">
-                <span className="font-semibold text-yellow-900">Setup Required: </span>
-                <span className="text-yellow-800">
+        <div className="bg-yellow-50 border-b border-yellow-200 px-3 sm:px-4 py-2.5 sm:py-3">
+          <div className="max-w-7xl mx-auto flex items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+              <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5 sm:mt-0" size={18} />
+              <div className="text-xs sm:text-sm min-w-0">
+                <span className="font-semibold text-yellow-900 block sm:inline">Setup Required: </span>
+                <span className="text-yellow-800 block sm:inline">
                   Firestore database is not configured. 
                   <a 
                     href="https://console.firebase.google.com/" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="underline ml-1 font-medium hover:text-yellow-900"
+                    className="underline ml-1 font-medium hover:text-yellow-900 break-words"
                   >
                     Enable Firestore now
                   </a>
@@ -83,7 +168,7 @@ export default function DashboardPage() {
             </div>
             <button
               onClick={() => setShowSetupNotice(false)}
-              className="text-yellow-600 hover:text-yellow-800"
+              className="text-yellow-600 hover:text-yellow-800 text-xl leading-none flex-shrink-0"
             >
               ×
             </button>
@@ -92,121 +177,94 @@ export default function DashboardPage() {
       )}
 
       {/* Navigation */}
-      <nav className="border-b border-gray-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <Sparkles className="text-blue-600" size={24} />
-              <span className="text-xl font-semibold text-gray-900">OptiCommerce AI</span>
+      <nav className="border-b border-gray-200 bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Sparkles className="text-blue-600" size={20} />
+              <span className="text-base sm:text-xl font-semibold text-gray-900 truncate">OptiCommerce AI</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
               <Link href="/dashboard/history">
-                <button className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-2">
-                  <History size={18} />
-                  History
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-1 sm:gap-2">
+                  <History size={16} className="sm:w-[18px] sm:h-[18px]" />
+                  <span className="hidden sm:inline">History</span>
                 </button>
               </Link>
               <Link href="/dashboard/settings">
-                <button className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-2">
-                  <Settings size={18} />
-                  Settings
+                <button className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-1 sm:gap-2">
+                  <Settings size={16} className="sm:w-[18px] sm:h-[18px]" />
+                  <span className="hidden sm:inline">Settings</span>
                 </button>
               </Link>
               <button 
                 onClick={handleSignOut}
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-2"
+                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-1 sm:gap-2"
               >
-                <LogOut size={18} />
-                Sign Out
+                <LogOut size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden md:inline">Sign Out</span>
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 md:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
             Welcome back, {userData.displayName}!
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600">
             Optimize your product listings with AI-powered suggestions
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Mode Selection */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Choose Optimization Mode</h2>
-              <div className="grid md:grid-cols-3 gap-4">
-                <button
-                  onClick={() => setMode('existing')}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    mode === 'existing'
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <FileText className={`mb-3 ${mode === 'existing' ? 'text-blue-600' : 'text-gray-400'}`} size={24} />
-                  <h3 className="font-semibold text-gray-900 mb-1">Optimize Existing</h3>
-                  <p className="text-sm text-gray-600">Improve your current listing</p>
-                </button>
-
-                <button
-                  onClick={() => setMode('new')}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    mode === 'new'
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Plus className={`mb-3 ${mode === 'new' ? 'text-blue-600' : 'text-gray-400'}`} size={24} />
-                  <h3 className="font-semibold text-gray-900 mb-1">Create New Product</h3>
-                  <p className="text-sm text-gray-600">Add photos & details</p>
-                </button>
-
-                <button
-                  onClick={() => setMode('url')}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    mode === 'url'
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <LinkIcon className={`mb-3 ${mode === 'url' ? 'text-blue-600' : 'text-gray-400'}`} size={24} />
-                  <h3 className="font-semibold text-gray-900 mb-1">Analyze URL</h3>
-                  <p className="text-sm text-gray-600">Paste product link</p>
-                </button>
-              </div>
+            <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 md:p-6">
+              <OptimizationModeSelector
+                selectedMode={mode}
+                onModeChange={(newMode) => {
+                  setMode(newMode);
+                  setOptimizationResult(null);
+                  setOriginalData(null);
+                }}
+              />
             </div>
 
             {/* Optimization Form */}
-            <div className="bg-white border border-gray-200 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                {mode === 'existing' && 'Optimize Existing Listing'}
-                {mode === 'new' && 'Create New Product'}
-                {mode === 'url' && 'Analyze Product URL'}
+            <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 md:p-6">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
+                {mode === 'optimize-existing' && 'Optimize Existing Listing'}
+                {mode === 'create-new' && 'Create New Product'}
+                {mode === 'analyze-url' && 'Analyze Product URL'}
               </h2>
               
-              {mode === 'existing' && (
-                <OptimizationForm onSuccess={handleOptimizationSuccess} />
+              {mode === 'optimize-existing' && (
+                <Mode1OptimizeExisting onSubmit={handleMode1Submit} loading={submitting} />
               )}
               
-              {mode === 'new' && (
-                <CreateProductForm onSuccess={handleOptimizationSuccess} />
+              {mode === 'create-new' && (
+                <Mode2CreateNew onSubmit={handleMode2Submit} loading={submitting} />
               )}
               
-              {mode === 'url' && (
-                <UrlOptimizationForm onSuccess={handleOptimizationSuccess} />
+              {mode === 'analyze-url' && (
+                <Mode3AnalyzeUrl onSubmit={handleMode3Submit} loading={submitting} />
               )}
             </div>
 
             {/* Results */}
-            {optimizationResult && originalData && (
-              <ResultCard original={originalData} optimized={optimizationResult} />
+            {optimizationResult && (
+              <>
+                {mode === 'create-new' ? (
+                  <SimpleResultCard optimized={optimizationResult} />
+                ) : (
+                  originalData && <ResultCard original={originalData} optimized={optimizationResult} />
+                )}
+              </>
             )}
           </div>
 

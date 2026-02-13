@@ -8,19 +8,20 @@ interface UsageStatsProps {
 
 export default function UsageStats({ userData }: UsageStatsProps) {
   const percentage = (userData.usageCount / userData.usageLimit) * 100;
-  const tierColors = {
+  const tierColors: Record<string, string> = {
     free: 'bg-gray-500',
     basic: 'bg-blue-500',
     premium: 'bg-purple-500',
+    enterprise: 'bg-gold-500',
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6">
-      <div className="space-y-6">
+    <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 md:p-6 sticky top-4">
+      <div className="space-y-4 sm:space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Usage This Month</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Usage This Month</h3>
           <span
-            className={`px-3 py-1 rounded-full text-white text-xs font-medium uppercase ${
+            className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-white text-xs font-medium uppercase ${
               tierColors[userData.tier]
             }`}
           >
@@ -29,7 +30,7 @@ export default function UsageStats({ userData }: UsageStatsProps) {
         </div>
 
         <div>
-          <div className="flex justify-between text-sm mb-2">
+          <div className="flex justify-between text-xs sm:text-sm mb-2">
             <span className="text-gray-600">
               {userData.usageCount} / {userData.usageLimit} used
             </span>
@@ -44,35 +45,46 @@ export default function UsageStats({ userData }: UsageStatsProps) {
         </div>
 
         {userData.usageCount >= userData.usageLimit && (
-          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800 text-sm">
-              You've reached your monthly limit. Upgrade to continue!
+          <div className="p-2.5 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-xs sm:text-sm font-medium">
+              🚫 You've used all {userData.usageLimit} free credits!
+            </p>
+            <p className="text-red-700 text-xs mt-1">
+              Upgrade to continue optimizing your listings.
+            </p>
+          </div>
+        )}
+
+        {userData.tier === 'free' && userData.usageCount < userData.usageLimit && (
+          <div className="p-2.5 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-800 text-xs sm:text-sm">
+              💡 {userData.usageLimit - userData.usageCount} free credits remaining
             </p>
           </div>
         )}
 
         {userData.tier === 'free' && (
-          <div className="pt-6 border-t space-y-4">
-            <p className="text-sm text-gray-600">
+          <div className="pt-4 sm:pt-6 border-t space-y-3 sm:space-y-4">
+            <p className="text-xs sm:text-sm text-gray-600">
               Upgrade to unlock more optimizations
             </p>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex justify-between items-center p-2.5 sm:p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">Basic</p>
-                  <p className="text-xs text-gray-500">20/month</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">Basic</p>
+                  <p className="text-xs text-gray-500">50 credits/month</p>
                 </div>
-                <button className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
-                  $19/mo
+                <button className="px-2.5 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-blue-700 transition-colors whitespace-nowrap">
+                  $9/mo
                 </button>
               </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+              <div className="flex justify-between items-center p-2.5 sm:p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <p className="font-medium text-gray-900">Premium</p>
-                  <p className="text-xs text-gray-500">75/month</p>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">Premium</p>
+                  <p className="text-xs text-gray-500">Unlimited credits</p>
                 </div>
-                <button className="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors">
-                  $49/mo
+                <button className="px-2.5 sm:px-3 py-1 bg-purple-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-purple-700 transition-colors whitespace-nowrap">
+                  $19/mo
                 </button>
               </div>
             </div>

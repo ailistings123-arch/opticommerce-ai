@@ -57,6 +57,20 @@ export const PLATFORM_RULES: Record<Platform, PlatformRules> = {
       'Be factual and direct',
     ],
   },
+  walmart: {
+    name: 'Walmart',
+    titleRange: { min: 40, max: 75 },
+    minDescription: 400,
+    maxTags: 10,
+    tagFormat: 'Product attributes',
+    guidelines: [
+      'Brand name first in title',
+      'Concise and feature-focused',
+      'Title Case only',
+      'Competitive pricing important',
+      'Fill all product attributes',
+    ],
+  },
 };
 
 export const TIER_LIMITS = {

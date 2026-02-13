@@ -53,7 +53,7 @@ async function createUserDocument(firebaseUser: FirebaseUser, displayName: strin
       photoURL: firebaseUser.photoURL,
       tier: 'free' as Tier,
       usageCount: 0,
-      usageLimit: 3,
+      usageLimit: 5, // Changed from 3 to 5 credits
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       resetDate: nextMonth,

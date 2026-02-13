@@ -46,7 +46,7 @@ export default function SignupForm() {
 
   return (
     <div className="w-full max-w-md">
-      <form onSubmit={handleEmailSignup} className="space-y-4">
+      <form onSubmit={handleEmailSignup} className="space-y-3 sm:space-y-4">
         <Input
           label="Display Name"
           type="text"
@@ -72,29 +72,29 @@ export default function SignupForm() {
           minLength={6}
           disabled={loading}
         />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-xs sm:text-sm">{error}</p>}
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? <Spinner size="sm" /> : 'Create Account'}
+          {loading ? <Spinner size="sm" /> : <span className="text-sm sm:text-base">Create Account</span>}
         </Button>
       </form>
 
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300" />
           </div>
-          <div className="relative flex justify-center text-sm">
+          <div className="relative flex justify-center text-xs sm:text-sm">
             <span className="px-2 bg-white text-gray-500">Or continue with</span>
           </div>
         </div>
 
         <Button
           variant="outline"
-          className="w-full mt-4"
+          className="w-full mt-3 sm:mt-4"
           onClick={handleGoogleSignup}
           disabled={loading}
         >
-          Sign up with Google
+          <span className="text-sm sm:text-base">Sign up with Google</span>
         </Button>
       </div>
     </div>

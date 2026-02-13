@@ -22,6 +22,7 @@ export function useOptimization() {
 
       const token = await user.getIdToken();
 
+      console.log('🚀 Starting optimization request...');
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: {
@@ -32,14 +33,17 @@ export function useOptimization() {
       });
 
       const data: ApiResponse<{ optimized: OptimizedContent; usageRemaining: number }> = await response.json();
+      console.log('📊 API Response:', data);
 
       if (!data.success) {
         throw new Error(data.error || 'Optimization failed');
       }
 
       setResult(data.data!.optimized);
+      console.log('✅ Optimization successful, usage remaining:', data.data!.usageRemaining);
       return data.data;
     } catch (err: any) {
+      console.error('❌ Optimization error:', err);
       setError(err.message);
       throw err;
     } finally {

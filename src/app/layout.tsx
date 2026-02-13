@@ -43,8 +43,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const theme = localStorage.getItem('theme') || 
+                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                if (theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body
-        className={`${poppins.variable} antialiased bg-gradient-to-br from-gray-50 to-blue-50`}
+        className={`${poppins.variable} antialiased bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen`}
       >
         {children}
       </body>

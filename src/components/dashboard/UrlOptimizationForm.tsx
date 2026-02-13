@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import { Platform } from '@/types';
 import Spinner from '@/components/ui/Spinner';
-import { Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { Link as LinkIcon, ExternalLink, CreditCard, Sparkles } from 'lucide-react';
 
 interface UrlOptimizationFormProps {
   onSuccess: (result: any, original: any) => void;
@@ -17,6 +18,7 @@ export default function UrlOptimizationForm({ onSuccess }: UrlOptimizationFormPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
+  const [showCreditModal, setShowCreditModal] = useState(false);
 
   const detectPlatform = (url: string): Platform | null => {
     const urlLower = url.toLowerCase();
@@ -100,12 +102,18 @@ export default function UrlOptimizationForm({ onSuccess }: UrlOptimizationFormPr
     } catch (err: any) {
       setError(err.message || 'Failed to analyze product URL');
       setAnalyzing(false);
+      
+      // Check if error is quota exceeded
+      if (err.message?.includes('Usage limit exceeded') || err.message?.includes('quota')) {
+        setShowCreditModal(true);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="flex items-start gap-3">
@@ -208,5 +216,64 @@ export default function UrlOptimizationForm({ onSuccess }: UrlOptimizationFormPr
         </div>
       </div>
     </form>
+
+    {/* Credit Limit Modal */}
+    <Modal
+      isOpen={showCreditModal}
+      onClose={() => setShowCreditModal(false)}
+      title="Free Credits Exhausted"
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-center">
+          <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-4 rounded-full">
+            <CreditCard className="text-blue-600" size={48} />
+          </div>
+        </div>
+        
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            You've used all 5 free credits!
+          </h3>
+          <p className="text-gray-600 text-sm mb-4">
+            Upgrade to a premium plan to continue optimizing your product listings and boost your sales.
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
+          <div className="flex items-start gap-3">
+            <Sparkles className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <h4 className="font-semibold text-gray-900 mb-1">Premium Benefits:</h4>
+              <ul className="text-sm text-gray-700 space-y-1">
+                <li>• Unlimited optimizations</li>
+                <li>• Priority AI processing</li>
+                <li>• Advanced SEO analytics</li>
+                <li>• Bulk optimization tools</li>
+                <li>• 24/7 priority support</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Button 
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            onClick={() => {
+              window.location.href = '/dashboard/settings';
+            }}
+          >
+            Upgrade to Premium
+          </Button>
+          <Button 
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowCreditModal(false)}
+          >
+            Maybe Later
+          </Button>
+        </div>
+      </div>
+    </Modal>
+    </>
   );
 }

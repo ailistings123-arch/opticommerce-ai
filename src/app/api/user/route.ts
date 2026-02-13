@@ -4,6 +4,15 @@ import { ApiResponse, User } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if Firebase Admin is initialized
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json<ApiResponse<never>>({
+        success: false,
+        error: 'Firebase Admin is not configured. Please set up Firebase credentials.',
+        code: 'CONFIG_ERROR',
+      }, { status: 500 });
+    }
+
     // Verify authentication
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
