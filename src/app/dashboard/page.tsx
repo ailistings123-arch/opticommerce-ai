@@ -45,9 +45,15 @@ export default function DashboardPage() {
   const handleMode1Submit = async (data: Mode1Data) => {
     setSubmitting(true);
     try {
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      
       const response = await fetch('/api/optimize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           mode: 'optimize-existing',
           title: data.currentTitle,
@@ -78,9 +84,15 @@ export default function DashboardPage() {
   const handleMode2Submit = async (data: Mode2Data) => {
     setSubmitting(true);
     try {
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      
       const response = await fetch('/api/optimize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
           mode: 'create-new',
           platform: data.platform,
@@ -108,9 +120,15 @@ export default function DashboardPage() {
   const handleMode3Submit = async (data: Mode3Data) => {
     setSubmitting(true);
     try {
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      
       const response = await fetch('/api/analyze-url', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(data),
       });
 
