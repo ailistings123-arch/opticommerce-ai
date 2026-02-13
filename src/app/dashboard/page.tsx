@@ -70,8 +70,14 @@ export default function DashboardPage() {
       }
 
       const result = await response.json();
-      setOptimizationResult(result.optimized);
-      setOriginalData({ title: data.currentTitle, description: data.currentDescription });
+      console.log('Mode 1 API response:', result);
+      
+      if (result.success && result.data) {
+        setOptimizationResult(result.data.optimized);
+        setOriginalData({ title: data.currentTitle, description: data.currentDescription });
+      } else {
+        throw new Error('Invalid response format');
+      }
       await refreshUserData();
     } catch (error: any) {
       console.error('Optimization error:', error);
@@ -106,8 +112,14 @@ export default function DashboardPage() {
       }
 
       const result = await response.json();
-      setOptimizationResult(result.optimized);
-      setOriginalData(null);
+      console.log('Mode 2 API response:', result);
+      
+      if (result.success && result.data) {
+        setOptimizationResult(result.data.optimized);
+        setOriginalData(null);
+      } else {
+        throw new Error('Invalid response format');
+      }
       await refreshUserData();
     } catch (error: any) {
       console.error('Creation error:', error);
@@ -138,8 +150,14 @@ export default function DashboardPage() {
       }
 
       const result = await response.json();
-      setOptimizationResult(result.optimized || result.analysis);
-      setOriginalData(result.scrapedData || result.original);
+      console.log('Mode 3 API response:', result);
+      
+      if (result.success && result.data) {
+        setOptimizationResult(result.data.optimized || result.data.analysis);
+        setOriginalData(result.data.scrapedData);
+      } else {
+        throw new Error('Invalid response format');
+      }
       await refreshUserData();
     } catch (error: any) {
       console.error('Analysis error:', error);
@@ -279,6 +297,12 @@ export default function DashboardPage() {
               <>
                 {mode === 'create-new' ? (
                   <SimpleResultCard optimized={optimizationResult} />
+                ) : mode === 'analyze-url' ? (
+                  originalData ? (
+                    <ResultCard original={originalData} optimized={optimizationResult} />
+                  ) : (
+                    <SimpleResultCard optimized={optimizationResult} />
+                  )
                 ) : (
                   originalData && <ResultCard original={originalData} optimized={optimizationResult} />
                 )}
