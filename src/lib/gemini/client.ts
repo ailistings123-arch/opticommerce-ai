@@ -219,7 +219,19 @@ ${productInfo.includedItems}
 • ${productInfo.scenario1}
 • ${productInfo.scenario2}
 • ${productInfo.scenario3}
-• ${productInfo.scenario4}`;
+• ${productInfo.scenario4}
+
+🎯 WHY CHOOSE THIS ${productInfo.type.toUpperCase()}?
+
+This ${productInfo.type} combines ${productInfo.material} construction with ${productInfo.specificFeatures[0] || 'practical design'} to deliver reliable performance. ${productInfo.category === 'phone-accessories' ? 'The precise fit and protective features ensure your device stays safe without adding bulk.' : productInfo.category === 'drinkware' ? 'Temperature retention technology keeps beverages at ideal temperature for hours.' : productInfo.category === 'accessories' ? 'Thoughtful organization and durable materials make this an everyday essential.' : 'Quality construction and functional design provide long-term value.'}
+
+${productInfo.category === 'phone-accessories' ? 'Unlike cheaper alternatives that crack or yellow, this case maintains its appearance and protection through extended use. The raised edges and shock-absorbing material provide multi-layer protection.' : productInfo.category === 'drinkware' ? 'The vacuum insulation outperforms single-wall containers while the leak-proof lid prevents spills in bags and vehicles. Maintains temperature 6x longer than standard bottles.' : productInfo.category === 'accessories' ? 'The combination of security features and slim profile sets this apart from bulkier options. RFID blocking and durable construction provide peace of mind.' : 'Attention to detail in materials and construction ensures long-term satisfaction and value.'}
+
+✅ QUALITY ASSURANCE:
+
+We stand behind the quality of this ${productInfo.type}. ${productInfo.category === 'phone-accessories' ? 'If the case doesn\'t fit perfectly or fails to protect as described, contact us for immediate resolution.' : productInfo.category === 'drinkware' ? 'If insulation performance doesn\'t meet expectations within the first 30 days, we\'ll make it right.' : 'If the product doesn\'t meet your needs, reach out within 30 days for assistance.'}
+
+${productInfo.category === 'phone-accessories' ? 'Thousands of satisfied customers trust this case to protect their devices daily. Join them in experiencing worry-free phone protection.' : productInfo.category === 'drinkware' ? 'Join countless users who rely on this bottle for their hydration needs throughout the day.' : productInfo.category === 'accessories' ? 'Professionals and everyday users choose this for its reliability, security, and elegant design.' : 'Proven performance and quality construction ensure your complete satisfaction.'}`;
 }
 
 function analyzeProduct(title: string, description: string): any {
