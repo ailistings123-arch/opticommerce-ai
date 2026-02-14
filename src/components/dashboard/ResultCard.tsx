@@ -145,7 +145,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
   };
 
   const handleContentSave = (field: string, newContent: string) => {
-    setEditedOptimized(prev => ({
+    setEditedOptimized((prev: typeof optimized) => ({
       ...prev,
       [field]: newContent
     }));
