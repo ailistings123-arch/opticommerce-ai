@@ -61,6 +61,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${poppins.variable} antialiased bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen`}
+        suppressHydrationWarning
       >
         {children}
       </body>

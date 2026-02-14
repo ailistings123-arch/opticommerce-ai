@@ -28,35 +28,35 @@ const steps = [
 
 export default function Solution() {
   return (
-    <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+    <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-white">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8 sm:mb-10">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
             AI Optimization That Actually Works
           </h2>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-4xl mx-auto px-2">
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 max-w-3xl mx-auto">
             ListingOptimizer AI analyzes your product, researches your market, and creates professional, 
             SEO-optimized listings that rank higher and convert better—in under 2 minutes.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
+        <div className="grid md:grid-cols-3 gap-5 sm:gap-6">
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
               <div key={index} className="relative">
                 <div className="text-center">
-                  <div className={`w-16 h-16 sm:w-20 sm:h-20 ${step.color} text-white rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold mx-auto mb-4 sm:mb-6 shadow-lg`}>
+                  <div className={`w-14 h-14 sm:w-16 sm:h-16 ${step.color} text-white rounded-full flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-3 sm:mb-4 shadow-lg`}>
                     {step.number}
                   </div>
-                  <div className={`w-12 h-12 sm:w-16 sm:h-16 ${step.color.replace('600', '100')} rounded-xl flex items-center justify-center mx-auto mb-3 sm:mb-4`}>
-                    <Icon className={step.color.replace('bg-', 'text-')} sx={{ fontSize: { xs: 28, sm: 32 } }} />
+                  <div className={`w-12 h-12 ${step.color.replace('600', '100')} rounded-lg flex items-center justify-center mx-auto mb-3`}>
+                    <Icon className={step.color.replace('bg-', 'text-')} sx={{ fontSize: 24 }} />
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 px-2">{step.title}</h3>
-                  <p className="text-sm sm:text-base text-gray-600 leading-relaxed px-2">{step.description}</p>
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{step.title}</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{step.description}</p>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="hidden md:block absolute top-10 left-full w-full h-1 bg-gradient-to-r from-gray-300 to-transparent -ml-6" />
+                  <div className="hidden md:block absolute top-8 left-full w-full h-0.5 bg-gradient-to-r from-gray-300 to-transparent -ml-6" />
                 )}
               </div>
             );
