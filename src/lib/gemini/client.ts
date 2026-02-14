@@ -4,6 +4,7 @@ import { seoOptimizer } from '@/lib/services/SEOOptimizerService';
 import { complianceChecker } from '@/lib/services/ComplianceCheckerService';
 import { qualityAssurance } from '@/lib/services/QualityAssuranceService';
 import { Platform, BaseContent, ProductSpecification } from '@/types';
+import { createOptimizationPrompt } from './prompt';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 if (!apiKey) {
@@ -20,8 +21,8 @@ export async function generateOptimizedContent(
   try {
     const platformRules = getPlatformRules(platform);
     
-    // Build comprehensive master training prompt
-    const prompt = buildMasterTrainingPrompt(title, description, platform, keywords, platformRules);
+    // Build comprehensive prompt using new simplified version
+    const prompt = createOptimizationPrompt(title, description, platform, keywords);
 
     // Try multiple model names
     const modelNames = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
@@ -91,22 +92,26 @@ export async function generateOptimizedContent(
 }
 
 function generateEnhancedMockResponse(title: string, description: string, platform: string, keywords?: string) {
+  // Clean the input first
+  const cleanTitle = title.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, '').trim();
+  const cleanDescription = description.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, '').trim();
+  
   // Create a realistic, enhanced product listing
-  const enhancedTitle = enhanceTitle(title, platform, keywords);
-  const longDescription = createLongDescription(title, description, platform, keywords);
-  const relevantTags = extractSmartTags(title, description, keywords);
+  const enhancedTitle = enhanceTitle(cleanTitle, platform, keywords);
+  const longDescription = createLongDescription(cleanTitle, cleanDescription, platform, keywords);
+  const relevantTags = extractSmartTags(cleanTitle, cleanDescription, keywords);
 
   return {
     title: enhancedTitle,
     description: longDescription,
     tags: relevantTags,
     improvements: [
-      'Enhanced title with specific measurements and features while removing vague marketing terms',
+      'Removed HTML tags and cleaned up formatting for better readability',
+      'Enhanced title with specific measurements and features while removing marketing fluff',
       'Created comprehensive 800+ word description with structured sections for easy scanning',
-      'Added detailed bullet points highlighting key benefits and specifications',
+      'Added detailed bullet points highlighting key benefits and technical specifications',
       'Included complete product specifications table for informed purchasing decisions',
       'Integrated relevant keywords naturally throughout the content for better search visibility',
-      'Added care instructions and usage recommendations to reduce customer questions',
       'Structured content with clear sections: Features, Benefits, Specs, and Use Cases'
     ],
     seo_score_new: 94
@@ -114,56 +119,77 @@ function generateEnhancedMockResponse(title: string, description: string, platfo
 }
 
 function enhanceTitle(title: string, platform: string, keywords?: string): string {
-  // Remove banned words
-  const bannedWords = ['premium', 'luxury', 'best', 'top', 'perfect', 'ultimate', 'amazing', 'awesome', 'great', 'excellent', 'quality', 'high-quality', 'professional'];
-  let enhanced = title;
+  // STEP 1: Clean HTML tags and entities first
+  let enhanced = title.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, '');
   
+  // STEP 2: Remove banned words
+  const bannedWords = ['premium', 'luxury', 'best', 'top', 'perfect', 'ultimate', 'amazing', 'awesome', 'great', 'excellent', 'quality', 'high-quality', 'professional', 'superior', 'advanced'];
   bannedWords.forEach(word => {
     const regex = new RegExp(`\\b${word}\\b`, 'gi');
     enhanced = enhanced.replace(regex, '');
   });
   
-  // STEP 1: Remove HTML entities first (anywhere in title)
-  enhanced = enhanced.replace(/&[a-z]+;/gi, '');
-  
-  // STEP 2: Remove store names and suffixes from the end
-  // Pattern 1: Remove "- StoreName", "– StoreName", "— StoreName" at the end
+  // STEP 3: Remove store names and suffixes from the end
   enhanced = enhanced.replace(/[\s]*[\-–—]+[\s]*[A-Z][a-zA-Z0-9\.\s]+$/g, '');
-  
-  // Pattern 2: Remove "by StoreName", "from StoreName" at the end
   enhanced = enhanced.replace(/[\s]+(by|from)[\s]+[A-Z][a-zA-Z0-9\.\s]+$/gi, '');
-  
-  // Pattern 3: Remove any remaining store-like patterns (capitalized words at end after dash/space)
-  enhanced = enhanced.replace(/[\s]*[\-–—]+[\s]*[A-Z][a-zA-Z]+(\.[A-Z]{2,})?$/g, '');
-  
-  // Pattern 4: Specifically target "Phonecase.PK" and similar patterns
   enhanced = enhanced.replace(/[\s]*[\-–—]*[\s]*(Phonecase\.PK|PhoneCase\.PK|phonecase\.pk)/gi, '');
-  
-  // Pattern 5: Remove any domain-like patterns (.com, .pk, .net, etc.)
   enhanced = enhanced.replace(/[\s]*[\-–—]*[\s]*[a-zA-Z0-9]+\.(com|pk|net|org|co|uk|in|us)$/gi, '');
   
-  // STEP 3: Clean up extra spaces, dashes, and trailing punctuation
+  // STEP 4: Clean up extra spaces and punctuation
   enhanced = enhanced.replace(/\s+/g, ' ').trim();
   enhanced = enhanced.replace(/[\-–—\s]+$/g, '').trim();
   enhanced = enhanced.replace(/^[\-–—\s]+/g, '').trim();
   
-  // STEP 4: Add platform-specific enhancements if title is too short
-  if (enhanced.length < 50 && platform === 'amazon') {
-    enhanced += ' - Durable Construction - Multiple Uses';
-  } else if (enhanced.length < 40 && platform === 'shopify') {
-    enhanced += ' - Modern Design';
+  // STEP 5: Add specific enhancements based on product analysis
+  const text = enhanced.toLowerCase();
+  
+  // Detect product type and add specific details
+  if (text.includes('keyboard')) {
+    if (!text.includes('wireless') && !text.includes('wired')) {
+      enhanced += ' - Wired USB Connection';
+    }
+    if (!text.includes('backlit') && !text.includes('backlight')) {
+      enhanced += ' - Backlit Keys';
+    }
+    if (!text.includes('compatible')) {
+      enhanced += ' - Windows Mac Compatible';
+    }
+  } else if (text.includes('case') && (text.includes('phone') || text.includes('iphone'))) {
+    if (!text.includes('shockproof') && !text.includes('protection')) {
+      enhanced += ' - Shockproof Protection';
+    }
+    if (!text.includes('wireless')) {
+      enhanced += ' - Wireless Charging Compatible';
+    }
+  } else if (text.includes('bottle') || text.includes('flask')) {
+    if (!text.includes('oz') && !text.includes('ml')) {
+      enhanced += ' - 32oz Capacity';
+    }
+    if (!text.includes('insulated')) {
+      enhanced += ' - Double Wall Insulated';
+    }
+  }
+  
+  // STEP 6: Ensure title isn't too long for platform
+  const maxLength = platform === 'amazon' ? 200 : platform === 'shopify' ? 70 : 80;
+  if (enhanced.length > maxLength) {
+    enhanced = enhanced.substring(0, maxLength - 3) + '...';
   }
   
   return enhanced;
 }
 
 function createLongDescription(title: string, description: string, platform: string, keywords?: string): string {
+  // Clean HTML from inputs
+  const cleanTitle = title.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, '').trim();
+  const cleanDescription = description.replace(/<[^>]*>/g, '').replace(/&[a-z]+;/gi, '').trim();
+  
   // Extract product details from title and description
-  const productInfo = analyzeProduct(title, description);
+  const productInfo = analyzeProduct(cleanTitle, cleanDescription);
   
   return `This ${productInfo.type} features ${productInfo.mainFeature}. ${productInfo.specificDetail}
 
-🌟 KEY FEATURES & SPECIFICATIONS:
+KEY FEATURES & SPECIFICATIONS:
 
 • ${productInfo.feature1}: ${productInfo.feature1Detail}
 • ${productInfo.feature2}: ${productInfo.feature2Detail}
@@ -172,7 +198,7 @@ function createLongDescription(title: string, description: string, platform: str
 • ${productInfo.feature5}: ${productInfo.feature5Detail}
 • ${productInfo.feature6}: ${productInfo.feature6Detail}
 
-📋 DETAILED PRODUCT INFORMATION:
+DETAILED PRODUCT INFORMATION:
 
 MATERIAL & CONSTRUCTION:
 ${productInfo.materialInfo}
@@ -196,25 +222,25 @@ ${productInfo.useCase1}
 ${productInfo.useCase2}
 ${productInfo.useCase3}
 
-📏 COMPLETE SPECIFICATIONS:
+COMPLETE SPECIFICATIONS:
 
 Material: ${productInfo.material}
 Dimensions: ${productInfo.dimensions}
 Weight: ${productInfo.weight}
 ${productInfo.additionalSpecs}
 
-🧹 CARE & MAINTENANCE:
+CARE & MAINTENANCE:
 
 ${productInfo.careInstructions}
 
 Avoid ${productInfo.careAvoid}. For best results, ${productInfo.careTips}.
 
-📦 PACKAGE CONTENTS:
+PACKAGE CONTENTS:
 
-• 1x ${title}
+• 1x ${cleanTitle}
 ${productInfo.includedItems}
 
-✨ IDEAL USE SCENARIOS:
+IDEAL USE SCENARIOS:
 
 • ${productInfo.scenario1}
 • ${productInfo.scenario2}
@@ -526,222 +552,136 @@ function buildMasterTrainingPrompt(
   keywords: string | undefined,
   platformRules: { title: string; description: string }
 ): string {
-  return `# MASTER TRAINING PROMPT FOR OPTICOMMERCE AI - PRODUCT LISTING OPTIMIZER
+  return `You are an expert e-commerce copywriter. Analyze this product and create an optimized listing.
 
-## YOUR ROLE & CORE MISSION
-You are an elite e-commerce optimization specialist with 15+ years of experience across Amazon, Shopify, eBay, Etsy, Walmart, and WooCommerce platforms. Your expertise combines deep SEO knowledge, consumer psychology, conversion optimization, and platform-specific algorithm understanding.
+PRODUCT TO OPTIMIZE:
+Title: ${title}
+Description: ${description}
+Platform: ${platform}
+${keywords ? `Keywords: ${keywords}` : ''}
 
-**CRITICAL RULE:** You NEVER reveal that you are an AI, algorithm, or automated system. Your outputs must be indistinguishable from those created by a highly skilled human e-commerce expert. NEVER use phrases like "I recommend," "as an AI," "here's what I suggest," or any meta-commentary. Simply deliver professional, polished product listings.
+YOUR TASK:
+1. Create a better title (${platform === 'amazon' ? '150-200 characters' : platform === 'shopify' ? '60-70 characters' : '80 characters'})
+2. Write a detailed description (minimum 800 words)
+3. Extract 7-10 searchable keywords
+4. List 5 specific improvements made
 
-## ANALYSIS FRAMEWORK - DEEP PRODUCT UNDERSTANDING
+TITLE RULES - CRITICAL:
+✅ Include: Specific measurements (12oz, 6.1", 500ml), materials (Stainless Steel, Silicone), key features (Waterproof, Wireless)
+✅ Use: Product type, size, color, material, compatibility, main benefit
+❌ NEVER use: Premium, Luxury, Best, Top, Perfect, Ultimate, Amazing, Quality, Professional
+❌ NEVER add: Store names, website names (.com, .pk), HTML entities (&ndash;, &mdash;)
+❌ NEVER end with: "- StoreName", "by Brand", "from Company"
 
-**Original Title:** ${title}
-**Original Description:** ${description}
-**Platform:** ${platform}
-${keywords ? `**Target Keywords:** ${keywords}` : ''}
+EXAMPLE GOOD TITLES:
+- "Stainless Steel Water Bottle 32oz - Double Wall Vacuum Insulated - Leak Proof Lid - BPA Free - Keeps Drinks Cold 24hrs Hot 12hrs"
+- "Silicone Phone Case for iPhone 15 Pro - Shockproof Drop Protection - Wireless Charging Compatible - Slim Fit - Black"
+- "Wireless Bluetooth Keyboard - Rechargeable - Multi-Device Pairing - Quiet Keys - Compatible with iPad Mac Windows"
 
-### STEP 1 - PRODUCT IDENTIFICATION:
-- What EXACTLY is this product? (Be ultra-specific)
-- What category does it belong to?
-- What is it made of? (Material analysis)
-- What are its physical properties? (Size, weight, color, texture)
+DESCRIPTION STRUCTURE (800+ words):
 
-### STEP 2 - FEATURE EXTRACTION:
-- What are ALL the measurable features? (Dimensions, capacity, weight, etc.)
-- What technical specifications does it have?
-- What protective features? (Waterproof, shockproof, etc.)
-- What functional capabilities? (Wireless, rechargeable, etc.)
-- What design elements? (Color, finish, style)
+**OPENING (2-3 sentences):**
+State exactly what the product is, main feature with measurement, and problem it solves.
 
-### STEP 3 - CUSTOMER ANALYSIS:
-- Who would buy this? (Demographics, lifestyle)
-- What PROBLEM does it solve?
-- What PAIN POINT does it address?
-- What BENEFIT do they get?
-- When/where would they use it?
+**KEY FEATURES (6-10 bullet points):**
+• Feature 1: [Specific detail] - [Measurement] - [Benefit]
+• Feature 2: [Material/Tech] - [Why it matters] - [Result]
+• Feature 3: [Design element] - [Specification] - [Advantage]
+(Continue with real, specific features)
 
-### STEP 4 - COMPETITIVE ADVANTAGE:
-- What makes THIS product different?
-- What unique features does it have?
-- What would make someone choose THIS over others?
+**DETAILED SECTIONS:**
 
-### STEP 5 - KEYWORD RESEARCH:
-- What would customers TYPE to find this?
-- What are the most searchable terms?
-- What specific words describe this product?
-- What related terms should be included?
+MATERIAL & CONSTRUCTION:
+- Exact material name and grade
+- Why this material was chosen
+- Construction method
+- Durability specifics
 
-### STEP 6 - MISSING ELEMENTS:
-- What's NOT mentioned but should be?
-- What specifications are missing?
-- What benefits aren't highlighted?
-- What attractive descriptive words can be added?
+FUNCTIONALITY:
+- How it works (step by step if needed)
+- Performance metrics (charges in X hours, lasts Y hours)
+- Technical specifications
 
----
-
-## PLATFORM-SPECIFIC OPTIMIZATION RULES FOR ${platform.toUpperCase()}:
-
-### TITLE REQUIREMENTS:
-${platformRules.title}
-
-### DESCRIPTION REQUIREMENTS:
-${platformRules.description}
-
----
-
-## CRITICAL CONTENT RULES
-
-### 🚫 ABSOLUTELY FORBIDDEN WORDS IN TITLES:
-Premium, Luxury, Best, Top, #1, Perfect, Ultimate, Amazing, Awesome, Great, Excellent, Superior, Quality, High-Quality, Professional, Advanced, Innovative, Revolutionary, Cutting-Edge, State-of-the-art, World-Class, Industry-Leading, Award-Winning, Certified, Guaranteed, Authentic, Original, Genuine (unless it's a brand name)
-
-### 🚫 NEVER ADD THESE AT THE END OF TITLES:
-- Store names (e.g., "- Phonecase.PK", "- Amazon.com", "- MyStore")
-- Website names or URLs (e.g., ".com", ".pk", ".net")
-- HTML entities (&ndash;, &mdash;, &nbsp;, etc.)
-- Generic brand suffixes (e.g., "by [StoreName]", "from [Company]")
-- Promotional tags (e.g., "- Free Shipping", "- On Sale")
-- CRITICAL: If you see "Phonecase.PK" or any ".PK" domain, REMOVE IT COMPLETELY
-
-### ✅ ATTRACTIVE WORDS TO ADD (Product-Specific Only):
-- **Materials:** Silicone, Stainless Steel, Genuine Leather, 100% Cotton, Ceramic, Bamboo, Glass, Metal
-- **Protection:** Shockproof, Waterproof, Dustproof, Scratch-Resistant, Anti-Slip, Drop-Protection, Heavy-Duty
-- **Benefits:** Insulated, Leak-Proof, Foldable, Adjustable, Portable, Compact, Lightweight, Ergonomic
-- **Tech:** Wireless, Rechargeable, USB-C, Bluetooth, HD, 4K, Fast-Charging, Long-Lasting
-- **Design:** Slim, Sleek, Transparent, Clear, Glossy, Matte, Textured, Smooth
-- **Size:** 12oz, 500ml, Large, XL, King-Size, 24-Pack, 256GB
-- **Compatibility:** Universal, Compatible, Fits, Works-With
-
----
-
-## DESCRIPTION STRATEGY - 100% PRODUCT-FOCUSED, NO GENERIC FILLER
-
-### CRITICAL RULES:
-❌ NO generic statements like "high quality", "great value", "you'll love it"
-❌ NO vague claims like "durable construction" without specifics
-❌ NO filler words or fluff
-❌ NO repetitive content
-❌ NO promotional language
-✅ ONLY specific, product-related information
-✅ ONLY measurable facts and features
-✅ ONLY real benefits based on actual features
-✅ ONLY details a customer needs to make a purchase decision
-
-### STRUCTURE (MINIMUM 800 words - ALL PRODUCT-SPECIFIC):
-
-**1. OPENING HOOK (2-3 sentences)**
-- State EXACTLY what the product is
-- Mention the MAIN specific feature (with measurement/spec)
-- Address the SPECIFIC problem it solves
-
-**2. KEY FEATURES SECTION (6-10 bullet points)**
-• Feature 1: [Specific feature] - [Exact measurement/spec] - [How it helps]
-• Feature 2: [Material detail] - [Why this material] - [Benefit]
-• Feature 3: [Technical spec] - [What it does] - [Result]
-• Feature 4: [Design element] - [Specific detail] - [Advantage]
-• Feature 5: [Functional capability] - [How it works] - [Use case]
-• Feature 6: [Protective feature] - [Level of protection] - [What it protects from]
-
-**3. DETAILED PRODUCT INFORMATION (4-5 paragraphs)**
-
-**MATERIAL & CONSTRUCTION:**
-- Exact material name (e.g., "Food-grade 18/8 stainless steel")
-- Construction method (e.g., "Seamless welded body")
-- Why this material (e.g., "Won't retain flavors or odors")
-- Durability specifics (e.g., "Withstands drops from 6 feet")
-
-**FUNCTIONALITY & OPERATION:**
-- How it works (step-by-step if needed)
-- Technical operation details
-- Specific use instructions
-- Performance metrics (e.g., "Charges in 2 hours, lasts 10 hours")
-
-**DESIGN & PHYSICAL DETAILS:**
-- Exact dimensions with context
+DESIGN & DIMENSIONS:
+- Exact measurements with context
 - Weight with comparison
-- Color/finish specifics
-- Ergonomic details
+- Color/finish details
+- Ergonomic features
 
-**COMPATIBILITY & VERSATILITY:**
-- What it works with (specific models/sizes)
-- Multiple use cases (specific scenarios)
+COMPATIBILITY:
+- What it works with (specific models)
+- Multiple use cases
 - Limitations (be honest)
-- Best use situations
 
-**4. SPECIFICATIONS TABLE**
-Material: [Exact material name and grade]
-Dimensions: [L x W x H in inches and cm]
-Weight: [Exact weight in oz and grams]
-Capacity: [Volume in oz and ml]
-Color Options: [List all available colors]
+SPECIFICATIONS TABLE:
+Material: [Exact material]
+Dimensions: [L x W x H]
+Weight: [Exact weight]
+Capacity: [If applicable]
+Color: [Available colors]
 
-**5. CARE & MAINTENANCE**
-- Exact cleaning method
+CARE INSTRUCTIONS:
+- Cleaning method
 - What to avoid
-- Storage specifics
-- Maintenance schedule
-- Longevity tips
+- Maintenance tips
 
-**6. PACKAGE CONTENTS**
-• 1x [Product name with size/model]
-• 1x [Specific accessory if included]
-• 1x [Documentation type]
+PACKAGE CONTENTS:
+• 1x [Product with size]
+• [Any accessories]
 
-**7. IDEAL USE CASES**
-• [Specific situation 1]: [Why it works for this]
-• [Specific situation 2]: [Exact benefit in this scenario]
-• [Specific situation 3]: [How it solves this need]
-• [Specific situation 4]: [What makes it suitable]
+USE CASES:
+• Scenario 1: [Specific situation and benefit]
+• Scenario 2: [Another use case]
+• Scenario 3: [Third application]
 
----
+CONTENT RULES:
+✅ Every sentence must be product-specific
+✅ Include measurements, specs, and facts
+✅ Use active, descriptive language
+✅ Address customer questions
+❌ NO generic phrases like "high quality", "great value"
+❌ NO vague claims without specifics
+❌ NO filler or fluff
+❌ NO repetition
 
-## KEYWORDS/TAGS RULES:
-- Extract 7-10 SPECIFIC keywords from the product
-- Use actual search terms customers type
-- Include: Product type, material, size, color, use case
-- NO generic words like "quality", "best", "premium"
+KEYWORDS:
+Extract 7-10 specific, searchable terms customers would type. Include product type, material, size, color, use case.
 
----
+IMPROVEMENTS:
+List 5 specific changes you made with explanations:
+- "Added 32oz capacity specification to title for clarity"
+- "Included stainless steel grade (18/8) in description"
+- "Structured content with clear sections for easy scanning"
+(Be specific about what you changed and why)
 
-## IMPROVEMENTS LIST:
-List 5-7 SPECIFIC improvements you made:
-- Be concrete: "Added 12oz capacity specification" not "Improved title"
-- Explain WHY each change helps
-- Show the value added
-
----
-
-## OUTPUT FORMAT (JSON only):
+OUTPUT FORMAT (JSON only, no markdown):
 {
-  "title": "Specific, keyword-rich title without banned words, following ${platform} requirements",
-  "description": "LONG detailed description (800+ words) with proper formatting, bullet points, sections, and high value content",
-  "tags": ["specific", "searchable", "product-related", "keywords"],
+  "title": "Optimized title following all rules",
+  "description": "Long detailed description 800+ words with sections, bullets, specs",
+  "tags": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7"],
   "improvements": [
-    "Specific improvement 1 with explanation",
-    "Specific improvement 2 with explanation", 
-    "Specific improvement 3 with explanation",
-    "Specific improvement 4 with explanation",
-    "Specific improvement 5 with explanation"
+    "Specific improvement 1",
+    "Specific improvement 2",
+    "Specific improvement 3",
+    "Specific improvement 4",
+    "Specific improvement 5"
   ],
   "seo_score_new": 95
 }
 
----
-
-## QUALITY CHECKLIST:
-□ Title has NO banned words?
-□ Title has NO store/website names at the end?
-□ Title has NO HTML entities?
-□ Title ends with a product feature, not a brand/store?
-□ Title includes specific measurements/specs?
+QUALITY CHECKLIST:
+□ Title has NO banned words (Premium, Best, Quality, etc.)?
+□ Title has NO store names or domains at end?
+□ Title includes specific measurements?
 □ Description is 800+ words?
 □ Description has clear sections with headers?
-□ Description includes bullet points?
-□ All keywords are naturally integrated?
-□ Content sounds human-written, not AI?
-□ Everything is specific to THIS product?
+□ All content is product-specific (no generic filler)?
+□ Keywords are searchable terms customers use?
+□ Improvements list is specific and actionable?
 
-**CRITICAL:** Return ONLY the JSON object. Make it PERFECT for ${platform}.`;
+Now optimize this product listing following ALL rules above.`;
 }
+
 
 function getPlatformRules(platform: string): { title: string; description: string } {
   const rules: Record<string, { title: string; description: string }> = {
