@@ -8,10 +8,10 @@ export default function Navigation() {
     <nav className="border-b border-gray-200 bg-white/80 backdrop-blur-md sticky top-0 z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity">
             <AutoAwesomeIcon className="text-blue-600" sx={{ fontSize: { xs: 20, sm: 24 } }} />
             <span className="text-base sm:text-xl font-semibold text-gray-900 whitespace-nowrap">ListingOptimizer AI</span>
-          </div>
+          </Link>
           <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Features</a>
             <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>

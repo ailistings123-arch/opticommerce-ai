@@ -82,10 +82,10 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 mb-12">
           {/* Company Info */}
           <div className="col-span-2 md:col-span-3 lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
+            <Link href="/" className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity">
               <AutoAwesomeIcon className="text-blue-500" sx={{ fontSize: 24 }} />
               <span className="text-xl font-semibold text-white">ListingOptimizer AI</span>
-            </div>
+            </Link>
             <p className="text-sm mb-4">
               AI-powered product listing optimization for e-commerce success
             </p>

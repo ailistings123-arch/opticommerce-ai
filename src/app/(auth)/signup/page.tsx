@@ -36,10 +36,10 @@ export default function SignupPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-6 sm:mb-8">
           <div className="flex justify-center mb-4 sm:mb-6">
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <Link href="/" className="flex items-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity">
               <Sparkles className="text-blue-600" size={28} />
               <span className="text-xl sm:text-2xl font-bold text-gray-900">ListingOptimizer</span>
-            </div>
+            </Link>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">Get started free</h1>
           <p className="text-sm sm:text-base text-gray-600">Create your account and start optimizing</p>
