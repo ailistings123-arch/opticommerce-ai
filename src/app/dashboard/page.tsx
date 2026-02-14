@@ -218,7 +218,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Sparkles className="text-blue-600" size={20} />
-              <span className="text-base sm:text-xl font-semibold text-gray-900 truncate">OptiCommerce AI</span>
+              <span className="text-base sm:text-xl font-semibold text-gray-900 truncate">ListingOptimizer</span>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
               <Link href="/dashboard/history">

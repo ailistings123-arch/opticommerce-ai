@@ -10,7 +10,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-2">
             <Sparkles className="text-blue-600" size={24} />
-            <span className="text-xl font-semibold text-gray-900">OptiCommerce AI</span>
+            <span className="text-xl font-semibold text-gray-900">ListingOptimizer</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
             <a href="#benefits" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Benefits</a>

@@ -59,7 +59,7 @@ export default function HistoryPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <Sparkles className="text-blue-600" size={24} />
-              <span className="text-xl font-semibold text-gray-900">OptiCommerce AI</span>
+              <span className="text-xl font-semibold text-gray-900">ListingOptimizer</span>
             </div>
             <Link href="/dashboard">
               <button className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 flex items-center gap-2">

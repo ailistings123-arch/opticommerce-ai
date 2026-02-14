@@ -38,7 +38,7 @@ export default function Home() {
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Sparkles className="text-blue-600" size={20} />
-              <span className="text-base sm:text-xl font-semibold text-gray-900 truncate">OptiCommerce AI</span>
+              <span className="text-base sm:text-xl font-semibold text-gray-900 truncate">ListingOptimizer</span>
             </div>
             <div className="hidden lg:flex items-center gap-6 xl:gap-8">
               <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Features</a>
@@ -385,7 +385,7 @@ export default function Home() {
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-2 mb-3 sm:mb-4">
                 <Sparkles className="text-blue-500" size={20} />
-                <span className="text-base sm:text-lg font-semibold text-white">OptiCommerce AI</span>
+                <span className="text-base sm:text-lg font-semibold text-white">ListingOptimizer</span>
               </div>
               <p className="text-xs sm:text-sm">
                 AI-powered product listing optimization for e-commerce success
@@ -417,7 +417,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-6 sm:pt-8 text-center text-xs sm:text-sm">
-            <p>&copy; 2026 OptiCommerce AI. All rights reserved.</p>
+            <p>&copy; 2026 ListingOptimizer. All rights reserved.</p>
           </div>
         </div>
       </footer>

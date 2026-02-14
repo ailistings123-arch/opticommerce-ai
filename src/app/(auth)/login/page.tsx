@@ -38,7 +38,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4 sm:mb-6">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Sparkles className="text-blue-600" size={28} />
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">OptiCommerce AI</span>
+              <span className="text-xl sm:text-2xl font-bold text-gray-900">ListingOptimizer</span>
             </div>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">Welcome back</h1>

@@ -5,8 +5,8 @@ import { ChevronDown } from 'lucide-react';
 
 const faqs = [
   {
-    question: "How does OptiCommerce AI optimize my product listings?",
-    answer: "OptiCommerce AI uses advanced Google Gemini 1.5 AI technology to analyze your product listings and generate SEO-optimized content. It considers platform-specific rules, keyword density, readability, and conversion best practices to create titles and descriptions that rank higher and convert better."
+    question: "How does ListingOptimizer optimize my product listings?",
+    answer: "ListingOptimizer uses advanced Google Gemini 1.5 AI technology to analyze your product listings and generate SEO-optimized content. It considers platform-specific rules, keyword density, readability, and conversion best practices to create titles and descriptions that rank higher and convert better."
   },
   {
     question: "Which e-commerce platforms do you support?",
@@ -17,7 +17,7 @@ const faqs = [
     answer: "Our SEO scoring algorithm analyzes 15+ factors including keyword usage, title length, description quality, readability, and platform-specific best practices. The score is based on proven e-commerce SEO principles and correlates strongly with listing performance."
   },
   {
-    question: "Can I try OptiCommerce AI before purchasing?",
+    question: "Can I try ListingOptimizer before purchasing?",
     answer: "Yes! We offer a free plan with 3 optimizations per month. No credit card required. You can upgrade anytime to access more optimizations and premium features."
   },
   {
@@ -33,7 +33,7 @@ const faqs = [
     answer: "We securely store your optimization history in Firebase so you can access past optimizations anytime. Your data is encrypted and never shared with third parties. You can delete your data at any time from your account settings."
   },
   {
-    question: "What makes OptiCommerce AI better than manual optimization?",
+    question: "What makes ListingOptimizer better than manual optimization?",
     answer: "Our AI processes thousands of successful listings to understand what works. It saves hours of research and testing, ensures consistency across your catalog, and applies the latest SEO best practices automatically. Plus, it never gets tired or makes typos!"
   },
   {
@@ -57,7 +57,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-gray-600">
-            Everything you need to know about OptiCommerce AI
+            Everything you need to know about ListingOptimizer
           </p>
         </div>
 
