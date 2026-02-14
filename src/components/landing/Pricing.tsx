@@ -91,54 +91,54 @@ const addOns = [
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
+    <section id="pricing" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
             Simple, Transparent Pricing That Grows With You
           </h2>
-          <p className="text-xl text-gray-600">Choose the plan that fits your business</p>
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 px-2">Choose the plan that fits your business</p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12 sm:mb-16">
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`rounded-2xl p-8 flex flex-col ${
+              className={`rounded-2xl p-6 sm:p-8 flex flex-col ${
                 plan.highlighted
-                  ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-2xl scale-105 border-4 border-blue-400'
+                  ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-2xl sm:scale-105 border-4 border-blue-400'
                   : 'bg-white border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg'
               } transition-all duration-300`}
             >
               <div className="flex-grow">
                 {plan.badge && (
-                  <div className="flex items-center gap-2 mb-4">
-                    <EmojiEventsIcon sx={{ fontSize: 20 }} />
-                    <span className="text-sm font-bold uppercase tracking-wide">{plan.badge}</span>
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <EmojiEventsIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                    <span className="text-xs sm:text-sm font-bold uppercase tracking-wide">{plan.badge}</span>
                   </div>
                 )}
-                <h3 className={`text-2xl font-bold mb-2 ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`text-xl sm:text-2xl font-bold mb-2 ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
                   {plan.name}
                 </h3>
-                <p className={`text-sm mb-4 ${plan.highlighted ? 'text-blue-100' : 'text-gray-600'}`}>
+                <p className={`text-xs sm:text-sm mb-3 sm:mb-4 ${plan.highlighted ? 'text-blue-100' : 'text-gray-600'}`}>
                   {plan.description}
                 </p>
-                <div className="mb-6">
-                  <span className={`text-5xl font-bold ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
+                <div className="mb-4 sm:mb-6">
+                  <span className={`text-4xl sm:text-5xl font-bold ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
                     {plan.price}
                   </span>
-                  <span className={`text-lg ${plan.highlighted ? 'text-blue-100' : 'text-gray-600'}`}>
+                  <span className={`text-base sm:text-lg ${plan.highlighted ? 'text-blue-100' : 'text-gray-600'}`}>
                     {plan.period}
                   </span>
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircleIcon
                         className={`flex-shrink-0 ${plan.highlighted ? 'text-blue-200' : 'text-green-600'}`}
-                        sx={{ fontSize: 18, marginTop: '2px' }}
+                        sx={{ fontSize: { xs: 16, sm: 18 }, marginTop: '2px' }}
                       />
-                      <span className={`text-sm ${plan.highlighted ? 'text-white' : 'text-gray-700'}`}>
+                      <span className={`text-xs sm:text-sm ${plan.highlighted ? 'text-white' : 'text-gray-700'}`}>
                         {feature}
                       </span>
                     </li>
@@ -147,7 +147,7 @@ export default function Pricing() {
               </div>
               <Link href={plan.link} className="mt-auto">
                 <button
-                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
+                  className={`w-full py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold transition-all duration-300 ${
                     plan.highlighted
                       ? 'bg-white text-blue-600 hover:bg-blue-50'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -160,14 +160,14 @@ export default function Pricing() {
           ))}
         </div>
 
-        <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Add-Ons</h3>
-          <div className="grid md:grid-cols-3 gap-6">
+        <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 border border-gray-200">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Add-Ons</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {addOns.map((addon, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl border border-gray-200">
-                <h4 className="font-bold text-gray-900 mb-2">{addon.name}</h4>
-                <p className="text-2xl font-bold text-blue-600 mb-3">{addon.price}</p>
-                <p className="text-sm text-gray-600">{addon.description}</p>
+              <div key={index} className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">{addon.name}</h4>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600 mb-2 sm:mb-3">{addon.price}</p>
+                <p className="text-xs sm:text-sm text-gray-600">{addon.description}</p>
               </div>
             ))}
           </div>
