@@ -51,10 +51,10 @@ export default function Benefits() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Why Sellers Love ListingOptimizer
+            Everything You Need to Dominate Your Marketplace
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Join thousands of successful sellers who are already boosting their sales with AI-powered optimization
+            Powerful features designed to help you create perfect product listings
           </p>
         </div>
 

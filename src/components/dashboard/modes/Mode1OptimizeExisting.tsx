@@ -111,6 +111,9 @@ export default function Mode1OptimizeExisting({ onSubmit, loading }: Mode1Props)
         placeholder="Paste your current product title"
         required
         disabled={loading}
+        showCharacterCount={true}
+        maxLength={200}
+        optimal={{ min: 150, max: 180 }}
       />
 
       <Textarea
@@ -121,6 +124,9 @@ export default function Mode1OptimizeExisting({ onSubmit, loading }: Mode1Props)
         rows={6}
         required
         disabled={loading}
+        showCharacterCount={true}
+        maxLength={2000}
+        optimal={{ min: 500, max: 1500 }}
       />
 
       {/* Current Bullet Points */}

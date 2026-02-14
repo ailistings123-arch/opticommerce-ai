@@ -12,6 +12,7 @@ import ResultCard from '@/components/dashboard/ResultCard';
 import SimpleResultCard from '@/components/dashboard/SimpleResultCard';
 import UsageStats from '@/components/dashboard/UsageStats';
 import Spinner from '@/components/ui/Spinner';
+import ProgressIndicator from '@/components/ui/ProgressIndicator';
 import { Sparkles, LogOut, History, Settings, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [originalData, setOriginalData] = useState<any>(null);
   const [showSetupNotice, setShowSetupNotice] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [progress, setProgress] = useState({ stage: '', percent: 0, isVisible: false });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -44,9 +46,13 @@ export default function DashboardPage() {
 
   const handleMode1Submit = async (data: Mode1Data) => {
     setSubmitting(true);
+    setProgress({ stage: 'Analyzing your product...', percent: 10, isVisible: true });
+    
     try {
       if (!user) throw new Error('Not authenticated');
       const token = await user.getIdToken();
+      
+      setProgress({ stage: 'Researching keywords...', percent: 30, isVisible: true });
       
       const response = await fetch('/api/optimize', {
         method: 'POST',
@@ -64,23 +70,33 @@ export default function DashboardPage() {
         }),
       });
 
+      setProgress({ stage: 'Generating optimized content...', percent: 70, isVisible: true });
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Optimization failed');
       }
 
       const result = await response.json();
+      
+      setProgress({ stage: 'Finalizing results...', percent: 95, isVisible: true });
       console.log('Mode 1 API response:', result);
       
       if (result.success && result.data) {
         setOptimizationResult(result.data.optimized);
         setOriginalData({ title: data.currentTitle, description: data.currentDescription });
+        setProgress({ stage: 'Complete!', percent: 100, isVisible: true });
+        
+        setTimeout(() => {
+          setProgress({ stage: '', percent: 0, isVisible: false });
+        }, 500);
       } else {
         throw new Error('Invalid response format');
       }
       await refreshUserData();
     } catch (error: any) {
       console.error('Optimization error:', error);
+      setProgress({ stage: '', percent: 0, isVisible: false });
       alert(error.message || 'Failed to optimize listing');
     } finally {
       setSubmitting(false);
@@ -89,9 +105,13 @@ export default function DashboardPage() {
 
   const handleMode2Submit = async (data: Mode2Data) => {
     setSubmitting(true);
+    setProgress({ stage: 'Analyzing product details...', percent: 15, isVisible: true });
+    
     try {
       if (!user) throw new Error('Not authenticated');
       const token = await user.getIdToken();
+      
+      setProgress({ stage: 'Generating product listing...', percent: 40, isVisible: true });
       
       const response = await fetch('/api/optimize', {
         method: 'POST',
@@ -106,23 +126,33 @@ export default function DashboardPage() {
         }),
       });
 
+      setProgress({ stage: 'Optimizing content...', percent: 75, isVisible: true });
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Creation failed');
       }
 
       const result = await response.json();
+      
+      setProgress({ stage: 'Finalizing...', percent: 95, isVisible: true });
       console.log('Mode 2 API response:', result);
       
       if (result.success && result.data) {
         setOptimizationResult(result.data.optimized);
         setOriginalData(null);
+        setProgress({ stage: 'Complete!', percent: 100, isVisible: true });
+        
+        setTimeout(() => {
+          setProgress({ stage: '', percent: 0, isVisible: false });
+        }, 500);
       } else {
         throw new Error('Invalid response format');
       }
       await refreshUserData();
     } catch (error: any) {
       console.error('Creation error:', error);
+      setProgress({ stage: '', percent: 0, isVisible: false });
       alert(error.message || 'Failed to create listing');
     } finally {
       setSubmitting(false);
@@ -131,9 +161,13 @@ export default function DashboardPage() {
 
   const handleMode3Submit = async (data: Mode3Data) => {
     setSubmitting(true);
+    setProgress({ stage: 'Analyzing URL...', percent: 20, isVisible: true });
+    
     try {
       if (!user) throw new Error('Not authenticated');
       const token = await user.getIdToken();
+      
+      setProgress({ stage: 'Extracting product data...', percent: 45, isVisible: true });
       
       const response = await fetch('/api/analyze-url', {
         method: 'POST',
@@ -144,23 +178,33 @@ export default function DashboardPage() {
         body: JSON.stringify(data),
       });
 
+      setProgress({ stage: 'Optimizing listing...', percent: 75, isVisible: true });
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Analysis failed');
       }
 
       const result = await response.json();
+      
+      setProgress({ stage: 'Finalizing analysis...', percent: 95, isVisible: true });
       console.log('Mode 3 API response:', result);
       
       if (result.success && result.data) {
         setOptimizationResult(result.data.optimized || result.data.analysis);
         setOriginalData(result.data.scrapedData);
+        setProgress({ stage: 'Complete!', percent: 100, isVisible: true });
+        
+        setTimeout(() => {
+          setProgress({ stage: '', percent: 0, isVisible: false });
+        }, 500);
       } else {
         throw new Error('Invalid response format');
       }
       await refreshUserData();
     } catch (error: any) {
       console.error('Analysis error:', error);
+      setProgress({ stage: '', percent: 0, isVisible: false });
       alert(error.message || 'Failed to analyze URL');
     } finally {
       setSubmitting(false);
@@ -316,6 +360,13 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+      
+      {/* Progress Indicator */}
+      <ProgressIndicator 
+        stage={progress.stage}
+        percent={progress.percent}
+        isVisible={progress.isVisible}
+      />
     </div>
   );
 }

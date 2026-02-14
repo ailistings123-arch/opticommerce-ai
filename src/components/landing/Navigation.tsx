@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 export default function Navigation() {
   return (
@@ -9,15 +9,13 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-2">
-            <Sparkles className="text-blue-600" size={24} />
-            <span className="text-xl font-semibold text-gray-900">ListingOptimizer</span>
+            <AutoAwesomeIcon className="text-blue-600" sx={{ fontSize: 24 }} />
+            <span className="text-xl font-semibold text-gray-900">ListingOptimizer AI</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            <a href="#benefits" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Benefits</a>
             <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
             <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-            <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">FAQ</a>
+            <a href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">How it Works</a>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login">

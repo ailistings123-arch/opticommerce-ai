@@ -1,17 +1,26 @@
 import { InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import clsx from 'clsx';
+import CharacterCounter from './CharacterCounter';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  showCharacterCount?: boolean;
+  maxLength?: number;
+  optimal?: { min: number; max: number };
 }
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
+  showCharacterCount?: boolean;
+  maxLength?: number;
+  optimal?: { min: number; max: number };
 }
 
-export function Input({ label, error, className, ...props }: InputProps) {
+export function Input({ label, error, className, showCharacterCount, maxLength, optimal, ...props }: InputProps) {
+  const currentLength = (props.value as string)?.length || 0;
+  
   return (
     <div className="w-full">
       {label && (
@@ -26,14 +35,25 @@ export function Input({ label, error, className, ...props }: InputProps) {
           'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed',
           className
         )}
+        maxLength={maxLength}
         {...props}
       />
+      {showCharacterCount && maxLength && (
+        <CharacterCounter
+          current={currentLength}
+          max={maxLength}
+          optimal={optimal}
+          className="mt-1"
+        />
+      )}
       {error && <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-red-600">{error}</p>}
     </div>
   );
 }
 
-export function Textarea({ label, error, className, ...props }: TextareaProps) {
+export function Textarea({ label, error, className, showCharacterCount, maxLength, optimal, ...props }: TextareaProps) {
+  const currentLength = (props.value as string)?.length || 0;
+  
   return (
     <div className="w-full">
       {label && (
@@ -48,8 +68,17 @@ export function Textarea({ label, error, className, ...props }: TextareaProps) {
           'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed resize-none',
           className
         )}
+        maxLength={maxLength}
         {...props}
       />
+      {showCharacterCount && maxLength && (
+        <CharacterCounter
+          current={currentLength}
+          max={maxLength}
+          optimal={optimal}
+          className="mt-1"
+        />
+      )}
       {error && <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-red-600">{error}</p>}
     </div>
   );

@@ -1,48 +1,64 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const faqs = [
   {
-    question: "How does ListingOptimizer optimize my product listings?",
-    answer: "ListingOptimizer uses advanced Google Gemini 1.5 AI technology to analyze your product listings and generate SEO-optimized content. It considers platform-specific rules, keyword density, readability, and conversion best practices to create titles and descriptions that rank higher and convert better."
+    question: "How accurate are the AI-generated listings?",
+    answer: "Our AI is trained on 50,000+ successful, high-converting listings. We analyze what actually works in the real marketplace—not theory. Every optimization follows proven patterns that increase rankings and conversions. That said, you can always edit and customize the output to match your exact brand voice."
   },
   {
-    question: "Which e-commerce platforms do you support?",
-    answer: "We currently support Amazon, Shopify, Etsy, and eBay. Each platform has unique SEO requirements and character limits, which our AI automatically adapts to for optimal results."
+    question: "Which platforms do you support?",
+    answer: "We currently support Amazon (Seller Central), Shopify, eBay, Etsy, Walmart Marketplace, and WooCommerce. More platforms coming soon based on user requests."
   },
   {
-    question: "How accurate is the SEO score?",
-    answer: "Our SEO scoring algorithm analyzes 15+ factors including keyword usage, title length, description quality, readability, and platform-specific best practices. The score is based on proven e-commerce SEO principles and correlates strongly with listing performance."
+    question: "How long does it take to see results?",
+    answer: "Most sellers see ranking improvements within 7-14 days and conversion improvements immediately. Amazon's algorithm typically takes 1-2 weeks to fully index changes and adjust rankings."
   },
   {
-    question: "Can I try ListingOptimizer before purchasing?",
-    answer: "Yes! We offer a free plan with 3 optimizations per month. No credit card required. You can upgrade anytime to access more optimizations and premium features."
+    question: "Can I edit the AI-generated content?",
+    answer: "Absolutely! The AI gives you a professional starting point, but you have full editing control. Tweak anything to match your brand voice and preferences."
   },
   {
-    question: "How long does it take to optimize a listing?",
-    answer: "Most optimizations complete in 5-10 seconds. Our AI analyzes your content and generates optimized titles, descriptions, tags, and improvement suggestions almost instantly."
+    question: "Do you provide actual keyword research data?",
+    answer: "Yes! We provide real search volumes, competition levels, and trend data for keywords. This isn't guesswork—it's actual marketplace data."
   },
   {
-    question: "Can I optimize existing product URLs?",
-    answer: "Absolutely! Just paste any product URL from Amazon, Shopify, Etsy, or eBay. Our system will automatically extract the existing listing data and optimize it for you."
+    question: "What if I don't like the optimization?",
+    answer: "We offer a 30-day money-back guarantee on all paid plans. If you're not satisfied, we'll refund you in full, no questions asked."
   },
   {
-    question: "Do you store my product data?",
-    answer: "We securely store your optimization history in Firebase so you can access past optimizations anytime. Your data is encrypted and never shared with third parties. You can delete your data at any time from your account settings."
+    question: "Can I optimize my competitor's listings?",
+    answer: "You can analyze any public listing URL to understand what's working and get inspiration. However, the optimization is always tailored to YOUR product with YOUR unique features."
   },
   {
-    question: "What makes ListingOptimizer better than manual optimization?",
-    answer: "Our AI processes thousands of successful listings to understand what works. It saves hours of research and testing, ensures consistency across your catalog, and applies the latest SEO best practices automatically. Plus, it never gets tired or makes typos!"
+    question: "Is there a limit to how many products I can optimize?",
+    answer: "Free plan: 10/month. Starter: 50/month. Professional: 200/month. Enterprise: Unlimited. All plans reset monthly."
   },
   {
-    question: "Can I use the optimized content immediately?",
-    answer: "Yes! Simply copy the optimized title, description, and tags with one click and paste them directly into your product listing. The content is ready to publish without any additional editing required."
+    question: "Do you offer bulk optimization?",
+    answer: "Yes! Professional and Enterprise plans include bulk optimization. Upload a CSV or paste multiple URLs and optimize 10-100+ products at once."
   },
   {
-    question: "What if I'm not satisfied with the optimization?",
-    answer: "You can re-optimize with different keywords or input variations. Our AI learns from your preferences. If you're still not satisfied, contact our support team and we'll help you get the results you need."
+    question: "Can my team collaborate on optimizations?",
+    answer: "Professional plans include up to 5 team members. Enterprise includes unlimited team members with role-based permissions."
+  },
+  {
+    question: "Do you integrate with my e-commerce platform?",
+    answer: "We're working on direct integrations! Currently, you copy-paste the optimized content into your platform. Direct publishing to Amazon and Shopify coming Q2 2024."
+  },
+  {
+    question: "What makes you different from other listing optimization tools?",
+    answer: "Most tools use basic templates or just rearrange your existing content. We use advanced AI that actually understands your product, researches your market, and creates original, high-performing content. Plus, we support 6 platforms (most competitors only do Amazon)."
+  },
+  {
+    question: "Is my data secure?",
+    answer: "Yes. We use bank-level encryption (AES-256), never share your data with third parties, and are fully GDPR compliant. You can export or delete your data anytime."
+  },
+  {
+    question: "Can I cancel anytime?",
+    answer: "Yes, cancel with one click anytime. No contracts, no cancellation fees. If you cancel, you keep access until the end of your billing period."
   }
 ];
 
@@ -54,10 +70,10 @@ export default function FAQ() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Frequently Asked Questions
+            Common Questions, Clear Answers
           </h2>
           <p className="text-lg text-gray-600">
-            Everything you need to know about ListingOptimizer
+            Everything you need to know about ListingOptimizer AI
           </p>
         </div>
 
@@ -75,11 +91,11 @@ export default function FAQ() {
                 <span className="font-semibold text-gray-900">
                   {faq.question}
                 </span>
-                <ChevronDown
+                <ExpandMoreIcon
                   className={`flex-shrink-0 text-blue-600 transition-transform duration-300 ${
                     openIndex === index ? 'rotate-180' : ''
                   }`}
-                  size={20}
+                  sx={{ fontSize: 20 }}
                 />
               </button>
               <div

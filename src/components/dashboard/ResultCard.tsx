@@ -5,6 +5,16 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Copy, Check, TrendingUp, ArrowRight } from 'lucide-react';
 import { useState } from 'react';
+import BeforeAfterComparison from './BeforeAfterComparison';
+import ExportOptions from './ExportOptions';
+import EditableContent from './EditableContent';
+import CopyButton from '@/components/ui/CopyButton';
+import SEOScoreBreakdown from './SEOScoreBreakdown';
+import KeywordResearchPanel from './KeywordResearchPanel';
+import PlatformComplianceChecker from './PlatformComplianceChecker';
+import ABTestingSuggestions from './ABTestingSuggestions';
+import { useToast } from '@/lib/hooks/useToast';
+import { ToastContainer } from '@/components/ui/Toast';
 
 interface ResultCardProps {
   original: {
@@ -117,22 +127,93 @@ function cleanOriginalTitle(title: string): string {
 
 export default function ResultCard({ original, optimized }: ResultCardProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [editedOptimized, setEditedOptimized] = useState(optimized);
+  const { success, toasts, removeToast } = useToast();
+  
   const cleanedOriginalTitle = cleanOriginalTitle(original.title);
   const originalScore = calculateOriginalScore(original.title, original.description);
-  const optimizedScore = optimized.seoScore || optimized.seo_score_new || 85;
+  const optimizedScore = editedOptimized.seoScore || editedOptimized.seo_score_new || 85;
   const improvement = optimizedScore - originalScore;
 
   // Check if we have enhanced data
-  const hasEnhancedData = optimized.compliance || optimized.seoMetrics || optimized.bulletPoints;
+  const hasEnhancedData = editedOptimized.compliance || editedOptimized.seoMetrics || editedOptimized.bulletPoints;
 
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const handleCopy = (text: string, field: string) => {
     setCopiedField(field);
+    success(`${field} copied!`, 'Content copied to clipboard');
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  const handleContentSave = (field: string, newContent: string) => {
+    setEditedOptimized(prev => ({
+      ...prev,
+      [field]: newContent
+    }));
+  };
+
+  const exportData = {
+    original,
+    optimized: editedOptimized
+  };
+
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      
+      <div className="space-y-4 sm:space-y-6">
+        {/* Before & After Comparison */}
+        <BeforeAfterComparison 
+          original={{ 
+            title: original.title, 
+            description: original.description,
+            seoScore: originalScore 
+          }}
+          optimized={{
+            title: editedOptimized.title,
+            description: editedOptimized.description,
+            seoScore: optimizedScore,
+            tags: editedOptimized.tags
+          }}
+        />
+
+        {/* Export Options */}
+        <Card>
+          <ExportOptions data={exportData} />
+        </Card>
+
+        {/* SEO Score Breakdown */}
+        {editedOptimized.seoMetrics && (
+          <SEOScoreBreakdown 
+            seoMetrics={editedOptimized.seoMetrics}
+            originalScore={originalScore}
+          />
+        )}
+
+        {/* Keyword Research Panel */}
+        {editedOptimized.keywordData && (
+          <KeywordResearchPanel
+            primaryKeywords={editedOptimized.keywordData.primary || []}
+            relatedKeywords={editedOptimized.keywordData.related || []}
+            longTailKeywords={editedOptimized.keywordData.longTail || []}
+          />
+        )}
+
+        {/* Platform Compliance */}
+        {editedOptimized.compliance && (
+          <PlatformComplianceChecker
+            platform={editedOptimized.compliance.platform}
+            rules={editedOptimized.compliance.rules}
+            overallScore={editedOptimized.compliance.score}
+            isCompliant={editedOptimized.compliance.isCompliant}
+          />
+        )}
+
+        {/* A/B Testing Suggestions */}
+        <ABTestingSuggestions 
+          optimizedTitle={editedOptimized.title}
+          platform={editedOptimized.platform || 'amazon'}
+        />
+
       {/* Before & After SEO Score Comparison */}
       <Card>
         <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">SEO Score Improvement</h3>
@@ -251,137 +332,114 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
         </div>
       </Card>
 
-      <Card title="Optimized Title">
-        <div className="space-y-2 sm:space-y-3">
-          <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">Original:</p>
-            <p className="text-sm sm:text-base text-gray-800">{cleanedOriginalTitle}</p>
+        <Card title="Optimized Title">
+          <div className="space-y-3">
+            <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">Original:</p>
+              <p className="text-sm sm:text-base text-gray-800">{cleanedOriginalTitle}</p>
+            </div>
+            <div className="flex items-center justify-center py-1">
+              <ArrowRight className="text-blue-600" size={20} />
+            </div>
+            
+            <EditableContent
+              label="Title"
+              content={editedOptimized.title}
+              maxLength={200}
+              optimal={{ min: 150, max: 180 }}
+              onSave={(newContent) => handleContentSave('title', newContent)}
+              placeholder="Enter optimized title..."
+            />
+            
+            <CopyButton
+              text={editedOptimized.title}
+              label="Title"
+              onCopy={handleCopy}
+              showEdit={false}
+              className="w-full"
+            />
           </div>
-          <div className="flex items-center justify-center py-1">
-            <ArrowRight className="text-blue-600" size={20} />
-          </div>
-          <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border-2 border-blue-200">
-            <p className="text-xs sm:text-sm font-medium text-blue-700 mb-1.5 sm:mb-2">Optimized:</p>
-            <p className="text-sm sm:text-base text-gray-900 font-medium">{optimized.title}</p>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => copyToClipboard(optimized.title, 'title')}
-            className="w-full"
-          >
-            {copiedField === 'title' ? (
-              <span className="flex items-center gap-2">
-                <Check size={14} className="sm:w-4 sm:h-4" /> Copied!
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Copy size={14} className="sm:w-4 sm:h-4" /> Copy Optimized Title
-              </span>
-            )}
-          </Button>
-        </div>
-      </Card>
+        </Card>
 
-      <Card title="Optimized Description">
-        <div className="space-y-2 sm:space-y-3">
-          <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-28 sm:max-h-32 overflow-y-auto">
-            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">Original:</p>
-            <p className="text-sm sm:text-base text-gray-800 whitespace-pre-wrap">{original.description}</p>
+        <Card title="Optimized Description">
+          <div className="space-y-3">
+            <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 max-h-28 sm:max-h-32 overflow-y-auto">
+              <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1.5 sm:mb-2">Original:</p>
+              <p className="text-sm sm:text-base text-gray-800 whitespace-pre-wrap">{original.description}</p>
+            </div>
+            <div className="flex items-center justify-center py-1">
+              <ArrowRight className="text-blue-600" size={20} />
+            </div>
+            
+            <EditableContent
+              label="Description"
+              content={editedOptimized.description}
+              maxLength={2000}
+              optimal={{ min: 500, max: 1500 }}
+              multiline={true}
+              onSave={(newContent) => handleContentSave('description', newContent)}
+              placeholder="Enter optimized description..."
+            />
+            
+            <CopyButton
+              text={editedOptimized.description}
+              label="Description"
+              onCopy={handleCopy}
+              showEdit={false}
+              className="w-full"
+            />
           </div>
-          <div className="flex items-center justify-center py-1">
-            <ArrowRight className="text-blue-600" size={20} />
-          </div>
-          <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border-2 border-blue-200 max-h-40 sm:max-h-48 overflow-y-auto">
-            <p className="text-xs sm:text-sm font-medium text-blue-700 mb-1.5 sm:mb-2">Optimized:</p>
-            <p className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap">{optimized.description}</p>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => copyToClipboard(optimized.description, 'description')}
-            className="w-full"
-          >
-            {copiedField === 'description' ? (
-              <span className="flex items-center gap-2">
-                <Check size={14} className="sm:w-4 sm:h-4" /> Copied!
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Copy size={14} className="sm:w-4 sm:h-4" /> Copy Optimized Description
-              </span>
-            )}
-          </Button>
-        </div>
-      </Card>
+        </Card>
 
-      <Card title="Optimized Tags">
-        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-          {optimized.tags.map((tag: string, index: number) => (
-            <span
-              key={index}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-100 to-purple-50 text-purple-800 rounded-full text-xs sm:text-sm font-medium border border-purple-200"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => copyToClipboard(optimized.tags.join(', '), 'tags')}
-          className="w-full"
-        >
-          {copiedField === 'tags' ? (
-            <span className="flex items-center gap-2">
-              <Check size={14} className="sm:w-4 sm:h-4" /> Copied!
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <Copy size={14} className="sm:w-4 sm:h-4" /> Copy All Tags
-            </span>
-          )}
-        </Button>
-      </Card>
+        <Card title="Optimized Tags">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+            {editedOptimized.tags.map((tag: string, index: number) => (
+              <span
+                key={index}
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-100 to-purple-50 text-purple-800 rounded-full text-xs sm:text-sm font-medium border border-purple-200"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <CopyButton
+            text={editedOptimized.tags.join(', ')}
+            label="Tags"
+            onCopy={handleCopy}
+            showEdit={false}
+            className="w-full"
+          />
+        </Card>
 
       {/* Bullet Points (Amazon/Walmart) */}
-      {hasEnhancedData && optimized.bulletPoints && optimized.bulletPoints.length > 0 && (
+      {hasEnhancedData && editedOptimized.bulletPoints && editedOptimized.bulletPoints.length > 0 && (
         <Card title="Product Bullet Points">
           <div className="space-y-2 mb-4">
-            {optimized.bulletPoints.map((bullet: string, index: number) => (
+            {editedOptimized.bulletPoints.map((bullet: string, index: number) => (
               <div key={index} className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <span className="text-blue-600 font-bold mt-0.5">•</span>
                 <p className="text-sm text-gray-800">{bullet}</p>
               </div>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => copyToClipboard(optimized.bulletPoints.join('\n'), 'bullets')}
+          <CopyButton
+            text={editedOptimized.bulletPoints.join('\n')}
+            label="Bullet Points"
+            onCopy={handleCopy}
+            showEdit={false}
             className="w-full"
-          >
-            {copiedField === 'bullets' ? (
-              <span className="flex items-center gap-2">
-                <Check size={14} /> Copied!
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Copy size={14} /> Copy Bullet Points
-              </span>
-            )}
-          </Button>
+          />
         </Card>
       )}
 
       {/* Backend Search Terms (Amazon) */}
-      {hasEnhancedData && optimized.backendSearchTerms && optimized.backendSearchTerms.length > 0 && (
+      {hasEnhancedData && editedOptimized.backendSearchTerms && editedOptimized.backendSearchTerms.length > 0 && (
         <Card title="Backend Search Terms">
           <p className="text-xs text-gray-600 mb-3">
             These keywords help your product appear in more searches (not visible to customers)
           </p>
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {optimized.backendSearchTerms.map((term: string, index: number) => (
+            {editedOptimized.backendSearchTerms.map((term: string, index: number) => (
               <span
                 key={index}
                 className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium border border-gray-300"
@@ -390,35 +448,27 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
               </span>
             ))}
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => copyToClipboard(optimized.backendSearchTerms.join(' '), 'backend')}
+          <CopyButton
+            text={editedOptimized.backendSearchTerms.join(' ')}
+            label="Search Terms"
+            onCopy={handleCopy}
+            showEdit={false}
             className="w-full"
-          >
-            {copiedField === 'backend' ? (
-              <span className="flex items-center gap-2">
-                <Check size={14} /> Copied!
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <Copy size={14} /> Copy Search Terms
-              </span>
-            )}
-          </Button>
+          />
         </Card>
       )}
 
-      <Card title="Key Improvements Made">
-        <ul className="space-y-2 sm:space-y-3">
-          {optimized.improvements.map((improvement: string, index: number) => (
-            <li key={index} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-green-50 rounded-lg border border-green-200">
-              <span className="text-green-600 font-bold mt-0.5 text-sm sm:text-base">✓</span>
-              <span className="text-xs sm:text-sm text-gray-800">{improvement}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
-    </div>
+        <Card title="Key Improvements Made">
+          <ul className="space-y-2 sm:space-y-3">
+            {editedOptimized.improvements.map((improvement: string, index: number) => (
+              <li key={index} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-green-50 rounded-lg border border-green-200">
+                <span className="text-green-600 font-bold mt-0.5 text-sm sm:text-base">✓</span>
+                <span className="text-xs sm:text-sm text-gray-800">{improvement}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+    </>
   );
 }
