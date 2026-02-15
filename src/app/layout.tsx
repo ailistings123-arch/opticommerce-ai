@@ -9,6 +9,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://listingoptimizer.ai'),
   title: "ListingOptimizer - AI-Powered Product Listing Optimization | Boost Sales on Amazon, Shopify, Etsy & eBay",
   description: "Transform your e-commerce listings with AI. ListingOptimizer optimizes product titles, descriptions, and SEO for Amazon, Shopify, Etsy, and eBay. Increase visibility, boost conversions, and save hours of work with our intelligent optimization platform.",
   keywords: "product listing optimization, AI SEO, Amazon listing optimizer, Shopify SEO, Etsy optimization, eBay listing tool, e-commerce AI, product description generator, SEO score, listing analyzer",

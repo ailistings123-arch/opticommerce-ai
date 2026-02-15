@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 const footerSections = [

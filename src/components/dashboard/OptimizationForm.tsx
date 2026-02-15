@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input, Textarea } from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import UpgradeModal from './UpgradeModal';
+import EngineSelector, { Engine } from './EngineSelector';
 import { Platform } from '@/types';
 import { useOptimization } from '@/lib/hooks/useOptimization';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -22,9 +23,20 @@ export default function OptimizationForm({ onSuccess, userData }: OptimizationFo
   const [description, setDescription] = useState('');
   const [platform, setPlatform] = useState<Platform>('amazon');
   const [keywords, setKeywords] = useState('');
+  const [engine, setEngine] = useState<Engine>('gemini');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const { optimize, loading, error } = useOptimization();
+
+  // Load engine selection from session storage on mount (Requirement 2.3)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEngine = sessionStorage.getItem('selectedEngine') as Engine;
+      if (savedEngine === 'gemini' || savedEngine === 'deepseek') {
+        setEngine(savedEngine);
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +44,13 @@ export default function OptimizationForm({ onSuccess, userData }: OptimizationFo
     const originalData = { title, description };
     
     try {
+      // Pass engine parameter to API (Requirement 2.4)
       const result = await optimize({
         title,
         description,
         platform,
         keywords: keywords || undefined,
+        engine, // Include selected engine
       });
       
       onSuccess(result, originalData);
@@ -51,6 +65,13 @@ export default function OptimizationForm({ onSuccess, userData }: OptimizationFo
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        {/* Engine Selector - Requirements: 2.1, 2.2 */}
+        <EngineSelector
+          selectedEngine={engine}
+          onEngineChange={setEngine}
+          disabled={loading}
+        />
+
         <div>
           <label className="block text-xs sm:text-sm font-medium text-gray-800 mb-1.5 sm:mb-2">
             Platform
@@ -106,7 +127,9 @@ export default function OptimizationForm({ onSuccess, userData }: OptimizationFo
           {loading ? (
             <span className="flex items-center justify-center gap-2">
               <Spinner size="sm" />
-              <span className="text-sm sm:text-base">Optimizing...</span>
+              <span className="text-sm sm:text-base">
+                Optimizing with {engine === 'gemini' ? 'Gemini' : 'DeepSeek'}...
+              </span>
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">

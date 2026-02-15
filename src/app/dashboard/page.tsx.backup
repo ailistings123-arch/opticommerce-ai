@@ -53,17 +53,6 @@ export default function DashboardPage() {
   };
 
   const handleMode1Submit = async (data: Mode1Data) => {
-    // Check if user has credits available
-    if (userData && userData.usageCount >= userData.usageLimit) {
-      setErrorModal({
-        isOpen: true,
-        title: 'No Credits Remaining',
-        message: `You've used all ${userData.usageLimit} credits. Please upgrade your plan to continue optimizing.`,
-        isEtsyError: false,
-      });
-      return;
-    }
-
     setSubmitting(true);
     setProgress({ stage: 'Analyzing your product...', percent: 10, isVisible: true });
     
@@ -123,17 +112,6 @@ export default function DashboardPage() {
   };
 
   const handleMode2Submit = async (data: Mode2Data) => {
-    // Check if user has credits available
-    if (userData && userData.usageCount >= userData.usageLimit) {
-      setErrorModal({
-        isOpen: true,
-        title: 'No Credits Remaining',
-        message: `You've used all ${userData.usageLimit} credits. Please upgrade your plan to continue optimizing.`,
-        isEtsyError: false,
-      });
-      return;
-    }
-
     setSubmitting(true);
     setProgress({ stage: 'Analyzing product details...', percent: 15, isVisible: true });
     
@@ -190,17 +168,6 @@ export default function DashboardPage() {
   };
 
   const handleMode3Submit = async (data: Mode3Data) => {
-    // Check if user has credits available
-    if (userData && userData.usageCount >= userData.usageLimit) {
-      setErrorModal({
-        isOpen: true,
-        title: 'No Credits Remaining',
-        message: `You've used all ${userData.usageLimit} credits. Please upgrade your plan to continue optimizing.`,
-        isEtsyError: false,
-      });
-      return;
-    }
-
     setSubmitting(true);
     setProgress({ stage: 'Analyzing URL...', percent: 20, isVisible: true });
     
@@ -275,6 +242,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Setup Notice */}
       {showSetupNotice && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-3 sm:px-4 py-2.5 sm:py-3">
           <div className="max-w-7xl mx-auto flex items-start sm:items-center justify-between gap-3">
@@ -299,12 +267,13 @@ export default function DashboardPage() {
               onClick={() => setShowSetupNotice(false)}
               className="text-yellow-600 hover:text-yellow-800 text-xl leading-none flex-shrink-0"
             >
-              ×
+              Ã—
             </button>
           </div>
         </div>
       )}
 
+      {/* Navigation */}
       <nav className="border-b border-gray-200 bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16">
@@ -338,6 +307,7 @@ export default function DashboardPage() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 md:py-8">
+        {/* Header */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
             Welcome back, {userData.displayName}!
@@ -348,7 +318,9 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+          {/* Main Content */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            {/* Mode Selection */}
             <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 md:p-6">
               <OptimizationModeSelector
                 selectedMode={mode}
@@ -360,6 +332,7 @@ export default function DashboardPage() {
               />
             </div>
 
+            {/* Optimization Form */}
             <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 md:p-6">
               <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
                 {mode === 'optimize-existing' && 'Optimize Existing Listing'}
@@ -380,6 +353,7 @@ export default function DashboardPage() {
               )}
             </div>
 
+            {/* Results */}
             {optimizationResult && (
               <>
                 {mode === 'create-new' ? (
@@ -397,18 +371,21 @@ export default function DashboardPage() {
             )}
           </div>
 
+          {/* Sidebar */}
           <div>
             <UsageStats userData={userData} />
           </div>
         </div>
       </main>
       
+      {/* Progress Indicator */}
       <ProgressIndicator 
         stage={progress.stage}
         percent={progress.percent}
         isVisible={progress.isVisible}
       />
 
+      {/* Error Modal */}
       <Modal
         isOpen={errorModal.isOpen}
         onClose={() => setErrorModal({ ...errorModal, isOpen: false })}
@@ -417,6 +394,7 @@ export default function DashboardPage() {
         <div className="space-y-4">
           {errorModal.isEtsyError ? (
             <>
+              {/* Etsy-specific error with alternatives */}
               <div className="flex items-center justify-center">
                 <div className="bg-yellow-100 p-4 rounded-full">
                   <AlertTriangle className="text-yellow-600" size={48} />
@@ -469,7 +447,7 @@ export default function DashboardPage() {
 
               <div className="bg-green-50 rounded-lg p-3 border border-green-200">
                 <p className="text-sm text-green-800 text-center">
-                  ✨ You'll still get full AI optimization with any of these methods!
+                  âœ¨ You'll still get full AI optimization with any of these methods!
                 </p>
               </div>
 
@@ -504,6 +482,7 @@ export default function DashboardPage() {
             </>
           ) : (
             <>
+              {/* Generic error */}
               <div className="flex items-center justify-center">
                 <div className="bg-red-100 p-4 rounded-full">
                   <AlertCircle className="text-red-600" size={48} />
@@ -516,43 +495,12 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              {errorModal.title === 'No Credits Remaining' ? (
-                <div className="space-y-2">
-                  <Button 
-                    className="w-full"
-                    onClick={() => {
-                      setErrorModal({ ...errorModal, isOpen: false });
-                      router.push('/dashboard/checkout?plan=basic');
-                    }}
-                  >
-                    Upgrade to Basic - $9/mo
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      setErrorModal({ ...errorModal, isOpen: false });
-                      router.push('/dashboard/checkout?plan=premium');
-                    }}
-                  >
-                    Upgrade to Premium - $19/mo
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
-                  >
-                    Close
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  className="w-full"
-                  onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
-                >
-                  Close
-                </Button>
-              )}
+              <Button 
+                className="w-full"
+                onClick={() => setErrorModal({ ...errorModal, isOpen: false })}
+              >
+                Close
+              </Button>
             </>
           )}
         </div>
@@ -560,3 +508,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

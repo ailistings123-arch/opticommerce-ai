@@ -15,6 +15,10 @@ export default function UsageStats({ userData }: UsageStatsProps) {
     enterprise: 'bg-gold-500',
   };
 
+  const handleUpgrade = (tier: string) => {
+    window.location.href = `/dashboard/checkout?plan=${tier}`;
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 md:p-6 sticky top-4">
       <div className="space-y-4 sm:space-y-6">
@@ -47,7 +51,7 @@ export default function UsageStats({ userData }: UsageStatsProps) {
         {userData.usageCount >= userData.usageLimit && (
           <div className="p-2.5 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-800 text-xs sm:text-sm font-medium">
-              🚫 You've used all {userData.usageLimit} free credits!
+              🚫 You've used all {userData.usageLimit} credits!
             </p>
             <p className="text-red-700 text-xs mt-1">
               Upgrade to continue optimizing your listings.
@@ -58,7 +62,7 @@ export default function UsageStats({ userData }: UsageStatsProps) {
         {userData.tier === 'free' && userData.usageCount < userData.usageLimit && (
           <div className="p-2.5 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 text-xs sm:text-sm">
-              💡 {userData.usageLimit - userData.usageCount} free credits remaining
+              💡 {userData.usageLimit - userData.usageCount} credits remaining
             </p>
           </div>
         )}
@@ -74,7 +78,10 @@ export default function UsageStats({ userData }: UsageStatsProps) {
                   <p className="font-medium text-gray-900 text-sm sm:text-base">Basic</p>
                   <p className="text-xs text-gray-500">50 credits/month</p>
                 </div>
-                <button className="px-2.5 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-blue-700 transition-colors whitespace-nowrap">
+                <button 
+                  onClick={() => handleUpgrade('basic')}
+                  className="px-2.5 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+                >
                   $9/mo
                 </button>
               </div>
@@ -83,7 +90,10 @@ export default function UsageStats({ userData }: UsageStatsProps) {
                   <p className="font-medium text-gray-900 text-sm sm:text-base">Premium</p>
                   <p className="text-xs text-gray-500">Unlimited credits</p>
                 </div>
-                <button className="px-2.5 sm:px-3 py-1 bg-purple-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-purple-700 transition-colors whitespace-nowrap">
+                <button 
+                  onClick={() => handleUpgrade('premium')}
+                  className="px-2.5 sm:px-3 py-1 bg-purple-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-purple-700 transition-colors whitespace-nowrap"
+                >
                   $19/mo
                 </button>
               </div>
