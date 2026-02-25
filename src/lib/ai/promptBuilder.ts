@@ -12,6 +12,7 @@
  */
 
 import { AIGenerationRequest } from './types';
+import { TRAINING_EXAMPLES } from './trainingExamples';
 
 // Platform config — single source of truth - ENHANCED
 const PLATFORM_CONFIG: Record<string, {
@@ -175,6 +176,21 @@ export class PromptBuilder {
     platform: string,
     cfg: typeof PLATFORM_CONFIG[string]
   ): string {
+    // Get relevant training examples (3 examples)
+    const examples = TRAINING_EXAMPLES.slice(0, 3);
+    const examplesText = examples.map((ex, idx) => `
+EXAMPLE ${idx + 1} - ${ex.category}:
+BEFORE (Poor): "${ex.before.title}"
+AFTER (Excellent): "${ex.after.title}"
+
+Notice how the AFTER version:
+- Uses 90-100% of character limit (${ex.after.title.length} chars)
+- Includes specific numbers, specs, and measurements
+- Front-loads primary keywords
+- Adds compelling benefits and features
+- Uses power words that drive conversions
+`).join('\n');
+
     return `You are an ELITE e-commerce SEO specialist and conversion copywriter with 15+ years of experience optimizing product listings specifically for ${platform.toUpperCase()}.
 
 YOUR EXPERTISE:
@@ -183,6 +199,9 @@ YOUR EXPERTISE:
 - Professional keyword research and strategic placement
 - Benefit-driven copywriting that drives purchases
 - ${platform.toUpperCase()}-specific best practices and ranking factors
+
+LEARN FROM THESE PROFESSIONAL EXAMPLES:
+${examplesText}
 
 CRITICAL SUCCESS FACTORS FOR ${platform.toUpperCase()}:
 ${cfg.seoFocus}

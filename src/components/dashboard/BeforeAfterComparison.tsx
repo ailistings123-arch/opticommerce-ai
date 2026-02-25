@@ -1,6 +1,7 @@
 import { ArrowRight, TrendingUp } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import CharacterCounter from '@/components/ui/CharacterCounter';
+import { decodeHtmlEntities } from '@/lib/utils/htmlDecode';
 
 interface BeforeAfterComparisonProps {
   original: {
@@ -17,17 +18,31 @@ interface BeforeAfterComparisonProps {
 }
 
 export default function BeforeAfterComparison({ original, optimized }: BeforeAfterComparisonProps) {
-  const originalScore = original.seoScore || 45; // Default low score
-  const improvement = optimized.seoScore - originalScore;
+  // Decode HTML entities from titles and descriptions
+  const decodedOriginal = {
+    title: decodeHtmlEntities(original.title),
+    description: decodeHtmlEntities(original.description),
+    seoScore: original.seoScore
+  };
   
-  const originalKeywords = (original.title + ' ' + original.description)
+  const decodedOptimized = {
+    title: decodeHtmlEntities(optimized.title),
+    description: decodeHtmlEntities(optimized.description),
+    seoScore: optimized.seoScore,
+    tags: optimized.tags
+  };
+  
+  const originalScore = decodedOriginal.seoScore || 45; // Default low score
+  const improvement = decodedOptimized.seoScore - originalScore;
+  
+  const originalKeywords = (decodedOriginal.title + ' ' + decodedOriginal.description)
     .toLowerCase()
     .split(/\s+/)
     .filter(word => word.length > 3)
     .filter((word, index, arr) => arr.indexOf(word) === index)
     .length;
     
-  const optimizedKeywords = (optimized.title + ' ' + optimized.description)
+  const optimizedKeywords = (decodedOptimized.title + ' ' + decodedOptimized.description)
     .toLowerCase()
     .split(/\s+/)
     .filter(word => word.length > 3)
@@ -64,10 +79,10 @@ export default function BeforeAfterComparison({ original, optimized }: BeforeAft
             <div className="mb-4">
               <p className="text-sm font-medium text-gray-600 mb-2">Title:</p>
               <p className="text-sm text-gray-800 bg-white p-3 rounded border line-clamp-2">
-                {original.title}
+                {decodedOriginal.title}
               </p>
               <CharacterCounter 
-                current={original.title.length} 
+                current={decodedOriginal.title.length} 
                 max={200}
                 optimal={{ min: 150, max: 180 }}
                 className="mt-2"
@@ -77,7 +92,7 @@ export default function BeforeAfterComparison({ original, optimized }: BeforeAft
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3 text-center">
               <div className="bg-white p-3 rounded border">
-                <p className="text-lg font-bold text-gray-700">{original.title.length}</p>
+                <p className="text-lg font-bold text-gray-700">{decodedOriginal.title.length}</p>
                 <p className="text-xs text-gray-600">Characters</p>
               </div>
               <div className="bg-white p-3 rounded border">
@@ -133,10 +148,10 @@ export default function BeforeAfterComparison({ original, optimized }: BeforeAft
             <div className="mb-4">
               <p className="text-sm font-medium text-blue-600 mb-2">Title:</p>
               <p className="text-sm text-gray-900 bg-white p-3 rounded border line-clamp-2 font-medium">
-                {optimized.title}
+                {decodedOptimized.title}
               </p>
               <CharacterCounter 
-                current={optimized.title.length} 
+                current={decodedOptimized.title.length} 
                 max={200}
                 optimal={{ min: 150, max: 180 }}
                 className="mt-2"
@@ -146,7 +161,7 @@ export default function BeforeAfterComparison({ original, optimized }: BeforeAft
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3 text-center">
               <div className="bg-white p-3 rounded border">
-                <p className="text-lg font-bold text-blue-600">{optimized.title.length}</p>
+                <p className="text-lg font-bold text-blue-600">{decodedOptimized.title.length}</p>
                 <p className="text-xs text-blue-600">Characters</p>
               </div>
               <div className="bg-white p-3 rounded border">
@@ -167,7 +182,7 @@ export default function BeforeAfterComparison({ original, optimized }: BeforeAft
             <p className="text-xs text-green-600">SEO Score</p>
           </div>
           <div>
-            <p className="text-lg font-bold text-green-700">+{optimized.title.length - original.title.length}</p>
+            <p className="text-lg font-bold text-green-700">+{decodedOptimized.title.length - decodedOriginal.title.length}</p>
             <p className="text-xs text-green-600">Characters</p>
           </div>
           <div>
@@ -175,7 +190,7 @@ export default function BeforeAfterComparison({ original, optimized }: BeforeAft
             <p className="text-xs text-green-600">Keywords</p>
           </div>
           <div>
-            <p className="text-lg font-bold text-green-700">{optimized.tags?.length || 0}</p>
+            <p className="text-lg font-bold text-green-700">{decodedOptimized.tags?.length || 0}</p>
             <p className="text-xs text-green-600">Tags Added</p>
           </div>
         </div>

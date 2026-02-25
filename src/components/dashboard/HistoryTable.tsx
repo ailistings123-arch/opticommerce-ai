@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Optimization } from '@/types';
 import { formatDistanceToNow } from '@/lib/utils/date';
 import { ChevronDown, ChevronUp, ExternalLink, Copy, Check } from 'lucide-react';
@@ -62,9 +62,8 @@ export default function HistoryTable({ optimizations }: HistoryTableProps) {
               const titlePreview = opt.optimized?.title || opt.original?.title || 'N/A';
               
               return (
-                <>
+                <React.Fragment key={opt.id}>
                   <tr 
-                    key={opt.id} 
                     className="hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => toggleRow(opt.id)}
                   >
@@ -257,7 +256,7 @@ export default function HistoryTable({ optimizations }: HistoryTableProps) {
                       </td>
                     </tr>
                   )}
-                </>
+                </React.Fragment>
               );
             })}
           </tbody>

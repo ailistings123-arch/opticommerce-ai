@@ -15,6 +15,7 @@ import PlatformComplianceChecker from './PlatformComplianceChecker';
 import ABTestingSuggestions from './ABTestingSuggestions';
 import { useToast } from '@/lib/hooks/useToast';
 import { ToastContainer } from '@/components/ui/Toast';
+import { decodeHtmlEntities } from '@/lib/utils/htmlDecode';
 
 interface ResultCardProps {
   original: {
@@ -107,8 +108,8 @@ function calculateOriginalScore(title: string, description: string): number {
 function cleanOriginalTitle(title: string): string {
   let cleaned = title;
   
-  // Remove HTML entities
-  cleaned = cleaned.replace(/&[a-z]+;/gi, '');
+  // Decode HTML entities FIRST
+  cleaned = decodeHtmlEntities(cleaned);
   
   // Remove store names and suffixes
   cleaned = cleaned.replace(/[\s]*[\-–—]+[\s]*[A-Z][a-zA-Z0-9\.\s]+$/g, '');
@@ -127,7 +128,17 @@ function cleanOriginalTitle(title: string): string {
 
 export default function ResultCard({ original, optimized }: ResultCardProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [editedOptimized, setEditedOptimized] = useState(optimized);
+  
+  // Decode HTML entities from optimized content
+  const decodedOptimized = {
+    ...optimized,
+    title: decodeHtmlEntities(optimized.title || ''),
+    description: decodeHtmlEntities(optimized.description || ''),
+    bulletPoints: optimized.bulletPoints?.map((b: string) => decodeHtmlEntities(b)),
+    tags: optimized.tags?.map((t: string) => decodeHtmlEntities(t))
+  };
+  
+  const [editedOptimized, setEditedOptimized] = useState(decodedOptimized);
   const { success, toasts, removeToast } = useToast();
   
   const cleanedOriginalTitle = cleanOriginalTitle(original.title);

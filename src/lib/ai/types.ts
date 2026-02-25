@@ -42,4 +42,5 @@ export interface AIProviderConfig {
   maxTokens?: number;
   temperature?: number;
   timeout?: number;
+  accountId?: string; // For Cloudflare Workers AI
 }

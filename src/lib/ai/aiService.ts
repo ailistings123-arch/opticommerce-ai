@@ -43,13 +43,16 @@ export class AIService {
       request = this.sanitizeRequest(request);
     }
 
-    const provider = AIProviderFactory.getDefaultProvider();
+    let provider = AIProviderFactory.getDefaultProvider();
+    let currentProviderName = provider.getName();
     let lastError: Error | null = null;
     let attempts = 0;
+    let providerSwitches = 0;
+    const maxProviderSwitches = 3; // Try up to 3 different providers
 
     while (attempts <= (opts.maxRetries || 0)) {
       try {
-        console.log(`[AIService] Attempt ${attempts + 1}/${(opts.maxRetries || 0) + 1}`);
+        console.log(`[AIService] Attempt ${attempts + 1}/${(opts.maxRetries || 0) + 1} using ${currentProviderName}`);
 
         const response = await provider.generate(request);
 
@@ -121,8 +124,29 @@ export class AIService {
         lastError = error;
         console.error(`[AIService] Attempt ${attempts + 1} failed:`, error.message);
 
+        // Check if it's a rate limit error - try fallback provider
+        if (error.message.includes('Rate limit exceeded') && providerSwitches < maxProviderSwitches) {
+          console.log(`[AIService] Rate limit hit on ${currentProviderName}, trying fallback provider...`);
+          
+          // Mark current provider as failed
+          AIProviderFactory.markProviderFailed(currentProviderName.toLowerCase(), 60000); // 60s cooldown
+          
+          // Try to get next provider
+          const nextProvider = AIProviderFactory.getNextProvider(currentProviderName.toLowerCase());
+          
+          if (nextProvider) {
+            provider = nextProvider;
+            currentProviderName = provider.getName();
+            providerSwitches++;
+            console.log(`[AIService] Switched to ${currentProviderName} (switch ${providerSwitches}/${maxProviderSwitches})`);
+            // Don't increment attempts, just retry with new provider
+            continue;
+          } else {
+            console.log('[AIService] No fallback providers available');
+          }
+        }
+
         if (error.message.includes('Authentication failed')) throw error;
-        if (error.message.includes('Rate limit exceeded'))   throw error;
 
         attempts++;
 
@@ -135,7 +159,7 @@ export class AIService {
     }
 
     throw new Error(
-      `Failed after ${attempts} attempts: ${lastError?.message || 'Unknown error'}`
+      `Failed after ${attempts} attempts and ${providerSwitches} provider switches: ${lastError?.message || 'Unknown error'}`
     );
   }
 

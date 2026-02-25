@@ -3,6 +3,7 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { calculateSEOScore } from '@/lib/utils/seo-scorer';
 import { ApiResponse, Platform, OptimizedContent } from '@/types';
 import { UrlAnalyzerService } from '@/lib/services/UrlAnalyzerService';
+import { AIService } from '@/lib/ai/aiService';
 
 // Helper function to remove undefined values from objects
 function removeUndefined(obj: any): any {
@@ -86,124 +87,141 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build analysis from scraped data - filter out undefined values
-    let analysis: any = {
-      title: scrapedData.title || 'Product Title',
-      description: scrapedData.description || 'Product description',
-      bullets: scrapedData.bullets || [],
-      tags: [],
-      seoScore: 0,
-      improvements: [],
-      platform: platform as Platform,
-      analysisType,
-      purpose,
-      images: scrapedData.images || []
-    };
-
-    // Only add optional fields if they have values
-    if (scrapedData.price !== undefined && scrapedData.price !== null) {
-      analysis.price = scrapedData.price;
-    }
-    if (scrapedData.specifications && scrapedData.specifications.length > 0) {
-      analysis.specifications = scrapedData.specifications;
-    }
-    if (scrapedData.brand) {
-      analysis.brand = scrapedData.brand;
-    }
-    if (scrapedData.rating !== undefined && scrapedData.rating !== null) {
-      analysis.rating = scrapedData.rating;
-    }
-    if (scrapedData.reviewCount !== undefined && scrapedData.reviewCount !== null) {
-      analysis.reviewCount = scrapedData.reviewCount;
-    }
-
-    // Add specific data for create-similar mode
-    if (analysisType === 'create-similar') {
-      analysis.customization = {};
-      if (productDifferences) analysis.customization.differences = productDifferences;
-      if (yourPricePoint !== undefined && yourPricePoint !== null) analysis.customization.pricePoint = yourPricePoint;
-      if (yourBrandName) analysis.customization.brandName = yourBrandName;
-      if (additionalFeatures) analysis.customization.additionalFeatures = additionalFeatures;
-    }
-
-    // Generate improvements based on analysis type
-    if (analysisType === 'full' || analysisType === 'seo-audit') {
-      analysis.improvements = [
-        'Title could be optimized with more keywords',
-        'Description could be more detailed',
-        'Add more bullet points highlighting key features',
-        'Include relevant search terms naturally'
-      ];
-    } else if (analysisType === 'competitive') {
-      analysis.improvements = [
-        'Competitor uses strong emotional triggers',
-        'Keywords are well-optimized for search',
-        'Product positioning is clear',
-        'Consider similar pricing strategy'
-      ];
-    } else if (analysisType === 'create-similar') {
-      analysis.improvements = [
-        'Leverage similar keyword strategy',
-        'Highlight your unique differentiators',
-        'Match or improve on description quality',
-        'Use similar structure but with your brand voice'
-      ];
-    }
-
-    // Extract tags/keywords from title and description
-    const words = `${analysis.title} ${analysis.description}`.toLowerCase().split(/\s+/);
-    const keywords = words.filter((w: string) => w.length > 4 && !['about', 'their', 'which', 'where', 'these', 'those'].includes(w));
-    analysis.tags = [...new Set(keywords)].slice(0, 10);
-
-    // Ensure tags array is not empty
-    if (!analysis.tags || analysis.tags.length === 0) {
-      analysis.tags = ['product', 'quality', 'premium'];
-    }
-
-    // Ensure improvements array exists
-    if (!analysis.improvements || analysis.improvements.length === 0) {
-      analysis.improvements = [
-        'Product data extracted successfully',
-        'SEO analysis completed',
-        'Keywords identified'
-      ];
-    }
-
-    // Calculate SEO score - cast to OptimizedContent type
-    const seoScore = calculateSEOScore(analysis as OptimizedContent, platform);
-
-    analysis.seoScore = seoScore;
-
-    // Save to Firestore - remove undefined values
-    if (adminDb) {
-      const analysisRef = adminDb.collection('urlAnalyses').doc();
-      const cleanedData = removeUndefined({
-        userId,
-        url,
+    // NOW OPTIMIZE WITH AI - this is the missing piece!
+    console.log('[API] Optimizing with AI...');
+    
+    try {
+      const aiResult = await AIService.generateListing({
         platform,
+        productData: {
+          title: scrapedData.title || 'Product Title',
+          description: scrapedData.description || 'Product description',
+          keywords: scrapedData.bullets || [],
+          category: scrapedData.category,
+          price: scrapedData.price,
+          specifications: scrapedData.specifications
+        },
+        mode: 'analyze' // Use analyze mode for URL analysis
+      });
+
+      console.log('[API] AI optimization complete, SEO score:', aiResult.qualityScore?.percentage);
+
+      // Build optimized analysis
+      const analysis: any = {
+        title: aiResult.listing.title,
+        description: aiResult.listing.description,
+        bullets: aiResult.listing.bullets || [],
+        tags: aiResult.listing.keywords || [],
+        seoScore: aiResult.qualityScore?.percentage || 85,
+        improvements: aiResult.qualityScore?.recommendations || [],
+        platform: platform as Platform,
         analysisType,
         purpose,
-        analysis,
-        createdAt: new Date().toISOString(),
-        status: 'completed'
-      });
-      await analysisRef.set(cleanedData);
-    }
+        images: scrapedData.images || [],
+        platform_notes: aiResult.listing.platform_notes
+      };
 
-    const response: ApiResponse<any> = {
-      success: true,
-      data: {
-        analysis,
-        optimized: analysis,
-        scrapedData: {
-          title: analysis.title,
-          description: analysis.description,
-          url
-        }
+      // Add optional fields
+      if (scrapedData.price !== undefined && scrapedData.price !== null) {
+        analysis.price = scrapedData.price;
       }
-    };
+      if (scrapedData.specifications && scrapedData.specifications.length > 0) {
+        analysis.specifications = scrapedData.specifications;
+      }
+      if (scrapedData.brand) {
+        analysis.brand = scrapedData.brand;
+      }
+      if (scrapedData.rating !== undefined && scrapedData.rating !== null) {
+        analysis.rating = scrapedData.rating;
+      }
+      if (scrapedData.reviewCount !== undefined && scrapedData.reviewCount !== null) {
+        analysis.reviewCount = scrapedData.reviewCount;
+      }
 
-    return NextResponse.json(response);
+      // Add customization for create-similar mode
+      if (analysisType === 'create-similar') {
+        analysis.customization = {};
+        if (productDifferences) analysis.customization.differences = productDifferences;
+        if (yourPricePoint !== undefined && yourPricePoint !== null) analysis.customization.pricePoint = yourPricePoint;
+        if (yourBrandName) analysis.customization.brandName = yourBrandName;
+        if (additionalFeatures) analysis.customization.additionalFeatures = additionalFeatures;
+      }
+
+      // Save to Firestore
+      if (adminDb) {
+        const analysisRef = adminDb.collection('urlAnalyses').doc();
+        const cleanedData = removeUndefined({
+          userId,
+          url,
+          platform,
+          analysisType,
+          purpose,
+          analysis,
+          createdAt: new Date().toISOString(),
+          status: 'completed'
+        });
+        await analysisRef.set(cleanedData);
+      }
+
+      const response: ApiResponse<any> = {
+        success: true,
+        data: {
+          analysis,
+          optimized: analysis,
+          scrapedData: {
+            title: scrapedData.title,
+            description: scrapedData.description,
+            url
+          }
+        }
+      };
+
+      return NextResponse.json(response);
+
+    } catch (aiError: any) {
+      console.error('[API] AI optimization failed:', aiError.message);
+      
+      // Fallback to basic analysis if AI fails
+      let analysis: any = {
+        title: scrapedData.title || 'Product Title',
+        description: scrapedData.description || 'Product description',
+        bullets: scrapedData.bullets || [],
+        tags: [],
+        seoScore: 0,
+        improvements: ['AI optimization temporarily unavailable'],
+        platform: platform as Platform,
+        analysisType,
+        purpose,
+        images: scrapedData.images || []
+      };
+
+      // Extract basic tags
+      const words = `${analysis.title} ${analysis.description}`.toLowerCase().split(/\s+/);
+      const keywords = words.filter((w: string) => w.length > 4 && !['about', 'their', 'which', 'where', 'these', 'those'].includes(w));
+      analysis.tags = [...new Set(keywords)].slice(0, 10);
+
+      if (!analysis.tags || analysis.tags.length === 0) {
+        analysis.tags = ['product', 'quality', 'premium'];
+      }
+
+      const seoScore = calculateSEOScore(analysis as OptimizedContent, platform);
+      analysis.seoScore = seoScore;
+
+      const response: ApiResponse<any> = {
+        success: true,
+        data: {
+          analysis,
+          optimized: analysis,
+          scrapedData: {
+            title: analysis.title,
+            description: analysis.description,
+            url
+          }
+        }
+      };
+
+      return NextResponse.json(response);
+    }
 
   } catch (error: any) {
     console.error('URL analysis error:', error);
