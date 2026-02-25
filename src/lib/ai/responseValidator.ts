@@ -122,10 +122,20 @@ export class ResponseValidator {
       warnings.push(`Title is below recommended minimum of ${rules.titleRange.min} characters (current: ${sanitized.length})`);
     }
 
-    // Check for HTML entities
+    // Check for HTML entities and decode them
     if (/&[a-z]+;/i.test(sanitized)) {
-      warnings.push('Title contains HTML entities');
-      sanitized = sanitized.replace(/&[a-z]+;/gi, '');
+      warnings.push('Title contains HTML entities - converting to plain text');
+      // Decode common HTML entities
+      sanitized = sanitized
+        .replace(/&ndash;/g, '-')
+        .replace(/&mdash;/g, '-')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&[a-z]+;/gi, ''); // Remove any remaining entities
     }
 
     // Check for special characters
@@ -172,15 +182,27 @@ export class ResponseValidator {
         return;
       }
 
-      if (trimmed.length < 20) {
-        warnings.push(`Bullet ${index + 1} is too short (${trimmed.length} chars)`);
+      // Decode HTML entities
+      let cleaned = trimmed
+        .replace(/&ndash;/g, '-')
+        .replace(/&mdash;/g, '-')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&[a-z]+;/gi, '');
+
+      if (cleaned.length < 20) {
+        warnings.push(`Bullet ${index + 1} is too short (${cleaned.length} chars)`);
       }
 
-      if (trimmed.length > 500) {
-        warnings.push(`Bullet ${index + 1} is too long (${trimmed.length} chars)`);
+      if (cleaned.length > 500) {
+        warnings.push(`Bullet ${index + 1} is too long (${cleaned.length} chars)`);
       }
 
-      sanitized.push(trimmed);
+      sanitized.push(cleaned);
     });
 
     return { errors, warnings, sanitized };
@@ -202,6 +224,18 @@ export class ResponseValidator {
       errors.push('Description is empty');
       return { errors, warnings };
     }
+
+    // Decode HTML entities
+    sanitized = sanitized
+      .replace(/&ndash;/g, '-')
+      .replace(/&mdash;/g, '-')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&[a-z]+;/gi, '');
 
     if (sanitized.length < rules.minDescription) {
       warnings.push(`Description is below recommended minimum of ${rules.minDescription} characters (current: ${sanitized.length})`);

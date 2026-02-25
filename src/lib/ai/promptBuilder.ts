@@ -227,7 +227,20 @@ OUTPUT RULES:
 - Return ONLY valid JSON. No markdown, no preamble, no explanation.
 - All strings must be properly escaped
 - Do not truncate any field
-- Ensure all required fields are present and complete`;
+- Ensure all required fields are present and complete
+- NEVER use HTML entities (&ndash;, &amp;, &quot;, etc.) - use plain text characters only
+- Use plain hyphens (-), ampersands (&), and quotes (") instead of HTML entities
+
+CRITICAL - WHEN TO OPTIMIZE VS WHEN TO KEEP:
+- If the input listing is ALREADY EXCELLENT (90%+ character usage, keyword-rich, professional, benefit-driven), you should:
+  * Keep the original title/content with minimal changes
+  * Return a quality score of 90+ 
+  * Add platform_notes: "SEO is already excellent. No major changes needed."
+- If the input listing is POOR (low character usage, missing keywords, weak copy), you MUST:
+  * Completely rewrite and dramatically improve it
+  * Maximize character usage to 90-100%
+  * Add missing keywords and benefits
+  * Return a significantly better version`;
   }
 
   // ─── USER PROMPT ─────────────────────────────────────────────────────────
@@ -340,9 +353,25 @@ Now generate the PROFESSIONAL, SEO-OPTIMIZED listing for ${request.platform.toUp
       case 'optimize':
         return `TASK: PROFESSIONAL OPTIMIZATION OF EXISTING LISTING
 
-You have an existing product listing that needs SUBSTANTIAL PROFESSIONAL IMPROVEMENTS:
+CRITICAL DECISION POINT - ANALYZE FIRST:
+1. Calculate current character usage percentage
+2. Check keyword density and quality
+3. Evaluate professional tone and benefit-driven language
+4. Assess if it follows platform best practices
 
-CRITICAL REQUIREMENTS:
+IF CURRENT LISTING IS ALREADY EXCELLENT (90%+ character usage, keyword-rich, professional):
+- Keep the original content with MINIMAL or NO changes
+- DO NOT rewrite just for the sake of rewriting
+- Return quality score 90+
+- Add note: "SEO is already excellent. No major changes needed."
+
+IF CURRENT LISTING IS POOR (low character usage, missing keywords, weak copy):
+- Completely rewrite and dramatically improve
+- Maximize character usage to 90-100%
+- Add missing keywords and compelling benefits
+- Transform it into professional quality
+
+CRITICAL REQUIREMENTS FOR POOR LISTINGS:
 - Rewrite the title to maximize SEO impact, character utilization (90-100%), and click-through rate
 - Front-load the primary keyword in first 80 characters
 - Rewrite ALL bullets with benefit-first structure and specific numbers/details
@@ -353,7 +382,7 @@ CRITICAL REQUIREMENTS:
 - Address customer pain points and objections
 - Include social proof elements if relevant
 
-RESULT MUST BE: Dramatically better, not just a minor tweak. Professional quality that ranks and converts.`;
+RESULT: Either keep excellent content OR dramatically improve poor content. Never make minor tweaks to already-good listings.`;
 
       case 'create':
         return `TASK: CREATE PROFESSIONAL LISTING FROM SCRATCH
