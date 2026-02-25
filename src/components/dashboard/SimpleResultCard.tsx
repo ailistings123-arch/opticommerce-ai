@@ -73,7 +73,7 @@ export default function SimpleResultCard({ optimized }: SimpleResultCardProps) {
 
       <Card title="Optimized Tags">
         <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-          {optimized.tags.map((tag, index) => (
+          {(optimized.tags || []).map((tag, index) => (
             <span
               key={index}
               className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-100 to-purple-50 text-purple-800 rounded-full text-xs sm:text-sm font-medium border border-purple-200"
@@ -85,7 +85,7 @@ export default function SimpleResultCard({ optimized }: SimpleResultCardProps) {
         <Button
           size="sm"
           variant="outline"
-          onClick={() => copyToClipboard(optimized.tags.join(', '), 'tags')}
+          onClick={() => copyToClipboard((optimized.tags || []).join(', '), 'tags')}
           className="w-full"
         >
           {copiedField === 'tags' ? (
@@ -102,7 +102,7 @@ export default function SimpleResultCard({ optimized }: SimpleResultCardProps) {
 
       <Card title="Key Features">
         <ul className="space-y-2 sm:space-y-3">
-          {optimized.improvements.map((improvement, index) => (
+          {(optimized.improvements || []).map((improvement, index) => (
             <li key={index} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-blue-50 rounded-lg border border-blue-200">
               <span className="text-blue-600 font-bold mt-0.5 text-sm sm:text-base">✓</span>
               <span className="text-xs sm:text-sm text-gray-800">{improvement}</span>

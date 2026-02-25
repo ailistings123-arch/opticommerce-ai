@@ -393,7 +393,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
 
         <Card title="Optimized Tags">
           <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-            {editedOptimized.tags.map((tag: string, index: number) => (
+            {(editedOptimized.tags || []).map((tag: string, index: number) => (
               <span
                 key={index}
                 className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-100 to-purple-50 text-purple-800 rounded-full text-xs sm:text-sm font-medium border border-purple-200"
@@ -403,7 +403,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
             ))}
           </div>
           <CopyButton
-            text={editedOptimized.tags.join(', ')}
+            text={(editedOptimized.tags || []).join(', ')}
             label="Tags"
             onCopy={handleCopy}
             showEdit={false}
@@ -415,7 +415,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
       {hasEnhancedData && editedOptimized.bulletPoints && editedOptimized.bulletPoints.length > 0 && (
         <Card title="Product Bullet Points">
           <div className="space-y-2 mb-4">
-            {editedOptimized.bulletPoints.map((bullet: string, index: number) => (
+            {(editedOptimized.bulletPoints || []).map((bullet: string, index: number) => (
               <div key={index} className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <span className="text-blue-600 font-bold mt-0.5">•</span>
                 <p className="text-sm text-gray-800">{bullet}</p>
@@ -423,7 +423,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
             ))}
           </div>
           <CopyButton
-            text={editedOptimized.bulletPoints.join('\n')}
+            text={(editedOptimized.bulletPoints || []).join('\n')}
             label="Bullet Points"
             onCopy={handleCopy}
             showEdit={false}
@@ -439,7 +439,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
             These keywords help your product appear in more searches (not visible to customers)
           </p>
           <div className="flex flex-wrap gap-1.5 mb-4">
-            {editedOptimized.backendSearchTerms.map((term: string, index: number) => (
+            {(editedOptimized.backendSearchTerms || []).map((term: string, index: number) => (
               <span
                 key={index}
                 className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium border border-gray-300"
@@ -449,7 +449,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
             ))}
           </div>
           <CopyButton
-            text={editedOptimized.backendSearchTerms.join(' ')}
+            text={(editedOptimized.backendSearchTerms || []).join(' ')}
             label="Search Terms"
             onCopy={handleCopy}
             showEdit={false}
@@ -460,7 +460,7 @@ export default function ResultCard({ original, optimized }: ResultCardProps) {
 
         <Card title="Key Improvements Made">
           <ul className="space-y-2 sm:space-y-3">
-            {editedOptimized.improvements.map((improvement: string, index: number) => (
+            {(editedOptimized.improvements || []).map((improvement: string, index: number) => (
               <li key={index} className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 bg-green-50 rounded-lg border border-green-200">
                 <span className="text-green-600 font-bold mt-0.5 text-sm sm:text-base">✓</span>
                 <span className="text-xs sm:text-sm text-gray-800">{improvement}</span>

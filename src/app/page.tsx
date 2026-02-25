@@ -19,6 +19,7 @@ import FAQ from '@/components/landing/FAQ';
 import Guarantee from '@/components/landing/Guarantee';
 import FinalCTA from '@/components/landing/FinalCTA';
 import Footer from '@/components/landing/Footer';
+import BackToTop from '@/components/ui/BackToTop';
 
 export default function Home() {
   const router = useRouter();
@@ -62,6 +63,7 @@ export default function Home() {
       <Guarantee />
       <FinalCTA />
       <Footer />
+      <BackToTop />
     </div>
   );
 }

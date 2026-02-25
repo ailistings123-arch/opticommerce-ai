@@ -125,7 +125,7 @@ export interface OptimizationInput {
   description: string;
   platform: Platform;
   keywords?: string;
-  engine?: 'gemini' | 'deepseek'; // AI engine selection
+  engine?: 'gemini'; // AI engine selection (only Gemini supported)
 }
 // SEO and Keyword Types
 export interface KeywordSet {
