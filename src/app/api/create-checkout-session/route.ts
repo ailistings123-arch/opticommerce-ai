@@ -8,14 +8,19 @@ import { adminAuth } from '@/lib/firebase/admin';
 
 const PLAN_PRICES = {
   starter: {
-    amount: 1900, // $19.00 in cents
-    credits: 30,
+    amount: 2500, // $25.00 in cents
+    credits: 25,
     name: 'Starter Plan'
   },
   professional: {
-    amount: 4500, // $45.00 in cents
-    credits: 999999,
+    amount: 4900, // $49.00 in cents
+    credits: 50,
     name: 'Professional Plan'
+  },
+  enterprise: {
+    amount: 15000, // $150.00 in cents
+    credits: 999999,
+    name: 'Enterprise Plan'
   }
 };
 

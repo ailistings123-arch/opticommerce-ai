@@ -519,23 +519,31 @@ export default function DashboardPage() {
               {errorModal.title === 'No Credits Remaining' ? (
                 <div className="space-y-2">
                   <Button 
-                    className="w-full"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => {
                       setErrorModal({ ...errorModal, isOpen: false });
-                      router.push('/dashboard/checkout?plan=basic');
+                      router.push('/dashboard/checkout?plan=starter');
                     }}
                   >
-                    Upgrade to Basic - $9/mo
+                    Upgrade to Starter - $25/mo
                   </Button>
                   <Button 
-                    variant="outline"
-                    className="w-full"
+                    className="w-full bg-purple-600 hover:bg-purple-700"
                     onClick={() => {
                       setErrorModal({ ...errorModal, isOpen: false });
-                      router.push('/dashboard/checkout?plan=premium');
+                      router.push('/dashboard/checkout?plan=professional');
                     }}
                   >
-                    Upgrade to Premium - $19/mo
+                    Upgrade to Professional - $49/mo
+                  </Button>
+                  <Button 
+                    className="w-full bg-orange-600 hover:bg-orange-700"
+                    onClick={() => {
+                      setErrorModal({ ...errorModal, isOpen: false });
+                      router.push('/dashboard/checkout?plan=enterprise');
+                    }}
+                  >
+                    Upgrade to Enterprise - $150/mo
                   </Button>
                   <Button 
                     variant="outline"

@@ -76,25 +76,37 @@ export default function UsageStats({ userData }: UsageStatsProps) {
               <div className="flex justify-between items-center p-2.5 sm:p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900 text-sm sm:text-base">Starter</p>
-                  <p className="text-xs text-gray-500">30 credits/month</p>
+                  <p className="text-xs text-gray-500">25 credits/month</p>
                 </div>
                 <button 
                   onClick={() => handleUpgrade('starter')}
                   className="px-2.5 sm:px-3 py-1 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
                 >
-                  $19/mo
+                  $25/mo
                 </button>
               </div>
               <div className="flex justify-between items-center p-2.5 sm:p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900 text-sm sm:text-base">Professional</p>
-                  <p className="text-xs text-gray-500">Unlimited credits</p>
+                  <p className="text-xs text-gray-500">50 credits/month</p>
                 </div>
                 <button 
                   onClick={() => handleUpgrade('professional')}
                   className="px-2.5 sm:px-3 py-1 bg-purple-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-purple-700 transition-colors whitespace-nowrap"
                 >
-                  $45/mo
+                  $49/mo
+                </button>
+              </div>
+              <div className="flex justify-between items-center p-2.5 sm:p-3 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-gray-900 text-sm sm:text-base">Enterprise</p>
+                  <p className="text-xs text-gray-500">Unlimited credits</p>
+                </div>
+                <button 
+                  onClick={() => handleUpgrade('enterprise')}
+                  className="px-2.5 sm:px-3 py-1 bg-orange-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-orange-700 transition-colors whitespace-nowrap"
+                >
+                  $150/mo
                 </button>
               </div>
             </div>

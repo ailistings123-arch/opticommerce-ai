@@ -65,6 +65,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check user credits BEFORE processing
+    if (adminDb) {
+      const userDoc = await adminDb.collection('users').doc(userId).get();
+      const userData = userDoc.data();
+      
+      if (userData && userData.usageCount >= userData.usageLimit) {
+        return NextResponse.json(
+          { success: false, error: 'Usage limit exceeded. Please upgrade your plan to continue.' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Extract platform from URL
     let platform: Platform = 'amazon';
     const urlLower = url.toLowerCase();
@@ -161,6 +174,16 @@ export async function POST(request: NextRequest) {
           status: 'completed'
         });
         await analysisRef.set(cleanedData);
+        
+        // INCREMENT USAGE COUNT
+        const userDoc = await adminDb.collection('users').doc(userId).get();
+        const currentUsage = userDoc.data()?.usageCount || 0;
+        await adminDb.collection('users').doc(userId).update({
+          usageCount: currentUsage + 1,
+          lastUsed: new Date().toISOString()
+        });
+        
+        console.log(`[API] User ${userId} usage: ${currentUsage} -> ${currentUsage + 1}`);
       }
 
       const response: ApiResponse<any> = {

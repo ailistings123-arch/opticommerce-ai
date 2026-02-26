@@ -13,7 +13,7 @@ interface UpgradeModalProps {
 }
 
 export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit }: UpgradeModalProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium'>('basic');
+  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'professional' | 'enterprise'>('starter');
 
   const plans = {
     free: {
@@ -21,7 +21,7 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
       price: 0,
       credits: 5,
       features: [
-        '5 optimizations per month',
+        '5 optimizations total',
         'Basic SEO optimization',
         'All 5 platforms supported',
         'Standard support'
@@ -33,47 +33,59 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
         'Limited features'
       ]
     },
-    basic: {
-      name: 'Basic',
-      price: 9,
+    starter: {
+      name: 'Starter',
+      price: 25,
+      credits: 25,
+      features: [
+        '25 optimizations per month',
+        'Advanced SEO optimization',
+        'All platforms supported',
+        'Competitor analysis',
+        'Before/after comparisons',
+        'Export to PDF',
+        'Email support',
+        'Priority processing'
+      ],
+      limitations: []
+    },
+    professional: {
+      name: 'Professional',
+      price: 49,
       credits: 50,
       features: [
         '50 optimizations per month',
-        'Advanced SEO optimization',
-        'All 5 platforms supported',
-        'Compliance checking',
-        'Quality assurance',
-        'Email support',
-        'Detailed analytics'
+        'Bulk optimization (10 at once)',
+        'A+ content templates',
+        'Keyword rank tracking',
+        'Team collaboration (5 users)',
+        'Priority support',
+        'API access (5K calls/month)',
+        'Custom brand voice'
       ],
-      limitations: [
-        'No bulk optimization',
-        'No priority support'
-      ]
+      limitations: []
     },
-    premium: {
-      name: 'Premium',
-      price: 19,
+    enterprise: {
+      name: 'Enterprise',
+      price: 150,
       credits: 'Unlimited',
       features: [
         'Unlimited optimizations',
-        'Advanced SEO optimization',
-        'All 5 platforms supported',
-        'Compliance checking',
-        'Quality assurance',
-        'Bulk optimization',
-        'Priority support',
-        'Advanced analytics',
-        'A/B testing recommendations',
-        'Competitive analysis'
+        'Unlimited bulk optimization',
+        'White-label option',
+        'Dedicated account manager',
+        'Custom integrations',
+        'Unlimited team members',
+        'API access (50K calls/month)',
+        '99.9% uptime SLA'
       ],
       limitations: []
     }
   };
 
-  const handleUpgrade = (plan: 'basic' | 'premium') => {
-    // In production, this would redirect to payment processor
-    alert(`Upgrade to ${plan} plan coming soon! This will integrate with Stripe/PayPal for payment processing.`);
+  const handleUpgrade = (plan: 'starter' | 'professional' | 'enterprise') => {
+    // Redirect to checkout page
+    window.location.href = `/dashboard/checkout?plan=${plan}`;
   };
 
   return (
@@ -105,17 +117,17 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
       </div>
 
       {/* Plan Selection */}
-      <div className="grid md:grid-cols-2 gap-4 mb-6">
-        {/* Basic Plan */}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        {/* Starter Plan */}
         <div
-          onClick={() => setSelectedPlan('basic')}
+          onClick={() => setSelectedPlan('starter')}
           className={`relative border-2 rounded-xl p-5 cursor-pointer transition-all ${
-            selectedPlan === 'basic'
+            selectedPlan === 'starter'
               ? 'border-blue-500 bg-blue-50 shadow-lg'
               : 'border-gray-200 hover:border-blue-300'
           }`}
         >
-          {selectedPlan === 'basic' && (
+          {selectedPlan === 'starter' && (
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
               SELECTED
             </div>
@@ -123,18 +135,18 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
           
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="text-blue-600" size={24} />
-            <h3 className="text-xl font-bold text-gray-900">Basic</h3>
+            <h3 className="text-xl font-bold text-gray-900">Starter</h3>
           </div>
           
           <div className="mb-4">
-            <span className="text-3xl font-bold text-gray-900">$9</span>
+            <span className="text-3xl font-bold text-gray-900">$25</span>
             <span className="text-gray-600">/month</span>
           </div>
           
           <div className="space-y-2 mb-4">
             <div className="flex items-center gap-2">
               <Check className="text-green-600 flex-shrink-0" size={16} />
-              <span className="text-sm text-gray-700">50 credits/month</span>
+              <span className="text-sm text-gray-700">25 credits/month</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="text-green-600 flex-shrink-0" size={16} />
@@ -151,28 +163,28 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
           </div>
           
           <Button
-            onClick={() => handleUpgrade('basic')}
+            onClick={() => handleUpgrade('starter')}
             className="w-full"
-            variant={selectedPlan === 'basic' ? 'primary' : 'outline'}
+            variant={selectedPlan === 'starter' ? 'primary' : 'outline'}
           >
-            Choose Basic
+            Choose Starter
           </Button>
         </div>
 
-        {/* Premium Plan */}
+        {/* Professional Plan */}
         <div
-          onClick={() => setSelectedPlan('premium')}
+          onClick={() => setSelectedPlan('professional')}
           className={`relative border-2 rounded-xl p-5 cursor-pointer transition-all ${
-            selectedPlan === 'premium'
+            selectedPlan === 'professional'
               ? 'border-purple-500 bg-purple-50 shadow-lg'
               : 'border-gray-200 hover:border-purple-300'
           }`}
         >
           <div className="absolute -top-3 right-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-            BEST VALUE
+            POPULAR
           </div>
           
-          {selectedPlan === 'premium' && (
+          {selectedPlan === 'professional' && (
             <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">
               SELECTED
             </div>
@@ -180,11 +192,64 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
           
           <div className="flex items-center gap-2 mb-3">
             <Crown className="text-purple-600" size={24} />
-            <h3 className="text-xl font-bold text-gray-900">Premium</h3>
+            <h3 className="text-xl font-bold text-gray-900">Professional</h3>
           </div>
           
           <div className="mb-4">
-            <span className="text-3xl font-bold text-gray-900">$19</span>
+            <span className="text-3xl font-bold text-gray-900">$49</span>
+            <span className="text-gray-600">/month</span>
+          </div>
+          
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-2">
+              <Check className="text-green-600 flex-shrink-0" size={16} />
+              <span className="text-sm text-gray-700 font-semibold">50 credits/month</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="text-green-600 flex-shrink-0" size={16} />
+              <span className="text-sm text-gray-700">Bulk optimization</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="text-green-600 flex-shrink-0" size={16} />
+              <span className="text-sm text-gray-700">Team collaboration</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="text-green-600 flex-shrink-0" size={16} />
+              <span className="text-sm text-gray-700">Priority support</span>
+            </div>
+          </div>
+          
+          <Button
+            onClick={() => handleUpgrade('professional')}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            variant={selectedPlan === 'professional' ? 'primary' : 'outline'}
+          >
+            Choose Professional
+          </Button>
+        </div>
+
+        {/* Enterprise Plan */}
+        <div
+          onClick={() => setSelectedPlan('enterprise')}
+          className={`relative border-2 rounded-xl p-5 cursor-pointer transition-all ${
+            selectedPlan === 'enterprise'
+              ? 'border-orange-500 bg-orange-50 shadow-lg'
+              : 'border-gray-200 hover:border-orange-300'
+          }`}
+        >
+          {selectedPlan === 'enterprise' && (
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+              SELECTED
+            </div>
+          )}
+          
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="text-orange-600" size={24} />
+            <h3 className="text-xl font-bold text-gray-900">Enterprise</h3>
+          </div>
+          
+          <div className="mb-4">
+            <span className="text-3xl font-bold text-gray-900">$150</span>
             <span className="text-gray-600">/month</span>
           </div>
           
@@ -195,28 +260,24 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
             </div>
             <div className="flex items-center gap-2">
               <Check className="text-green-600 flex-shrink-0" size={16} />
-              <span className="text-sm text-gray-700">All platforms</span>
+              <span className="text-sm text-gray-700">White-label option</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="text-green-600 flex-shrink-0" size={16} />
-              <span className="text-sm text-gray-700">Bulk optimization</span>
+              <span className="text-sm text-gray-700">Dedicated manager</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="text-green-600 flex-shrink-0" size={16} />
-              <span className="text-sm text-gray-700">Priority support</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="text-green-600 flex-shrink-0" size={16} />
-              <span className="text-sm text-gray-700">Advanced analytics</span>
+              <span className="text-sm text-gray-700">99.9% uptime SLA</span>
             </div>
           </div>
           
           <Button
-            onClick={() => handleUpgrade('premium')}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            variant={selectedPlan === 'premium' ? 'primary' : 'outline'}
+            onClick={() => handleUpgrade('enterprise')}
+            className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+            variant={selectedPlan === 'enterprise' ? 'primary' : 'outline'}
           >
-            Choose Premium
+            Choose Enterprise
           </Button>
         </div>
       </div>

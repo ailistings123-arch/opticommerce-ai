@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       photoURL: decodedToken.picture || null,
       tier: 'free',
       usageCount: 0,
-      usageLimit: 5,
+      usageLimit: 5, // FREE plan: 5 credits
       createdAt: now,
       updatedAt: now,
       resetDate: nextMonth,

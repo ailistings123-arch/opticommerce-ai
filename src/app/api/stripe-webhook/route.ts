@@ -35,7 +35,12 @@ export async function POST(request: NextRequest) {
         const session = event.data.object;
         const userId = session.metadata?.userId;
         const plan = session.metadata?.plan;
-        const credits = parseInt(session.metadata?.credits || '5');
+        
+        // Set credits based on plan
+        let credits = 5; // default free
+        if (plan === 'starter') credits = 25;
+        else if (plan === 'professional') credits = 50;
+        else if (plan === 'enterprise') credits = 999999;
 
         if (userId && plan) {
           // Update user's subscription in Firestore
@@ -48,7 +53,7 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date(),
           });
 
-          console.log(`✅ Updated user ${userId} to ${plan} plan`);
+          console.log(`✅ Updated user ${userId} to ${plan} plan with ${credits} credits`);
         }
         break;
       }

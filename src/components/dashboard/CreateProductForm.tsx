@@ -184,55 +184,52 @@ export default function CreateProductForm({ onSuccess }: CreateProductFormProps)
     <Modal
       isOpen={showCreditModal}
       onClose={() => setShowCreditModal(false)}
-      title="Free Credits Exhausted"
+      title="No Credits Remaining"
     >
       <div className="space-y-4">
         <div className="flex items-center justify-center">
-          <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-4 rounded-full">
-            <CreditCard className="text-blue-600" size={48} />
+          <div className="bg-gradient-to-br from-red-100 to-orange-100 p-4 rounded-full">
+            <CreditCard className="text-red-600" size={48} />
           </div>
         </div>
         
         <div className="text-center">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            You've used all 5 free credits!
+            You've used all 5 credits. Please upgrade your plan to continue optimizing.
           </h3>
-          <p className="text-gray-600 text-sm mb-4">
-            Upgrade to a premium plan to continue optimizing your product listings and boost your sales.
-          </p>
-        </div>
-
-        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-start gap-3">
-            <Sparkles className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-1">Premium Benefits:</h4>
-              <ul className="text-sm text-gray-700 space-y-1">
-                <li>• Unlimited optimizations</li>
-                <li>• Priority AI processing</li>
-                <li>• Advanced SEO analytics</li>
-                <li>• Bulk optimization tools</li>
-                <li>• 24/7 priority support</li>
-              </ul>
-            </div>
-          </div>
         </div>
 
         <div className="space-y-2">
           <Button 
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="w-full bg-blue-600 hover:bg-blue-700"
             onClick={() => {
-              window.location.href = '/dashboard/settings';
+              window.location.href = '/dashboard/checkout?plan=starter';
             }}
           >
-            Upgrade to Premium
+            Upgrade to Starter - $25/mo
+          </Button>
+          <Button 
+            className="w-full bg-purple-600 hover:bg-purple-700"
+            onClick={() => {
+              window.location.href = '/dashboard/checkout?plan=professional';
+            }}
+          >
+            Upgrade to Professional - $49/mo
+          </Button>
+          <Button 
+            className="w-full bg-orange-600 hover:bg-orange-700"
+            onClick={() => {
+              window.location.href = '/dashboard/checkout?plan=enterprise';
+            }}
+          >
+            Upgrade to Enterprise - $150/mo
           </Button>
           <Button 
             variant="outline"
             className="w-full"
             onClick={() => setShowCreditModal(false)}
           >
-            Maybe Later
+            Close
           </Button>
         </div>
       </div>

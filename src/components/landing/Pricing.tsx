@@ -22,13 +22,13 @@ const plans = [
   },
   {
     name: "STARTER",
-    price: "$19",
+    price: "$25",
     period: "/month",
     description: "For growing sellers",
     badge: "Most Popular",
     features: [
-      "Everything in Free, plus:",
-      "30 optimizations/month",
+      "25 optimizations/month",
+      "All platform support",
       "Advanced keyword research",
       "Competitor analysis",
       "Before/after comparisons",
@@ -42,12 +42,11 @@ const plans = [
   },
   {
     name: "PROFESSIONAL",
-    price: "$45",
+    price: "$49",
     period: "/month",
     description: "For serious sellers",
     features: [
-      "Everything in Starter, plus:",
-      "Unlimited optimizations",
+      "50 optimizations/month",
       "Bulk optimization (10 at once)",
       "A+ content templates",
       "Keyword rank tracking",
@@ -57,6 +56,26 @@ const plans = [
       "Custom brand voice"
     ],
     cta: "Start 7-Day Free Trial",
+    highlighted: false,
+    link: "/signup"
+  },
+  {
+    name: "ENTERPRISE",
+    price: "$150",
+    period: "/month",
+    description: "For agencies & brands",
+    features: [
+      "Unlimited optimizations",
+      "Unlimited bulk optimization",
+      "White-label option",
+      "Dedicated account manager",
+      "Custom integrations",
+      "Unlimited team members",
+      "API access (50K calls/month)",
+      "Custom training & onboarding",
+      "99.9% uptime SLA"
+    ],
+    cta: "Contact Sales",
     highlighted: false,
     link: "/signup"
   }
@@ -73,7 +92,7 @@ export default function Pricing() {
           <p className="text-base sm:text-lg md:text-xl text-gray-600 px-2">Choose the plan that fits your business</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12 sm:mb-16">
           {plans.map((plan, index) => (
             <div
               key={index}

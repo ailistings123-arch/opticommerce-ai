@@ -7,44 +7,50 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const plans = {
-  basic: {
-    name: 'Basic',
-    price: 9,
+  starter: {
+    name: 'Starter',
+    price: 25,
+    credits: 25,
+    features: [
+      '25 optimizations per month',
+      'All platform support',
+      'Advanced keyword research',
+      'Competitor analysis',
+      'Before/after comparisons',
+      'Export to PDF',
+      'Email support',
+      'Priority processing'
+    ]
+  },
+  professional: {
+    name: 'Professional',
+    price: 49,
     credits: 50,
     features: [
       '50 optimizations per month',
-      'All platform support',
-      'Basic SEO analysis',
-      'Email support',
-      'Export to CSV'
-    ]
-  },
-  premium: {
-    name: 'Premium',
-    price: 19,
-    credits: 999999,
-    features: [
-      'Unlimited optimizations',
-      'All platform support',
-      'Advanced SEO analysis',
-      'Priority email support',
-      'Export to CSV & PDF',
-      'Bulk optimization',
-      'A/B testing suggestions'
+      'Bulk optimization (10 at once)',
+      'A+ content templates',
+      'Keyword rank tracking',
+      'Team collaboration (5 users)',
+      'Priority support',
+      'API access (5K calls/month)',
+      'Custom brand voice'
     ]
   },
   enterprise: {
     name: 'Enterprise',
-    price: 49,
+    price: 150,
     credits: 999999,
     features: [
-      'Everything in Premium',
       'Unlimited optimizations',
+      'Unlimited bulk optimization',
+      'White-label option',
       'Dedicated account manager',
       'Custom integrations',
-      'API access',
-      'Team collaboration',
-      'White-label options'
+      'Unlimited team members',
+      'API access (50K calls/month)',
+      'Custom training & onboarding',
+      '99.9% uptime SLA'
     ]
   }
 };
@@ -53,12 +59,12 @@ function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState<'basic' | 'premium' | 'enterprise'>('basic');
+  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'professional' | 'enterprise'>('starter');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const plan = searchParams.get('plan') as 'basic' | 'premium' | 'enterprise';
+    const plan = searchParams.get('plan') as 'starter' | 'professional' | 'enterprise';
     if (plan && plans[plan]) {
       setSelectedPlan(plan);
     }
