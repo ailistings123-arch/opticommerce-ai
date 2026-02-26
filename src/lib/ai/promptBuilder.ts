@@ -42,8 +42,8 @@ const PLATFORM_CONFIG: Record<string, {
     algorithm: 'Amazon A10 — ranks on: relevance, CTR, conversion rate, sales velocity',
     titleFormat: '[Primary Keyword] + [Type/Model] + [Key Specs] + [Use Cases] + [Brand if space]',
     specialRules: 'No promotional language (Sale, Best, #1). Include specific numbers (watts, dimensions, count). List compatible devices/brands. Front-load primary keyword in first 80 chars.',
-    seoFocus: 'Front-load high-volume keywords. Include exact match phrases buyers search. Add long-tail keywords naturally. Use numbers and specifications for better ranking.',
-    conversionTips: 'Emphasize Prime eligibility benefits. Highlight fast shipping. Address common customer questions. Include warranty/guarantee info. Use power words: Premium, Professional, Durable, Certified.'
+    seoFocus: 'Front-load high-volume keywords. Include exact match phrases buyers search. Add long-tail keywords naturally. Use numbers and specifications for better ranking. Focus on technical specs and actual product features.',
+    conversionTips: 'List specific technical specifications. Include exact measurements and materials. Mention compatibility with specific devices/systems. State actual performance metrics. Use industry-standard terminology.'
   },
   etsy: {
     titleMax: 140,
@@ -57,8 +57,8 @@ const PLATFORM_CONFIG: Record<string, {
     algorithm: 'Etsy Search — ranks on: listing quality score, recency, shop performance, tags match',
     titleFormat: '[Item] + [Style/Material] + [Occasion] + [Recipient] + pipe separators (|)',
     specialRules: 'Use pipe (|) separators. Include gift occasions (Gift for Her, Birthday Gift). Mention handmade/handcrafted. All 13 tags must be used. Tags max 20 chars each.',
-    seoFocus: 'Use all 13 tags strategically. Include gift-related keywords. Add occasion keywords (wedding, birthday, anniversary). Use material keywords. Include style descriptors (vintage, modern, rustic).',
-    conversionTips: 'Tell the story behind the product. Emphasize handmade quality. Mention customization options. Highlight unique features. Use emotional language. Include care instructions.'
+    seoFocus: 'Use all 13 tags strategically. Include gift-related keywords. Add occasion keywords (wedding, birthday, anniversary). Use material keywords. Include style descriptors (vintage, modern, rustic). Focus on craftsmanship and materials.',
+    conversionTips: 'Describe the craftsmanship process. List specific materials used. Mention dimensions and measurements. Highlight customization options. Include care instructions. State production time.'
   },
   shopify: {
     titleMax: 70,
@@ -72,8 +72,8 @@ const PLATFORM_CONFIG: Record<string, {
     algorithm: 'Google SEO — ranks on: title relevance, meta description, page content, backlinks',
     titleFormat: '[Brand] + [Product Name] + [Key Feature] — concise, Google-friendly',
     specialRules: 'Title is the SEO title tag — keep it natural and clickable. Description should open with a meta description in first 160 chars. Include long-tail keywords naturally.',
-    seoFocus: 'Optimize for Google search. Use long-tail keywords. Include location keywords if relevant. Add brand name. Use natural language. Include product category keywords.',
-    conversionTips: 'Strong brand voice. Emphasize unique value proposition. Include social proof. Highlight free shipping if available. Use scarcity/urgency carefully. Add trust signals.'
+    seoFocus: 'Optimize for Google search. Use long-tail keywords. Include location keywords if relevant. Add brand name. Use natural language. Include product category keywords. Focus on specific features and specifications.',
+    conversionTips: 'List technical specifications. Include exact dimensions and materials. State shipping details. Mention return policy. Provide size charts. Include compatibility information.'
   },
   ebay: {
     titleMax: 80,
@@ -87,8 +87,8 @@ const PLATFORM_CONFIG: Record<string, {
     algorithm: 'eBay Cassini — ranks on: title keyword match, item specifics, seller metrics, price',
     titleFormat: '[Brand] + [Model/Type] + [Key Spec] + [Condition if used] + [Compatible With]',
     specialRules: 'Include brand, model number, condition. List compatibility. Include key specs in title. No promotional terms.',
-    seoFocus: 'Use exact brand and model names. Include condition keywords (New, Used, Refurbished). Add compatibility keywords. Use specific model numbers. Include size/color in title.',
-    conversionTips: 'Clear condition description. Detailed item specifics. Include shipping details. Mention return policy. Add measurements. Use high-quality photos. Build trust with transparency.'
+    seoFocus: 'Use exact brand and model names. Include condition keywords (New, Used, Refurbished). Add compatibility keywords. Use specific model numbers. Include size/color in title. List technical specifications.',
+    conversionTips: 'State exact condition with details. List all included items. Provide precise measurements. Mention compatibility with specific models. Include shipping details. State return policy clearly.'
   },
   walmart: {
     titleMax: 75,
@@ -102,15 +102,23 @@ const PLATFORM_CONFIG: Record<string, {
     algorithm: 'Walmart Search — ranks on: relevance, price competitiveness, item performance, reviews',
     titleFormat: '[Brand] + [Quality Descriptor] + [Item Type] + [Key Feature] + [Pack Count]',
     specialRules: 'Family-friendly tone only. Emphasize value and quantity. Include pack sizes. Practical language.',
-    seoFocus: 'Emphasize value keywords (Pack, Bundle, Set). Include family-friendly terms. Add practical use cases. Use quality descriptors. Include quantity in title.',
-    conversionTips: 'Highlight value for money. Emphasize family benefits. Include pack sizes prominently. Mention durability. Use trust words: Trusted, Reliable, Quality. Compare to retail price if better.'
+    seoFocus: 'Emphasize value keywords (Pack, Bundle, Set). Include family-friendly terms. Add practical use cases. Use quality descriptors. Include quantity in title. Focus on specifications and pack contents.',
+    conversionTips: 'List exact quantity and pack size. Include dimensions per item. State total weight. Mention durability specifications. List all included items. Provide usage instructions.'
   }
 };
 
 const PROHIBITED = [
+  // Absolutely forbidden - will cause rejection
   'FREE', 'SALE', 'BEST', '#1', 'CHEAP', 'GUARANTEE', 'WINNER',
   'AMAZING', 'INCREDIBLE', 'UNBELIEVABLE', 'PERFECT', 'ULTIMATE',
-  'REVOLUTIONARY', 'MIRACLE', 'MAGIC', 'INSTANT', 'EASY MONEY'
+  'REVOLUTIONARY', 'MIRACLE', 'MAGIC', 'INSTANT', 'EASY MONEY',
+  'PREMIUM', 'LUXURY', 'EXCLUSIVE', 'LIMITED', 'SPECIAL OFFER',
+  'SOLVE YOUR PROBLEM', 'GAME CHANGER', 'MUST HAVE', 'LIFE CHANGING',
+  'TOP RATED', 'AWARD WINNING', 'WORLD CLASS', 'INDUSTRY LEADING',
+  'TRANSFORM YOUR', 'CHANGE EVERYTHING', 'NEVER BEFORE', 'BREAKTHROUGH',
+  'STATE OF THE ART', 'NEXT LEVEL', 'TAKE IT TO', 'CUTTING EDGE',
+  'ELEVATE YOUR', 'UNLOCK', 'DISCOVER THE SECRET', 'PROFESSIONAL GRADE',
+  'MILITARY GRADE', 'HOSPITAL GRADE', 'COMMERCIAL GRADE', 'STUDIO QUALITY'
 ];
 
 // ENHANCED: Product type specific guidance
@@ -231,9 +239,50 @@ PROFESSIONAL QUALITY STANDARDS:
 - Write for humans first, algorithms second — must sound natural and professional
 - Every claim must be realistic and believable
 - No keyword stuffing — natural integration only
-- Use power words that drive conversions
-- Address customer pain points and desires
-- Include social proof elements when relevant
+- Use ONLY product-specific language — NO generic marketing words
+- Focus on actual specifications, features, and technical details
+- Address customer pain points with specific solutions, not vague promises
+- Use industry-standard terminology and technical specifications
+
+CRITICAL: ABSOLUTELY FORBIDDEN WORDS AND PHRASES:
+You will be REJECTED if you use ANY of these:
+- Premium, Luxury, Exclusive, Limited, Special Offer, Solve Your Problem
+- Game Changer, Must Have, Life Changing, Top Rated, Award Winning
+- World Class, Industry Leading, Revolutionary, Ultimate, Perfect
+- Amazing, Incredible, Unbelievable, Best, #1, Winner
+- Transform Your Life, Change Everything, Never Before
+- Breakthrough, Cutting Edge (unless referring to actual blade technology)
+- State of the Art, Next Level, Take It to the Next Level
+
+INSTEAD, ALWAYS USE:
+✓ Exact technical specifications (processor model, RAM amount, storage capacity)
+✓ Precise measurements (dimensions in inches/cm, weight in lbs/kg)
+✓ Specific materials (stainless steel 304, aluminum alloy, tempered glass)
+✓ Actual performance metrics (battery life in hours, speed in RPM/GHz)
+✓ Compatibility details (works with iPhone 12-15, Windows 10/11, USB-C)
+✓ Certifications and standards (FDA approved, CE certified, UL listed)
+✓ Quantifiable features (12-hour battery, 1080p resolution, 5-year warranty)
+
+PROFESSIONAL WRITING EXAMPLES:
+
+BAD (Marketing Fluff):
+✗ "Premium quality rice cooker that will transform your cooking experience"
+✗ "Ultimate solution for perfect rice every time"
+✗ "Game-changing technology for the modern kitchen"
+
+GOOD (Professional & Specific):
+✓ "CUCKOO 6-Cup Rice Cooker with Twin Pressure System and Induction Heating Technology"
+✓ "Stainless steel inner pot with 12 preset cooking modes including GABA rice and porridge"
+✓ "Silent pressure release system operates at 35dB, voice navigation in English and Spanish"
+
+TITLE STRUCTURE RULES:
+1. Start with BRAND + PRODUCT TYPE
+2. Add KEY SPECIFICATION (capacity, size, model)
+3. Include MAIN TECHNOLOGY/FEATURE
+4. List SPECIFIC CAPABILITIES
+5. End with MODEL NUMBER if space allows
+
+Example: "CUCKOO CRP-PHTR0609FS Twin Pressure Rice Cooker – 6-Cup Uncooked Capacity, Induction Heating, 12 Cooking Modes, Stainless Steel Inner Pot, Voice Navigation, Silent Pressure System"
 
 KEYWORD STRATEGY:
 - Primary keyword: 1-2% density (appears naturally 1-2 times per 100 words)
@@ -315,37 +364,45 @@ CRITICAL - WHEN TO OPTIMIZE VS WHEN TO KEEP:
     prompt += `
 === PROFESSIONAL SEO ANALYSIS (Think deeply before writing) ===
 
+CRITICAL INSTRUCTION: You are writing for AMAZON/E-COMMERCE, not for marketing brochures.
+- Write like a TECHNICAL SPECIFICATION SHEET, not an advertisement
+- Use FACTUAL LANGUAGE only - no hype, no exaggeration, no marketing fluff
+- Every word must provide SPECIFIC INFORMATION about the product
+- If you cannot state a SPECIFIC FACT, do not write that sentence
+
 STEP 1 - KEYWORD RESEARCH:
 - What is the PRIMARY keyword buyers use to find this product? (high-volume, exact match)
 - What are 3-5 SECONDARY keywords? (related searches, variations)
 - What are 2-3 LONG-TAIL keywords? (specific phrases, lower competition)
 - What LSI keywords should be included? (semantically related terms)
 
-STEP 2 - COMPETITIVE ANALYSIS:
-- What keywords are competitors ranking for?
-- What makes this product UNIQUE vs competitors?
-- What are the TOP 3 BENEFITS that drive purchases? (emotional + practical)
-- What customer PAIN POINTS does this solve?
+STEP 2 - TECHNICAL ANALYSIS:
+- What are the EXACT specifications? (dimensions, weight, capacity, power)
+- What MATERIALS is it made from? (stainless steel, aluminum, plastic type)
+- What TECHNOLOGY does it use? (induction, pressure, digital, etc.)
+- What CERTIFICATIONS does it have? (FDA, CE, UL, ETL)
+- What is INCLUDED in the package? (accessories, manuals, warranty)
 
-STEP 3 - TARGET BUYER PROFILE:
-- Who is buying this? (demographics, psychographics)
-- What do they care most about? (price, quality, speed, features)
-- What objections might they have? (address in description)
-- What would make them click BUY NOW?
+STEP 3 - FEATURE EXTRACTION:
+- What are the MEASURABLE features? (12 modes, 6-cup capacity, 1100W power)
+- What are the FUNCTIONAL capabilities? (voice navigation, auto shut-off)
+- What COMPATIBILITY does it have? (works with X, fits Y, supports Z)
+- What is the WARRANTY period? (1 year, 3 years, lifetime)
 
-STEP 4 - MISSING DATA INFERENCE:
-- What specific details (numbers, specs, materials) should be inferred from context?
-- What dimensions/measurements are standard for this product type?
-- What certifications/standards apply?
-- What's included in the package?
+STEP 4 - COMPETITIVE DIFFERENTIATION:
+- What makes this product TECHNICALLY different? (twin pressure vs single)
+- What SPECIFIC advantages does it have? (35dB vs 60dB noise level)
+- What QUANTIFIABLE benefits? (cooks 30% faster, uses 20% less energy)
 
 STEP 5 - OPTIMIZATION STRATEGY:
-- How can we maximize character usage (90-100%)?
-- Where should keywords be placed for maximum impact?
-- What power words will drive conversions?
-- How can we stand out from competitors?
+- How can we maximize character usage (90-100%) with FACTUAL information?
+- Where should technical keywords be placed for maximum impact?
+- What specific numbers and measurements will drive conversions?
+- How can we stand out with TECHNICAL SUPERIORITY, not marketing claims?
 
-Now generate the PROFESSIONAL, SEO-OPTIMIZED listing for ${request.platform.toUpperCase()}.
+Now generate the PROFESSIONAL, TECHNICAL, SEO-OPTIMIZED listing for ${request.platform.toUpperCase()}.
+
+REMEMBER: NO marketing words. ONLY technical facts, specifications, and measurable features.
 
 === REQUIRED JSON OUTPUT (return this exact structure) ===
 {

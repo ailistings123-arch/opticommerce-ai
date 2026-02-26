@@ -19,12 +19,18 @@ export default function Navigation() {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link href="/login">
-              <button className="text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-2 sm:px-3 py-1.5 sm:py-2">
+              <button 
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors px-2 sm:px-3 py-1.5 sm:py-2 min-h-[44px]"
+                aria-label="Sign in to your account"
+              >
                 Sign in
               </button>
             </Link>
             <Link href="/signup">
-              <button className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg shadow-blue-200 whitespace-nowrap">
+              <button 
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-xs sm:text-sm font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg shadow-blue-200 whitespace-nowrap min-h-[44px]"
+                aria-label="Get started with free account"
+              >
                 Get Started
               </button>
             </Link>

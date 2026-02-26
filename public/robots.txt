@@ -1,0 +1,8 @@
+# robots.txt for Listing Optimizer AI
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /_next/
+
+Sitemap: https://listingoptimizer.site/sitemap.xml

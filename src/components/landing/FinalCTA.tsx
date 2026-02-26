@@ -29,7 +29,7 @@ export default function FinalCTA() {
           </div>
           <div className="flex items-center gap-2">
             <CardGiftcardIcon className="text-pink-300" sx={{ fontSize: 24 }} />
-            <span className="text-lg font-semibold">10 free optimizations</span>
+            <span className="text-lg font-semibold">5 free optimizations</span>
           </div>
           <div className="flex items-center gap-2">
             <CheckCircleIcon className="text-blue-300" sx={{ fontSize: 24 }} />

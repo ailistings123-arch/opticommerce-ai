@@ -8,6 +8,7 @@ import Hero from '@/components/landing/Hero';
 import Stats from '@/components/landing/Stats';
 import Problem from '@/components/landing/Problem';
 import Solution from '@/components/landing/Solution';
+import HowItWorks from '@/components/landing/HowItWorks';
 import CaseStudies from '@/components/landing/CaseStudies';
 import Features from '@/components/landing/Features';
 import Benefits from '@/components/landing/Benefits';
@@ -52,6 +53,7 @@ export default function Home() {
       <Stats />
       <Problem />
       <Solution />
+      <HowItWorks />
       <CaseStudies />
       <Features />
       <Benefits />

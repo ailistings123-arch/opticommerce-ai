@@ -7,20 +7,15 @@ import { adminAuth } from '@/lib/firebase/admin';
 // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
 
 const PLAN_PRICES = {
-  basic: {
-    amount: 900, // $9.00 in cents
-    credits: 50,
-    name: 'Basic Plan'
-  },
-  premium: {
+  starter: {
     amount: 1900, // $19.00 in cents
-    credits: 999999,
-    name: 'Premium Plan'
+    credits: 30,
+    name: 'Starter Plan'
   },
-  enterprise: {
-    amount: 4900, // $49.00 in cents
+  professional: {
+    amount: 4500, // $45.00 in cents
     credits: 999999,
-    name: 'Enterprise Plan'
+    name: 'Professional Plan'
   }
 };
 

@@ -11,27 +11,33 @@ export default function Hero() {
     <section className="pt-8 sm:pt-12 md:pt-16 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-blue-50 to-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-900 mb-3 sm:mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight">
             Transform Your Product Listings into{' '}
             <span className="text-blue-600">Sales Machines</span>
           </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-3 leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-4 sm:mb-5 leading-relaxed">
             AI-powered optimization that turns mediocre listings into top-ranking, high-converting product pages. 
-            Boost visibility by 300%, increase conversions by 68%—all in under 2 minutes.
+            Boost visibility by 300%, increase conversions by 88%—all in under 2 minutes.
           </p>
-          <p className="text-xs sm:text-sm text-gray-700 mb-4 sm:mb-5">
-            Join 12,000+ sellers who increased revenue by{' '}
-            <span className="font-semibold text-blue-600">$4,200/month</span> using ListingOptimizer AI.
+          <p className="text-sm sm:text-base text-gray-700 mb-6 sm:mb-8">
+            Join 12,000+ active sellers who increased revenue by{' '}
+            <span className="font-semibold text-blue-600">$4,200/month</span> using Listing Optimizer AI.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center mb-4 sm:mb-5">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8">
             <Link href="/signup" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-1.5">
-                <ArrowForwardIcon sx={{ fontSize: 16 }} /> Start Optimizing Free
+              <button 
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white text-sm sm:text-base font-semibold rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 min-h-[48px]"
+                aria-label="Start optimizing your product listings for free"
+              >
+                <ArrowForwardIcon sx={{ fontSize: 20 }} /> Start Optimizing Free
               </button>
             </Link>
-            <button className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-white text-gray-700 text-xs sm:text-sm font-medium rounded-lg border border-gray-300 hover:border-gray-400 transition-colors flex items-center justify-center gap-1.5">
-              <PlayArrowIcon sx={{ fontSize: 16 }} />
+            <button 
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-700 text-sm sm:text-base font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 transition-colors flex items-center justify-center gap-2 min-h-[48px]"
+              aria-label="Watch product demo video"
+            >
+              <PlayArrowIcon sx={{ fontSize: 20 }} />
               Watch Demo
             </button>
           </div>
@@ -52,7 +58,7 @@ export default function Hero() {
               </div>
               <div className="flex items-center gap-0.5">
                 <CheckCircleIcon className="text-green-600" sx={{ fontSize: 12 }} />
-                <span>10 free optimizations</span>
+                <span>5 free optimizations</span>
               </div>
               <div className="flex items-center gap-0.5">
                 <CheckCircleIcon className="text-green-600" sx={{ fontSize: 12 }} />

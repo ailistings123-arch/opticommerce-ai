@@ -42,10 +42,11 @@ export default function Problem() {
     <section className="py-10 sm:py-14 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8 sm:mb-10">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
-            Your Great Products Are Invisible Because Your Listings Suck
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+            Stop Wasting Ad Spend
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">The Painful Reality:</p>
+          <p className="text-base sm:text-lg text-gray-600 mb-2">Your Great Products Are Invisible Because Your Listings Aren't Optimized</p>
+          <p className="text-sm sm:text-base text-gray-500">The Painful Reality:</p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-5 mb-8 sm:mb-10">

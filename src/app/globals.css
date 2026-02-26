@@ -27,11 +27,27 @@ body {
   line-height: 1.6;
   letter-spacing: -0.01em;
   font-size: 15px;
+  /* Performance optimizations */
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* Performance: GPU acceleration for animations */
+.animate-fade-in,
+.animate-slide-in,
+.animate-scale-in,
+button:hover,
+a:hover,
+.card:hover {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 /* Improved Typography - Smaller, More Balanced */

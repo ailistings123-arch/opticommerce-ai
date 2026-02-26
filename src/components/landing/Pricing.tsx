@@ -6,13 +6,13 @@ const plans = [
   {
     name: "FREE",
     price: "$0",
-    period: "/month",
+    period: "",
     description: "Perfect for trying out",
     features: [
-      "10 optimizations/month",
+      "5 optimizations total",
       "Basic SEO scores",
       "Standard templates",
-      "All 6 platforms",
+      "All 5 platforms",
       "Copy/paste exports",
       "Community support"
     ],
@@ -28,7 +28,7 @@ const plans = [
     badge: "Most Popular",
     features: [
       "Everything in Free, plus:",
-      "50 optimizations/month",
+      "30 optimizations/month",
       "Advanced keyword research",
       "Competitor analysis",
       "Before/after comparisons",
@@ -42,12 +42,12 @@ const plans = [
   },
   {
     name: "PROFESSIONAL",
-    price: "$49",
+    price: "$45",
     period: "/month",
     description: "For serious sellers",
     features: [
       "Everything in Starter, plus:",
-      "200 optimizations/month",
+      "Unlimited optimizations",
       "Bulk optimization (10 at once)",
       "A+ content templates",
       "Keyword rank tracking",
@@ -59,34 +59,7 @@ const plans = [
     cta: "Start 7-Day Free Trial",
     highlighted: false,
     link: "/signup"
-  },
-  {
-    name: "ENTERPRISE",
-    price: "$149",
-    period: "/month",
-    description: "For agencies & brands",
-    features: [
-      "Everything in Professional, plus:",
-      "Unlimited optimizations",
-      "Unlimited bulk optimization",
-      "White-label option",
-      "Dedicated account manager",
-      "Custom integrations",
-      "Unlimited team members",
-      "API access (50K calls/month)",
-      "Custom training & onboarding",
-      "99.9% uptime SLA"
-    ],
-    cta: "Contact Sales",
-    highlighted: false,
-    link: "/signup"
   }
-];
-
-const addOns = [
-  { name: "Advanced Keyword Research", price: "$9/month", description: "Real-time search volumes, CPC data, trend analysis" },
-  { name: "Rank Tracking", price: "$19/month", description: "Monitor your keyword rankings daily across all platforms" },
-  { name: "Done-For-You Service", price: "$99/product", description: "We optimize it for you, professionally" }
 ];
 
 export default function Pricing() {
@@ -100,7 +73,7 @@ export default function Pricing() {
           <p className="text-base sm:text-lg md:text-xl text-gray-600 px-2">Choose the plan that fits your business</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12 sm:mb-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16">
           {plans.map((plan, index) => (
             <div
               key={index}
@@ -158,19 +131,6 @@ export default function Pricing() {
               </Link>
             </div>
           ))}
-        </div>
-
-        <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 border border-gray-200">
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Add-Ons</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {addOns.map((addon, index) => (
-              <div key={index} className="bg-white p-4 sm:p-6 rounded-xl border border-gray-200">
-                <h4 className="font-bold text-gray-900 mb-2 text-sm sm:text-base">{addon.name}</h4>
-                <p className="text-xl sm:text-2xl font-bold text-blue-600 mb-2 sm:mb-3">{addon.price}</p>
-                <p className="text-xs sm:text-sm text-gray-600">{addon.description}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>

@@ -96,40 +96,40 @@ export class AIProviderFactory {
   private static getAllAvailableProviders(): Array<{ type: AIProviderType; config: AIProviderConfig }> {
     const providers: Array<{ type: AIProviderType; config: AIProviderConfig }> = [];
 
-    // Priority 1: Groq (fastest, 30 req/min free)
+    // Priority 1: Groq (fastest, 30 req/min free, best model)
     if (process.env.GROQ_API_KEY) {
       providers.push({
         type: 'groq',
         config: {
           apiKey: process.env.GROQ_API_KEY,
-          model: 'llama-3.3-70b-versatile',
+          model: 'llama-3.3-70b-versatile', // Best Groq model for SEO
           maxTokens: 8192,
           temperature: 0.3
         }
       });
     }
 
-    // Priority 2: Cloudflare (10,000 req/day free)
+    // Priority 2: Cloudflare (10,000 req/day free, powerful model)
     if (process.env.CLOUDFLARE_API_KEY && process.env.CLOUDFLARE_ACCOUNT_ID) {
       providers.push({
         type: 'cloudflare',
         config: {
           apiKey: process.env.CLOUDFLARE_API_KEY,
           accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
-          model: '@cf/meta/llama-3.1-70b-instruct',
+          model: '@cf/meta/llama-3.1-70b-instruct', // Best Cloudflare model
           maxTokens: 8192,
           temperature: 0.3
         }
       });
     }
 
-    // Priority 3: Gemini (15 req/min free)
+    // Priority 3: Gemini (15 req/min free, Google's best)
     if (process.env.GEMINI_API_KEY) {
       providers.push({
         type: 'gemini',
         config: {
           apiKey: process.env.GEMINI_API_KEY,
-          model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+          model: process.env.GEMINI_MODEL || 'gemini-2.0-flash', // Latest Gemini model
           maxTokens: 8192,
           temperature: 0.3
         }
