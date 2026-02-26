@@ -284,7 +284,7 @@ export default function UpgradeModal({ isOpen, onClose, currentUsage, usageLimit
 
       {/* Feature Comparison */}
       <div className="bg-gray-50 rounded-lg p-4 mb-4">
-        <h4 className="font-semibold text-gray-900 mb-3 text-sm">What you get with {selectedPlan === 'basic' ? 'Basic' : 'Premium'}:</h4>
+        <h4 className="font-semibold text-gray-900 mb-3 text-sm">What you get with {selectedPlan === 'starter' ? 'Starter' : selectedPlan === 'professional' ? 'Professional' : 'Enterprise'}:</h4>
         <div className="space-y-2">
           {plans[selectedPlan].features.map((feature, index) => (
             <div key={index} className="flex items-start gap-2">
