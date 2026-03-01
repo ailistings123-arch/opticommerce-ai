@@ -10,7 +10,6 @@ import {
   TrendingUp, 
   DollarSign,
   Shield,
-  Database,
   Activity,
   Settings
 } from 'lucide-react';
@@ -25,16 +24,21 @@ export default function AdminPanel() {
   const [users, setUsers] = useState<any[]>([]);
   const [optimizations, setOptimizations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'optimizations' | 'settings'>('overview');
 
   useEffect(() => {
+    console.log('Admin Panel - Auth State:', { user: user?.email, authLoading });
+    
     if (!authLoading) {
       if (!user) {
+        console.log('No user - redirecting to login');
         router.push('/login');
       } else if (!ADMIN_EMAILS.includes(user.email || '')) {
-        // Not admin - redirect to dashboard
+        console.log('Not admin - redirecting to dashboard');
         router.push('/dashboard');
       } else {
+        console.log('Admin user detected - loading data');
         loadAdminData();
       }
     }
@@ -43,6 +47,9 @@ export default function AdminPanel() {
   const loadAdminData = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Fetching admin data...');
       
       // Fetch admin stats
       const statsResponse = await fetch('/api/admin/stats', {
@@ -51,9 +58,16 @@ export default function AdminPanel() {
         }
       });
       
+      console.log('Stats response:', statsResponse.status);
+      
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
+        console.log('Stats data:', statsData);
         setStats(statsData.data);
+      } else {
+        const errorData = await statsResponse.json();
+        console.error('Stats error:', errorData);
+        setError(`Failed to load stats: ${errorData.error}`);
       }
 
       // Fetch all users
@@ -63,9 +77,15 @@ export default function AdminPanel() {
         }
       });
       
+      console.log('Users response:', usersResponse.status);
+      
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
+        console.log('Users data:', usersData.data?.length, 'users');
         setUsers(usersData.data);
+      } else {
+        const errorData = await usersResponse.json();
+        console.error('Users error:', errorData);
       }
 
       // Fetch recent optimizations
@@ -75,13 +95,20 @@ export default function AdminPanel() {
         }
       });
       
+      console.log('Optimizations response:', optimizationsResponse.status);
+      
       if (optimizationsResponse.ok) {
         const optimizationsData = await optimizationsResponse.json();
+        console.log('Optimizations data:', optimizationsData.data?.length, 'items');
         setOptimizations(optimizationsData.data);
+      } else {
+        const errorData = await optimizationsResponse.json();
+        console.error('Optimizations error:', errorData);
       }
 
     } catch (error) {
       console.error('Failed to load admin data:', error);
+      setError('Failed to load admin data. Check console for details.');
     } finally {
       setLoading(false);
     }
@@ -135,18 +162,34 @@ export default function AdminPanel() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
         <Spinner size="lg" />
+        <p className="text-gray-400 mt-4">Loading admin panel...</p>
       </div>
     );
   }
 
   if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900">
+        <Shield className="text-red-500 mb-4" size={64} />
+        <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+        <p className="text-gray-400">You don't have permission to access this page.</p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-900">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-900 border-b border-red-700 px-4 py-3">
+          <div className="max-w-7xl mx-auto">
+            <p className="text-red-200 text-sm">⚠️ {error}</p>
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
