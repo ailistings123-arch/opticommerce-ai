@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type Platform = 'amazon' | 'shopify' | 'etsy' | 'ebay' | 'walmart';
+export type Platform = 'amazon' | 'shopify' | 'etsy' | 'ebay' | 'walmart' | 'woocommerce';
 export type Tier = 'free' | 'basic' | 'premium' | 'enterprise';
 export type OptimizationGoal = 'seo' | 'conversion' | 'compliance' | 'mobile' | 'competitive';
 export type ExperienceLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';

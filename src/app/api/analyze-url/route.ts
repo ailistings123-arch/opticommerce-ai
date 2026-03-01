@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
     else if (urlLower.includes('etsy')) platform = 'etsy';
     else if (urlLower.includes('shopify') || urlLower.includes('.store') || urlLower.includes('.shop')) platform = 'shopify';
     else if (urlLower.includes('walmart')) platform = 'walmart';
+    else if (urlLower.includes('/product/') || urlLower.includes('/shop/') || urlLower.includes('woocommerce')) platform = 'woocommerce';
 
     // Scrape the URL to get actual product data
     let scrapedData;

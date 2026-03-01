@@ -32,7 +32,7 @@ const benefits = [
   {
     icon: Shield,
     title: "Platform-Specific Rules",
-    description: "Each marketplace has unique requirements. Our AI automatically adapts to Amazon, Shopify, Etsy, and eBay guidelines.",
+    description: "Each marketplace has unique requirements. Our AI automatically adapts to Amazon, Shopify, Etsy, eBay, Walmart, and WooCommerce guidelines.",
     color: "text-red-600",
     bgColor: "bg-red-100"
   },

@@ -132,6 +132,7 @@ export default function Mode2CreateNew({ onSubmit, loading }: Mode2Props) {
           <option value="etsy">Etsy</option>
           <option value="ebay">eBay</option>
           <option value="walmart">Walmart</option>
+          <option value="woocommerce">WooCommerce</option>
         </select>
       </div>
 

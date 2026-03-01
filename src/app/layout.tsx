@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://listingoptimizer.site'),
   title: "Listing Optimizer AI | Transform Product Listings into Sales Machines",
   description: "Boost your marketplace visibility by 300% and increase conversions by 88%. Listing Optimizer AI uses advanced algorithms to turn underperforming product pages into high-ranking sales machines in under 2 minutes.",
-  keywords: "product listing optimization, AI SEO, Amazon listing optimizer, Shopify SEO, Etsy optimization, eBay listing tool, Walmart marketplace, e-commerce AI, product description generator, SEO score, listing analyzer, sales conversion, marketplace visibility",
+  keywords: "product listing optimization, AI SEO, Amazon listing optimizer, Shopify SEO, Etsy optimization, eBay listing tool, Walmart marketplace, WooCommerce optimization, e-commerce AI, product description generator, SEO score, listing analyzer, sales conversion, marketplace visibility",
   authors: [{ name: "Listing Optimizer AI" }],
   creator: "Listing Optimizer AI",
   publisher: "Listing Optimizer AI",
@@ -105,7 +105,7 @@ export default function RootLayout({
               "screenshot": "https://listingoptimizer.site/logo.svg",
               "featureList": [
                 "AI-Powered SEO Optimization",
-                "Multi-Platform Support (Amazon, Shopify, Etsy, eBay, Walmart)",
+                "Multi-Platform Support (Amazon, Shopify, Etsy, eBay, Walmart, WooCommerce)",
                 "Automatic Keyword Research",
                 "Before/After Comparison",
                 "Real-time SEO Scoring",

@@ -33,13 +33,6 @@ export default function Hero() {
                 <ArrowForwardIcon sx={{ fontSize: 20 }} /> Start Optimizing Free
               </button>
             </Link>
-            <button 
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-700 text-sm sm:text-base font-semibold rounded-lg border-2 border-gray-300 hover:border-gray-400 transition-colors flex items-center justify-center gap-2 min-h-[48px]"
-              aria-label="Watch product demo video"
-            >
-              <PlayArrowIcon sx={{ fontSize: 20 }} />
-              Watch Demo
-            </button>
           </div>
 
           <div className="flex flex-col items-center gap-2">

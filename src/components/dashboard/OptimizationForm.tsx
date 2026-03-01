@@ -68,6 +68,7 @@ export default function OptimizationForm({ onSuccess, userData }: OptimizationFo
             <option value="etsy" className="text-gray-900 bg-white">Etsy</option>
             <option value="ebay" className="text-gray-900 bg-white">eBay</option>
             <option value="walmart" className="text-gray-900 bg-white">Walmart</option>
+            <option value="woocommerce" className="text-gray-900 bg-white">WooCommerce</option>
           </select>
         </div>
 

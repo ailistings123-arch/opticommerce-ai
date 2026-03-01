@@ -26,6 +26,9 @@ export default function UrlOptimizationForm({ onSuccess }: UrlOptimizationFormPr
     if (urlLower.includes('shopify.') || urlLower.includes('.myshopify.')) return 'shopify';
     if (urlLower.includes('etsy.')) return 'etsy';
     if (urlLower.includes('ebay.')) return 'ebay';
+    if (urlLower.includes('walmart.')) return 'walmart';
+    // WooCommerce detection - look for common WooCommerce URL patterns
+    if (urlLower.includes('/product/') || urlLower.includes('/shop/') || urlLower.includes('woocommerce')) return 'woocommerce';
     return null;
   };
 
@@ -121,7 +124,7 @@ export default function UrlOptimizationForm({ onSuccess }: UrlOptimizationFormPr
           <div className="text-sm text-blue-800">
             <p className="font-semibold mb-1">How it works:</p>
             <ol className="list-decimal list-inside space-y-1 text-blue-700">
-              <li>Paste any product URL from Amazon, Shopify, Etsy, or eBay</li>
+              <li>Paste any product URL from Amazon, Shopify, Etsy, eBay, Walmart, or WooCommerce</li>
               <li>Our AI will analyze the existing listing</li>
               <li>Get optimized title, description, and SEO improvements</li>
             </ol>
@@ -167,6 +170,8 @@ export default function UrlOptimizationForm({ onSuccess }: UrlOptimizationFormPr
           <option value="shopify" className="text-gray-900 bg-white">Shopify</option>
           <option value="etsy" className="text-gray-900 bg-white">Etsy</option>
           <option value="ebay" className="text-gray-900 bg-white">eBay</option>
+          <option value="walmart" className="text-gray-900 bg-white">Walmart</option>
+          <option value="woocommerce" className="text-gray-900 bg-white">WooCommerce</option>
         </select>
         <p className="mt-1 text-xs text-gray-500">
           Platform auto-detected from URL

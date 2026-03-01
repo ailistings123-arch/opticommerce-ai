@@ -44,7 +44,7 @@ export default function Mode3AnalyzeUrl({ onSubmit, loading }: Mode3Props) {
           disabled={loading}
         />
         <p className="text-xs text-gray-500 mt-1">
-          Paste any product URL from Amazon, Shopify, eBay, Etsy, or Walmart
+          Paste any product URL from Amazon, Shopify, eBay, Etsy, Walmart, or WooCommerce
         </p>
       </div>
 

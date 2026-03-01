@@ -94,6 +94,7 @@ export default function AIListingGenerator() {
             <option value="etsy">Etsy</option>
             <option value="shopify">Shopify</option>
             <option value="walmart">Walmart</option>
+            <option value="woocommerce">WooCommerce</option>
           </select>
         </div>
 

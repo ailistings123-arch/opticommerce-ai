@@ -100,6 +100,7 @@ export default function Mode1OptimizeExisting({ onSubmit, loading }: Mode1Props)
           <option value="etsy">Etsy</option>
           <option value="ebay">eBay</option>
           <option value="walmart">Walmart</option>
+          <option value="woocommerce">WooCommerce</option>
         </select>
       </div>
 

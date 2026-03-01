@@ -104,6 +104,21 @@ const PLATFORM_CONFIG: Record<string, {
     specialRules: 'Family-friendly tone only. Emphasize value and quantity. Include pack sizes. Practical language.',
     seoFocus: 'Emphasize value keywords (Pack, Bundle, Set). Include family-friendly terms. Add practical use cases. Use quality descriptors. Include quantity in title. Focus on specifications and pack contents.',
     conversionTips: 'List exact quantity and pack size. Include dimensions per item. State total weight. Mention durability specifications. List all included items. Provide usage instructions.'
+  },
+  woocommerce: {
+    titleMax: 70,
+    titleTarget: '60-70 characters for SEO',
+    bulletCount: 5,
+    bulletTarget: '100-200 characters each, benefit-first',
+    descMin: 400,
+    descTarget: '500-1000 characters, brand-voice, engaging, SEO-optimized',
+    keywordsMax: 12,
+    tone: 'Brand-aligned, engaging, conversion-focused, SEO-optimized',
+    algorithm: 'Google SEO + WooCommerce Search — ranks on: title relevance, meta description, product content, schema markup, reviews',
+    titleFormat: '[Brand] + [Product Name] + [Key Feature] + [Benefit] — natural, Google-friendly',
+    specialRules: 'Title is the SEO title tag — keep it natural and clickable. Description should open with a meta description in first 160 chars. Include long-tail keywords naturally. Use schema-friendly language. Focus on conversions.',
+    seoFocus: 'Optimize for Google search and WooCommerce internal search. Use long-tail keywords. Include location keywords if relevant. Add brand name. Use natural language. Include product category keywords. Focus on specific features and specifications. Add schema-friendly structured data.',
+    conversionTips: 'List technical specifications. Include exact dimensions and materials. State shipping details. Mention return policy. Provide size charts. Include compatibility information. Add trust signals (warranty, guarantees). Use persuasive benefit-driven language.'
   }
 };
 
