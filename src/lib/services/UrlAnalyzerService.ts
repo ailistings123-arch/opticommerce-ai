@@ -81,16 +81,45 @@ export class UrlAnalyzerService {
    * Extract Amazon title
    */
   private static extractAmazonTitle(html: string): string {
-    const titleMatch = html.match(/<span id="productTitle"[^>]*>([^<]+)<\/span>/i);
-    return titleMatch ? titleMatch[1].trim() : '';
+    const selectors = [
+      /<span id="productTitle"[^>]*>([^<]+)<\/span>/i,
+      /<h1[^>]*id="title"[^>]*>([^<]+)<\/h1>/i,
+      /<meta property="og:title" content="([^"]+)"/i,
+      /<title>([^<:]+)/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1].trim()) {
+        return match[1].trim().replace(/\s+/g, ' ');
+      }
+    }
+
+    return 'Product Title';
   }
 
   /**
    * Extract Amazon description
    */
   private static extractAmazonDescription(html: string): string {
-    const descMatch = html.match(/<div id="productDescription"[^>]*>[\s\S]*?<p>([^<]+)<\/p>/i);
-    return descMatch ? descMatch[1].trim() : '';
+    const selectors = [
+      /<div id="productDescription"[^>]*>[\s\S]*?<p>([^<]+)<\/p>/i,
+      /<div id="feature-bullets"[^>]*>([\s\S]*?)<\/div>/i,
+      /<meta property="og:description" content="([^"]+)"/i,
+      /<meta name="description" content="([^"]+)"/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1]) {
+        let desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (desc.length > 50) {
+          return desc.substring(0, 2000);
+        }
+      }
+    }
+
+    return 'Product description';
   }
 
   /**
@@ -208,27 +237,73 @@ export class UrlAnalyzerService {
    * Extract eBay title
    */
   private static extractEbayTitle(html: string): string {
-    const titleMatch = html.match(/<h1 class="x-item-title__mainTitle"[^>]*>([^<]+)<\/h1>/i);
-    return titleMatch ? titleMatch[1].trim() : '';
+    // Try multiple selectors for eBay title
+    const selectors = [
+      /<h1 class="x-item-title__mainTitle"[^>]*><span class="ux-textspans[^"]*">([^<]+)<\/span><\/h1>/i,
+      /<h1 class="x-item-title__mainTitle"[^>]*>([^<]+)<\/h1>/i,
+      /<h1[^>]*itemprop="name"[^>]*>([^<]+)<\/h1>/i,
+      /<meta property="og:title" content="([^"]+)"/i,
+      /<title>([^<|]+)/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1].trim()) {
+        return match[1].trim().replace(/\s+/g, ' ');
+      }
+    }
+
+    return 'Product Title';
   }
 
   /**
    * Extract eBay description
    */
   private static extractEbayDescription(html: string): string {
-    const descMatch = html.match(/<div class="x-item-description"[^>]*>([\s\S]*?)<\/div>/i);
-    if (descMatch) {
-      return descMatch[1].replace(/<[^>]+>/g, '').trim();
+    // Try multiple selectors for description
+    const selectors = [
+      /<div class="x-item-description"[^>]*>([\s\S]*?)<\/div>/i,
+      /<div[^>]*id="desc_div"[^>]*>([\s\S]*?)<\/div>/i,
+      /<meta property="og:description" content="([^"]+)"/i,
+      /<meta name="description" content="([^"]+)"/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1]) {
+        let desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (desc.length > 50) {
+          return desc.substring(0, 2000);
+        }
+      }
     }
-    return '';
+
+    return 'Product description';
   }
 
   /**
    * Extract eBay price
    */
   private static extractEbayPrice(html: string): number | undefined {
-    const priceMatch = html.match(/<span class="ux-textspans">US \$([0-9,.]+)<\/span>/i);
-    return priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : undefined;
+    // Try multiple price selectors
+    const pricePatterns = [
+      /<span class="ux-textspans">US \$([0-9,.]+)<\/span>/i,
+      /<span[^>]*class="[^"]*x-price-primary[^"]*"[^>]*>US \$([0-9,.]+)<\/span>/i,
+      /<span[^>]*itemprop="price"[^>]*content="([0-9.]+)"/i,
+      /\$([0-9,.]+)/
+    ];
+
+    for (const pattern of pricePatterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        if (!isNaN(price) && price > 0) {
+          return price;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   /**
@@ -251,17 +326,27 @@ export class UrlAnalyzerService {
    */
   private static extractEbaySpecs(html: string): Array<{ name: string; value: string }> {
     const specs: Array<{ name: string; value: string }> = [];
-    const specRegex = /<dt class="ux-labels-values__labels"[^>]*>([^<]+)<\/dt>[\s\S]*?<dd class="ux-labels-values__values"[^>]*>([^<]+)<\/dd>/gi;
-    let match;
+    
+    // Try multiple spec patterns
+    const patterns = [
+      /<dt class="ux-labels-values__labels"[^>]*><span[^>]*>([^<]+)<\/span><\/dt>[\s\S]*?<dd class="ux-labels-values__values"[^>]*><span[^>]*>([^<]+)<\/span><\/dd>/gi,
+      /<dt class="ux-labels-values__labels"[^>]*>([^<]+)<\/dt>[\s\S]*?<dd class="ux-labels-values__values"[^>]*>([^<]+)<\/dd>/gi,
+      /<div class="ux-layout-section-evo__col"[^>]*><span class="ux-textspans ux-textspans--BOLD">([^<]+)<\/span><\/div>[\s\S]*?<div class="ux-layout-section-evo__col"[^>]*><span class="ux-textspans">([^<]+)<\/span><\/div>/gi
+    ];
 
-    while ((match = specRegex.exec(html)) !== null) {
-      specs.push({
-        name: match[1].trim(),
-        value: match[2].trim()
-      });
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(html)) !== null) {
+        const name = match[1].trim();
+        const value = match[2].trim();
+        if (name && value && name.length < 100 && value.length < 200) {
+          specs.push({ name, value });
+        }
+      }
+      if (specs.length > 0) break;
     }
 
-    return specs;
+    return specs.slice(0, 15);
   }
 
   /**
