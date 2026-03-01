@@ -441,24 +441,70 @@ export class UrlAnalyzerService {
    * Extract Walmart title
    */
   private static extractWalmartTitle(html: string): string {
-    const titleMatch = html.match(/<h1[^>]*itemprop="name"[^>]*>([^<]+)<\/h1>/i);
-    return titleMatch ? titleMatch[1].trim() : '';
+    const selectors = [
+      /<h1[^>]*itemprop="name"[^>]*>([^<]+)<\/h1>/i,
+      /<h1[^>]*class="[^"]*prod-ProductTitle[^"]*"[^>]*>([^<]+)<\/h1>/i,
+      /<h1[^>]*data-automation-id="product-title"[^>]*>([^<]+)<\/h1>/i,
+      /<meta property="og:title" content="([^"]+)"/i,
+      /<title>([^<|]+)/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1].trim()) {
+        return match[1].trim().replace(/\s+/g, ' ');
+      }
+    }
+
+    return 'Product Title';
   }
 
   /**
    * Extract Walmart description
    */
   private static extractWalmartDescription(html: string): string {
-    const descMatch = html.match(/<div[^>]*itemprop="description"[^>]*>([^<]+)<\/div>/i);
-    return descMatch ? descMatch[1].trim() : '';
+    const selectors = [
+      /<div[^>]*itemprop="description"[^>]*>([\s\S]*?)<\/div>/i,
+      /<div[^>]*class="[^"]*about-desc[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
+      /<div[^>]*data-automation-id="product-description"[^>]*>([\s\S]*?)<\/div>/i,
+      /<meta property="og:description" content="([^"]+)"/i,
+      /<meta name="description" content="([^"]+)"/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1]) {
+        let desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (desc.length > 50) {
+          return desc.substring(0, 2000);
+        }
+      }
+    }
+
+    return 'Product description';
   }
 
   /**
    * Extract Walmart price
    */
   private static extractWalmartPrice(html: string): number | undefined {
-    const priceMatch = html.match(/<span[^>]*itemprop="price"[^>]*content="([0-9.]+)"/i);
-    return priceMatch ? parseFloat(priceMatch[1]) : undefined;
+    const pricePatterns = [
+      /<span[^>]*itemprop="price"[^>]*content="([0-9.]+)"/i,
+      /<span[^>]*class="[^"]*price-characteristic[^"]*"[^>]*>([0-9]+)<\/span>/i,
+      /\$([0-9,.]+)/
+    ];
+
+    for (const pattern of pricePatterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        if (!isNaN(price) && price > 0) {
+          return price;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   /**

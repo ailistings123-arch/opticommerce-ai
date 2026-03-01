@@ -335,6 +335,41 @@ OUTPUT RULES:
 - NEVER use HTML entities (&ndash;, &amp;, &quot;, etc.) - use plain text characters only
 - Use plain hyphens (-), ampersands (&), and quotes (") instead of HTML entities
 
+CRITICAL KEYWORD/TAG RULES:
+Keywords/tags MUST be:
+✓ ACTUAL SEARCH TERMS buyers use (e.g., "wireless headphones", "noise cancelling", "bluetooth 5.0")
+✓ PRODUCT FEATURES (e.g., "waterproof", "rechargeable", "adjustable")
+✓ TECHNICAL SPECS (e.g., "1080p", "stainless steel", "6-cup capacity")
+✓ USE CASES (e.g., "gaming", "travel", "workout", "office")
+✓ COMPATIBILITY (e.g., "iPhone compatible", "USB-C", "Windows 10")
+✓ MATERIALS (e.g., "genuine leather", "aluminum alloy", "tempered glass")
+
+Keywords/tags MUST NEVER be:
+✗ Generic category words (e.g., "product", "item", "thing")
+✗ Descriptive labels (e.g., "productdescription", "sizes", "features")
+✗ Meta information (e.g., "description", "specifications", "details")
+✗ Marketing fluff (e.g., "quality", "premium", "best")
+✗ Single letters or numbers without context (e.g., "M", "L", "24")
+
+GOOD KEYWORD EXAMPLES:
+✓ "wireless bluetooth headphones"
+✓ "noise cancelling technology"
+✓ "40-hour battery life"
+✓ "over-ear design"
+✓ "foldable portable"
+✓ "built-in microphone"
+✓ "memory foam cushions"
+
+BAD KEYWORD EXAMPLES (NEVER USE):
+✗ "productdescription"
+✗ "sizes"
+✗ "features"
+✗ "specifications"
+✗ "details"
+✗ "quality"
+✗ "premium"
+✗ "description"
+
 CRITICAL - WHEN TO OPTIMIZE VS WHEN TO KEEP:
 - If the input listing is ALREADY EXCELLENT (90%+ character usage, keyword-rich, professional, benefit-driven), you should:
   * Keep the original title/content with minimal changes
@@ -451,9 +486,21 @@ REMEMBER: NO marketing words. ONLY technical facts, specifications, and measurab
     "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials"${cfg.bulletCount === 6 ? ',\n    "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials"' : ''}
   ],
   "description": "full professional product description — minimum ${cfg.descMin} characters, keyword-rich, benefit-driven, addresses customer questions",
-  "keywords": ["primary-keyword", "secondary-keyword-1", "secondary-keyword-2", "long-tail-keyword-phrase", "lsi-keyword"],
+  "keywords": [
+    "primary-search-term",
+    "secondary-feature-keyword",
+    "technical-specification",
+    "use-case-keyword",
+    "material-or-compatibility"
+  ],
   "platform_notes": "Brief summary of key optimization decisions made for ${request.platform.toUpperCase()} algorithm"
-}`;
+}
+
+KEYWORD EXAMPLES FOR DIFFERENT PRODUCTS:
+- Headphones: ["wireless bluetooth headphones", "noise cancelling", "40-hour battery", "over-ear design", "foldable portable"]
+- Leather Jacket: ["genuine leather jacket", "motorcycle style", "cafe racer", "sheep skin leather", "black brown jacket"]
+- Rice Cooker: ["6-cup rice cooker", "induction heating", "twin pressure system", "stainless steel pot", "voice navigation"]
+- NOT: ["productdescription", "sizes", "features", "quality", "premium", "description"]`;
 
     return prompt;
   }
