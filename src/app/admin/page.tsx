@@ -7,6 +7,9 @@ import Spinner from '@/components/ui/Spinner';
 import StatsCards from '@/components/admin/StatsCards';
 import UsersTable from '@/components/admin/UsersTable';
 import AnalyticsCharts from '@/components/admin/AnalyticsCharts';
+import RevenueCards from '@/components/admin/RevenueCards';
+import EmailModal from '@/components/admin/EmailModal';
+import SystemHealth from '@/components/admin/SystemHealth';
 import { 
   Users, 
   FileText, 
@@ -15,7 +18,8 @@ import {
   Settings,
   BarChart3,
   Download,
-  RefreshCw
+  RefreshCw,
+  DollarSign
 } from 'lucide-react';
 
 // ADMIN EMAILS - Only these emails can access the admin panel
@@ -27,18 +31,21 @@ export default function AdminPanel() {
   const [stats, setStats] = useState<any>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [optimizations, setOptimizations] = useState<any[]>([]);
+  const [revenue, setRevenue] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'optimizations' | 'analytics' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'optimizations' | 'analytics' | 'revenue' | 'settings'>('overview');
   const [refreshing, setRefreshing] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [selectedUsersForEmail, setSelectedUsersForEmail] = useState<any[]>([]);
 
   useEffect(() => {
     console.log('Admin Panel - Auth State:', { user: user?.email, authLoading });
     
     if (!authLoading) {
       if (!user) {
-        console.log('No user - redirecting to login');
-        router.push('/login');
+        console.log('No user - redirecting to admin login');
+        router.push('/admin/login');
       } else if (!ADMIN_EMAILS.includes(user.email || '')) {
         console.log('Not admin - redirecting to dashboard');
         router.push('/dashboard');
@@ -59,10 +66,11 @@ export default function AdminPanel() {
       const token = await user!.getIdToken();
       
       // Fetch all data in parallel
-      const [statsRes, usersRes, optimizationsRes] = await Promise.all([
+      const [statsRes, usersRes, optimizationsRes, revenueRes] = await Promise.all([
         fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('/api/admin/optimizations', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('/api/admin/optimizations', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/admin/revenue', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       
       if (statsRes.ok) {
@@ -78,6 +86,11 @@ export default function AdminPanel() {
       if (optimizationsRes.ok) {
         const optimizationsData = await optimizationsRes.json();
         setOptimizations(optimizationsData.data);
+      }
+
+      if (revenueRes.ok) {
+        const revenueData = await revenueRes.json();
+        setRevenue(revenueData.data);
       }
 
     } catch (error) {
@@ -96,24 +109,27 @@ export default function AdminPanel() {
 
   const updateUserTier = async (userId: string, newTier: string) => {
     try {
+      const token = await user!.getIdToken();
       const response = await fetch('/api/admin/update-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await user!.getIdToken()}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId, tier: newTier })
       });
 
+      const data = await response.json();
+      
       if (response.ok) {
-        alert('User tier updated successfully');
+        alert('✅ User tier updated successfully');
         loadAdminData();
       } else {
-        alert('Failed to update user tier');
+        alert(`❌ Failed: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to update user:', error);
-      alert('Error updating user');
+      alert('❌ Error updating user');
     }
   };
 
@@ -121,24 +137,61 @@ export default function AdminPanel() {
     if (!confirm('Are you sure you want to reset this user\'s credits to 0?')) return;
     
     try {
+      const token = await user!.getIdToken();
       const response = await fetch('/api/admin/reset-credits', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await user!.getIdToken()}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId })
       });
 
+      const data = await response.json();
+      
       if (response.ok) {
-        alert('User credits reset successfully');
+        alert('✅ User credits reset successfully');
         loadAdminData();
       } else {
-        alert('Failed to reset credits');
+        alert(`❌ Failed: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to reset credits:', error);
-      alert('Error resetting credits');
+      alert('❌ Error resetting credits');
+    }
+  };
+
+  const handleEmailUsers = (users: any[]) => {
+    setSelectedUsersForEmail(users);
+    setEmailModalOpen(true);
+  };
+
+  const sendEmail = async (subject: string, message: string) => {
+    try {
+      const token = await user!.getIdToken();
+      const response = await fetch('/api/admin/email-users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userIds: selectedUsersForEmail.map(u => u.id),
+          subject,
+          message
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ Email queued for ${data.recipients.length} users`);
+      } else {
+        alert(`❌ Failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      alert('❌ Error sending email');
     }
   };
 
@@ -147,6 +200,7 @@ export default function AdminPanel() {
       stats,
       users,
       optimizations,
+      revenue,
       exportedAt: new Date().toISOString()
     };
     
@@ -251,6 +305,17 @@ export default function AdminPanel() {
               Analytics
             </button>
             <button
+              onClick={() => setActiveTab('revenue')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'revenue'
+                  ? 'border-blue-500 text-blue-500'
+                  : 'border-transparent text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <DollarSign className="inline mr-2" size={16} />
+              Revenue
+            </button>
+            <button
               onClick={() => setActiveTab('users')}
               className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'users'
@@ -293,6 +358,9 @@ export default function AdminPanel() {
           <div className="space-y-6">
             <StatsCards stats={stats} />
             
+            {/* System Health */}
+            <SystemHealth stats={stats} users={users} optimizations={optimizations} />
+            
             {/* Recent Activity */}
             <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h2 className="text-xl font-bold text-white mb-4">Recent Activity</h2>
@@ -315,11 +383,76 @@ export default function AdminPanel() {
           <AnalyticsCharts stats={stats} users={users} optimizations={optimizations} />
         )}
 
+        {activeTab === 'revenue' && revenue && (
+          <div className="space-y-6">
+            <RevenueCards revenue={revenue} />
+            
+            {/* Revenue Breakdown */}
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+              <h2 className="text-xl font-bold text-white mb-4">Revenue by Tier</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <p className="text-gray-400 text-sm">Starter ($25/mo)</p>
+                  <p className="text-2xl font-bold text-white mt-1">${revenue.revenueByTier.starter}</p>
+                </div>
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <p className="text-gray-400 text-sm">Professional ($49/mo)</p>
+                  <p className="text-2xl font-bold text-white mt-1">${revenue.revenueByTier.professional}</p>
+                </div>
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <p className="text-gray-400 text-sm">Enterprise ($150/mo)</p>
+                  <p className="text-2xl font-bold text-white mt-1">${revenue.revenueByTier.enterprise}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Payments */}
+            {revenue.payments && revenue.payments.length > 0 && (
+              <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <div className="p-4 border-b border-gray-700">
+                  <h2 className="text-xl font-bold text-white">Recent Payments</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-700">
+                      <tr>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Date</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">User</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Amount</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-700">
+                      {revenue.payments.map((payment: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-gray-750 transition-colors">
+                          <td className="py-3 px-4 text-sm text-gray-400">
+                            {new Date(payment.createdAt).toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-white">{payment.userEmail || 'N/A'}</td>
+                          <td className="py-3 px-4 text-sm text-green-400 font-semibold">
+                            ${(payment.amount / 100).toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="px-2 py-1 bg-green-900 text-green-200 rounded text-xs font-medium">
+                              {payment.status || 'completed'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {activeTab === 'users' && (
           <UsersTable 
             users={users} 
             onUpdateTier={updateUserTier} 
-            onResetCredits={resetUserCredits} 
+            onResetCredits={resetUserCredits}
+            onEmailUsers={handleEmailUsers}
           />
         )}
 
@@ -431,6 +564,14 @@ export default function AdminPanel() {
           </div>
         )}
       </main>
+
+      {/* Email Modal */}
+      <EmailModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        selectedUsers={selectedUsersForEmail}
+        onSend={sendEmail}
+      />
     </div>
   );
 }

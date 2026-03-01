@@ -36,6 +36,10 @@ yarn-error.log*
 # Firebase service account (keep secure!)
 firebase-service-account.json
 
+# Admin setup scripts (contains passwords)
+scripts/setup-admin-accounts.js
+ADMIN_CREDENTIALS.txt
+
 # vercel
 .vercel
 
