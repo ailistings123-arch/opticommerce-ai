@@ -107,11 +107,11 @@ export async function getOptimizationHistory(userId: string, limitCount: number 
         platform: data.platform,
         mode: 'analyze-url',
         url: data.url,
-        original: null,
+        original: undefined,
         optimized: data.analysis,
         createdAt: data.createdAt,
       };
-    }) as Optimization[];
+    }) as any[];
     
     // Merge and sort by createdAt
     const allHistory = [...optimizations, ...urlAnalyses].sort((a, b) => {
