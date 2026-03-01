@@ -15,8 +15,8 @@ import {
   Settings
 } from 'lucide-react';
 
-// ADMIN EMAIL - Only this email can access the admin panel
-const ADMIN_EMAIL = 'your-admin-email@example.com'; // TODO: Change this to your email
+// ADMIN EMAILS - Only these emails can access the admin panel
+const ADMIN_EMAILS = ['ailistings123@gmail.com', 'mechannel805@gmail.com'];
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function AdminPanel() {
     if (!authLoading) {
       if (!user) {
         router.push('/login');
-      } else if (user.email !== ADMIN_EMAIL) {
+      } else if (!ADMIN_EMAILS.includes(user.email || '')) {
         // Not admin - redirect to dashboard
         router.push('/dashboard');
       } else {
@@ -141,7 +141,7 @@ export default function AdminPanel() {
     );
   }
 
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || !ADMIN_EMAILS.includes(user.email || '')) {
     return null;
   }
 
@@ -388,16 +388,21 @@ export default function AdminPanel() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Admin Email
+                    Admin Emails
                   </label>
-                  <input
-                    type="email"
-                    value={ADMIN_EMAIL}
-                    disabled
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
-                  />
+                  <div className="space-y-2">
+                    {ADMIN_EMAILS.map((email, idx) => (
+                      <input
+                        key={idx}
+                        type="email"
+                        value={email}
+                        disabled
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white"
+                      />
+                    ))}
+                  </div>
                   <p className="text-xs text-gray-400 mt-1">
-                    To change admin email, update ADMIN_EMAIL in src/app/admin/page.tsx
+                    To change admin emails, update ADMIN_EMAILS in src/app/admin/page.tsx
                   </p>
                 </div>
                 

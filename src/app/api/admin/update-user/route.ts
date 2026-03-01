@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth, adminDb } from '@/lib/firebase/admin';
 
-const ADMIN_EMAIL = 'your-admin-email@example.com'; // TODO: Change this to your email
+const ADMIN_EMAILS = ['ailistings123@gmail.com', 'mechannel805@gmail.com'];
 
 const TIER_LIMITS: Record<string, number> = {
   free: 5,
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const decodedToken = await adminAuth!.verifyIdToken(token);
     
     // Check if user is admin
-    if (decodedToken.email !== ADMIN_EMAIL) {
+    if (!ADMIN_EMAILS.includes(decodedToken.email || '')) {
       return NextResponse.json(
         { success: false, error: 'Forbidden - Admin access only' },
         { status: 403 }
