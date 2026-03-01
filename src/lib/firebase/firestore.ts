@@ -66,25 +66,62 @@ export async function incrementUsageCount(userId: string) {
   }
 }
 
-export async function getOptimizationHistory(userId: string, limitCount: number = 20) {
+export async function getOptimizationHistory(userId: string, limitCount: number = 50) {
   try {
     console.log('📖 Fetching optimization history for user:', userId);
     
-    const q = query(
+    // Query optimizations collection
+    const optimizationsQuery = query(
       collection(db, 'optimizations'),
       where('userId', '==', userId),
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
     
-    const snapshot = await getDocs(q);
-    const optimizations = snapshot.docs.map(doc => ({
+    // Query urlAnalyses collection
+    const urlAnalysesQuery = query(
+      collection(db, 'urlAnalyses'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    
+    // Fetch both collections in parallel
+    const [optimizationsSnapshot, urlAnalysesSnapshot] = await Promise.all([
+      getDocs(optimizationsQuery),
+      getDocs(urlAnalysesQuery)
+    ]);
+    
+    // Map optimizations
+    const optimizations = optimizationsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
     })) as Optimization[];
     
-    console.log(`✅ Found ${optimizations.length} optimizations in history`);
-    return optimizations;
+    // Map URL analyses to optimization format
+    const urlAnalyses = urlAnalysesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        userId: data.userId,
+        platform: data.platform,
+        mode: 'analyze-url',
+        url: data.url,
+        original: null,
+        optimized: data.analysis,
+        createdAt: data.createdAt,
+      };
+    }) as Optimization[];
+    
+    // Merge and sort by createdAt
+    const allHistory = [...optimizations, ...urlAnalyses].sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt);
+      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    }).slice(0, limitCount);
+    
+    console.log(`✅ Found ${allHistory.length} items in history (${optimizations.length} optimizations + ${urlAnalyses.length} URL analyses)`);
+    return allHistory;
   } catch (error: any) {
     console.error('❌ Failed to fetch optimization history:', error);
     console.error('Error details:', {
@@ -95,9 +132,9 @@ export async function getOptimizationHistory(userId: string, limitCount: number 
     
     // If it's an index error, provide helpful message
     if (error.code === 'failed-precondition' || error.message?.includes('index')) {
-      console.error('🔍 Index required! Please create an index in Firebase Console:');
-      console.error('Collection: optimizations');
-      console.error('Fields: userId (Ascending), createdAt (Descending)');
+      console.error('🔍 Index required! Please create indexes in Firebase Console:');
+      console.error('Collection: optimizations - Fields: userId (Ascending), createdAt (Descending)');
+      console.error('Collection: urlAnalyses - Fields: userId (Ascending), createdAt (Descending)');
       console.error('Or click the link in the error message above');
     }
     

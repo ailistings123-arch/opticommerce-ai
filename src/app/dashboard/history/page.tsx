@@ -87,7 +87,19 @@ export default function HistoryPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Optimization History</h1>
-          <p className="text-gray-600">View all your past product optimizations</p>
+          <p className="text-gray-600">
+            View all your past product optimizations
+            {user && (
+              <span className="ml-2 text-sm text-gray-500">
+                • Logged in as: {user.email}
+              </span>
+            )}
+          </p>
+          {optimizations.length > 0 && (
+            <p className="text-sm text-gray-500 mt-1">
+              Showing {optimizations.length} optimization{optimizations.length !== 1 ? 's' : ''}
+            </p>
+          )}
         </div>
 
         {error && (
