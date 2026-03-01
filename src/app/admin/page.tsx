@@ -4,14 +4,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import Spinner from '@/components/ui/Spinner';
+import StatsCards from '@/components/admin/StatsCards';
+import UsersTable from '@/components/admin/UsersTable';
+import AnalyticsCharts from '@/components/admin/AnalyticsCharts';
 import { 
   Users, 
   FileText, 
-  TrendingUp, 
-  DollarSign,
   Shield,
   Activity,
-  Settings
+  Settings,
+  BarChart3,
+  Download,
+  RefreshCw
 } from 'lucide-react';
 
 // ADMIN EMAILS - Only these emails can access the admin panel
@@ -25,7 +29,8 @@ export default function AdminPanel() {
   const [optimizations, setOptimizations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'optimizations' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'optimizations' | 'analytics' | 'settings'>('overview');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     console.log('Admin Panel - Auth State:', { user: user?.email, authLoading });
@@ -51,59 +56,28 @@ export default function AdminPanel() {
       
       console.log('Fetching admin data...');
       
-      // Fetch admin stats
-      const statsResponse = await fetch('/api/admin/stats', {
-        headers: {
-          'Authorization': `Bearer ${await user!.getIdToken()}`
-        }
-      });
+      const token = await user!.getIdToken();
       
-      console.log('Stats response:', statsResponse.status);
+      // Fetch all data in parallel
+      const [statsRes, usersRes, optimizationsRes] = await Promise.all([
+        fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch('/api/admin/optimizations', { headers: { 'Authorization': `Bearer ${token}` } })
+      ]);
       
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        console.log('Stats data:', statsData);
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
         setStats(statsData.data);
-      } else {
-        const errorData = await statsResponse.json();
-        console.error('Stats error:', errorData);
-        setError(`Failed to load stats: ${errorData.error}`);
       }
-
-      // Fetch all users
-      const usersResponse = await fetch('/api/admin/users', {
-        headers: {
-          'Authorization': `Bearer ${await user!.getIdToken()}`
-        }
-      });
       
-      console.log('Users response:', usersResponse.status);
-      
-      if (usersResponse.ok) {
-        const usersData = await usersResponse.json();
-        console.log('Users data:', usersData.data?.length, 'users');
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
         setUsers(usersData.data);
-      } else {
-        const errorData = await usersResponse.json();
-        console.error('Users error:', errorData);
       }
-
-      // Fetch recent optimizations
-      const optimizationsResponse = await fetch('/api/admin/optimizations', {
-        headers: {
-          'Authorization': `Bearer ${await user!.getIdToken()}`
-        }
-      });
       
-      console.log('Optimizations response:', optimizationsResponse.status);
-      
-      if (optimizationsResponse.ok) {
-        const optimizationsData = await optimizationsResponse.json();
-        console.log('Optimizations data:', optimizationsData.data?.length, 'items');
+      if (optimizationsRes.ok) {
+        const optimizationsData = await optimizationsRes.json();
         setOptimizations(optimizationsData.data);
-      } else {
-        const errorData = await optimizationsResponse.json();
-        console.error('Optimizations error:', errorData);
       }
 
     } catch (error) {
@@ -111,7 +85,13 @@ export default function AdminPanel() {
       setError('Failed to load admin data. Check console for details.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadAdminData();
   };
 
   const updateUserTier = async (userId: string, newTier: string) => {
@@ -138,6 +118,8 @@ export default function AdminPanel() {
   };
 
   const resetUserCredits = async (userId: string) => {
+    if (!confirm('Are you sure you want to reset this user\'s credits to 0?')) return;
+    
     try {
       const response = await fetch('/api/admin/reset-credits', {
         method: 'POST',
@@ -158,6 +140,22 @@ export default function AdminPanel() {
       console.error('Failed to reset credits:', error);
       alert('Error resetting credits');
     }
+  };
+
+  const exportAllData = () => {
+    const data = {
+      stats,
+      users,
+      optimizations,
+      exportedAt: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `admin-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
   };
 
   if (authLoading || loading) {
@@ -191,9 +189,9 @@ export default function AdminPanel() {
       )}
       
       {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
+      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Shield className="text-red-500" size={32} />
               <div>
@@ -201,21 +199,38 @@ export default function AdminPanel() {
                 <p className="text-sm text-gray-400">Listing Optimizer Management</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-400">Logged in as</p>
-              <p className="text-white font-medium">{user.email}</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                Refresh
+              </button>
+              <button
+                onClick={exportAllData}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+              >
+                <Download size={16} />
+                Export All
+              </button>
+              <div className="text-right">
+                <p className="text-sm text-gray-400">Logged in as</p>
+                <p className="text-white font-medium text-sm">{user.email}</p>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* Navigation Tabs */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 border-b border-gray-700 sticky top-[88px] z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex gap-4">
+          <nav className="flex gap-2 overflow-x-auto">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'overview'
                   ? 'border-blue-500 text-blue-500'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
@@ -225,8 +240,19 @@ export default function AdminPanel() {
               Overview
             </button>
             <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === 'analytics'
+                  ? 'border-blue-500 text-blue-500'
+                  : 'border-transparent text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <BarChart3 className="inline mr-2" size={16} />
+              Analytics
+            </button>
+            <button
               onClick={() => setActiveTab('users')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'users'
                   ? 'border-blue-500 text-blue-500'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
@@ -237,18 +263,18 @@ export default function AdminPanel() {
             </button>
             <button
               onClick={() => setActiveTab('optimizations')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'optimizations'
                   ? 'border-blue-500 text-blue-500'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
               }`}
             >
               <FileText className="inline mr-2" size={16} />
-              Optimizations
+              Optimizations ({optimizations.length})
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === 'settings'
                   ? 'border-blue-500 text-blue-500'
                   : 'border-transparent text-gray-400 hover:text-gray-300'
@@ -265,57 +291,16 @@ export default function AdminPanel() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === 'overview' && stats && (
           <div className="space-y-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-400 text-sm">Total Users</p>
-                    <p className="text-3xl font-bold text-white mt-2">{stats.totalUsers || 0}</p>
-                  </div>
-                  <Users className="text-blue-500" size={40} />
-                </div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-400 text-sm">Total Optimizations</p>
-                    <p className="text-3xl font-bold text-white mt-2">{stats.totalOptimizations || 0}</p>
-                  </div>
-                  <FileText className="text-green-500" size={40} />
-                </div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-400 text-sm">Paid Users</p>
-                    <p className="text-3xl font-bold text-white mt-2">{stats.paidUsers || 0}</p>
-                  </div>
-                  <DollarSign className="text-yellow-500" size={40} />
-                </div>
-              </div>
-
-              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-400 text-sm">Active Today</p>
-                    <p className="text-3xl font-bold text-white mt-2">{stats.activeToday || 0}</p>
-                  </div>
-                  <TrendingUp className="text-purple-500" size={40} />
-                </div>
-              </div>
-            </div>
-
+            <StatsCards stats={stats} />
+            
             {/* Recent Activity */}
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h2 className="text-xl font-bold text-white mb-4">Recent Activity</h2>
               <div className="space-y-3">
                 {optimizations.slice(0, 10).map((opt: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-700">
+                  <div key={idx} className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
                     <div>
-                      <p className="text-white text-sm">{opt.userEmail || 'Unknown User'}</p>
+                      <p className="text-white text-sm font-medium">{opt.userEmail || 'Unknown User'}</p>
                       <p className="text-gray-400 text-xs">{opt.platform} • {opt.mode}</p>
                     </div>
                     <p className="text-gray-500 text-xs">{new Date(opt.createdAt).toLocaleString()}</p>
@@ -326,69 +311,20 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {activeTab === 'analytics' && (
+          <AnalyticsCharts stats={stats} users={users} optimizations={optimizations} />
+        )}
+
         {activeTab === 'users' && (
-          <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-700">
-                  <tr>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Email</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Tier</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Usage</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Created</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-gray-300 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700">
-                  {users.map((user: any) => (
-                    <tr key={user.id} className="hover:bg-gray-750">
-                      <td className="py-3 px-4 text-sm text-white">{user.email}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          user.tier === 'enterprise' ? 'bg-purple-900 text-purple-200' :
-                          user.tier === 'professional' ? 'bg-blue-900 text-blue-200' :
-                          user.tier === 'starter' ? 'bg-green-900 text-green-200' :
-                          'bg-gray-700 text-gray-300'
-                        }`}>
-                          {user.tier}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-300">
-                        {user.usageCount} / {user.usageLimit}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-400">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <select
-                            onChange={(e) => updateUserTier(user.id, e.target.value)}
-                            className="text-xs bg-gray-700 text-white border border-gray-600 rounded px-2 py-1"
-                            defaultValue={user.tier}
-                          >
-                            <option value="free">Free</option>
-                            <option value="starter">Starter</option>
-                            <option value="professional">Professional</option>
-                            <option value="enterprise">Enterprise</option>
-                          </select>
-                          <button
-                            onClick={() => resetUserCredits(user.id)}
-                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
-                          >
-                            Reset Credits
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <UsersTable 
+            users={users} 
+            onUpdateTier={updateUserTier} 
+            onResetCredits={resetUserCredits} 
+          />
         )}
 
         {activeTab === 'optimizations' && (
-          <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-700">
@@ -402,10 +338,10 @@ export default function AdminPanel() {
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {optimizations.map((opt: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-gray-750">
+                    <tr key={idx} className="hover:bg-gray-750 transition-colors">
                       <td className="py-3 px-4 text-sm text-white">{opt.userEmail || 'Unknown'}</td>
                       <td className="py-3 px-4">
-                        <span className="px-2 py-1 bg-blue-900 text-blue-200 rounded text-xs">
+                        <span className="px-2 py-1 bg-blue-900 text-blue-200 rounded text-xs font-medium">
                           {opt.platform}
                         </span>
                       </td>
@@ -426,7 +362,7 @@ export default function AdminPanel() {
 
         {activeTab === 'settings' && (
           <div className="space-y-6">
-            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
               <h2 className="text-xl font-bold text-white mb-4">Admin Settings</h2>
               <div className="space-y-4">
                 <div>
@@ -450,12 +386,45 @@ export default function AdminPanel() {
                 </div>
                 
                 <div className="pt-4 border-t border-gray-700">
-                  <button
-                    onClick={loadAdminData}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
-                  >
-                    Refresh Data
-                  </button>
+                  <h3 className="text-lg font-semibold text-white mb-3">Quick Actions</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={handleRefresh}
+                      className="px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      Refresh All Data
+                    </button>
+                    <button
+                      onClick={exportAllData}
+                      className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                    >
+                      Export All Data
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-3">System Information</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400">Total Users</p>
+                      <p className="text-white font-semibold text-lg">{users.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Total Optimizations</p>
+                      <p className="text-white font-semibold text-lg">{optimizations.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Paid Conversion Rate</p>
+                      <p className="text-white font-semibold text-lg">
+                        {users.length > 0 ? Math.round((stats?.paidUsers / users.length) * 100) : 0}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Active Today</p>
+                      <p className="text-white font-semibold text-lg">{stats?.activeToday || 0}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
