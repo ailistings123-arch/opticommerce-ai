@@ -350,7 +350,8 @@ export class SEOOptimizerService {
       ebay: { min: 40, max: 80 },
       etsy: { min: 60, max: 140 },
       shopify: { min: 40, max: 70 },
-      walmart: { min: 40, max: 75 }
+      walmart: { min: 40, max: 75 },
+      woocommerce: { min: 60, max: 70 }
     };
 
     const optimal = optimalLengths[platform];

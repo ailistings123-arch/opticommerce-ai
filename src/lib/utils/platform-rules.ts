@@ -71,6 +71,20 @@ export const PLATFORM_RULES: Record<Platform, PlatformRules> = {
       'Fill all product attributes',
     ],
   },
+  woocommerce: {
+    name: 'WooCommerce',
+    titleRange: { min: 60, max: 70 },
+    minDescription: 400,
+    maxTags: 12,
+    tagFormat: 'Product tags',
+    guidelines: [
+      'SEO-optimized title for Google search',
+      'Natural, readable language',
+      'Include brand and key features',
+      'Focus on benefits and specifications',
+      'Use schema-friendly structured data',
+    ],
+  },
 };
 
 export const TIER_LIMITS = {

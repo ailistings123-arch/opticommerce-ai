@@ -49,7 +49,8 @@ export class PlatformRulesExtractor {
       ebay: 'Conversational, detailed, trust-building',
       etsy: 'Creative, artisanal, story-driven',
       shopify: 'Brand-aligned, engaging, conversion-focused',
-      walmart: 'Value-focused, family-friendly, practical'
+      walmart: 'Value-focused, family-friendly, practical',
+      woocommerce: 'Brand-aligned, engaging, conversion-focused, SEO-optimized'
     };
 
     return toneMap[platform] || 'Professional and clear';
@@ -68,7 +69,8 @@ export class PlatformRulesExtractor {
       ebay: 'Descriptive, includes condition and specifics',
       etsy: 'Creative, includes materials and style',
       shopify: 'Brand-focused, benefit-oriented',
-      walmart: 'Clear, value-focused, family-friendly'
+      walmart: 'Clear, value-focused, family-friendly',
+      woocommerce: 'SEO-optimized, brand-focused, Google-friendly'
     };
 
     return styleMap[platform] || 'Clear and descriptive';

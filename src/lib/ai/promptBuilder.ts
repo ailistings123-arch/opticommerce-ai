@@ -133,7 +133,8 @@ const PROHIBITED = [
   'TRANSFORM YOUR', 'CHANGE EVERYTHING', 'NEVER BEFORE', 'BREAKTHROUGH',
   'STATE OF THE ART', 'NEXT LEVEL', 'TAKE IT TO', 'CUTTING EDGE',
   'ELEVATE YOUR', 'UNLOCK', 'DISCOVER THE SECRET', 'PROFESSIONAL GRADE',
-  'MILITARY GRADE', 'HOSPITAL GRADE', 'COMMERCIAL GRADE', 'STUDIO QUALITY'
+  'MILITARY GRADE', 'HOSPITAL GRADE', 'COMMERCIAL GRADE', 'STUDIO QUALITY',
+  'BEST VALUE', 'SOLVE YOUR', 'PROBLEM SOLVER', 'SOLUTION FOR'
 ];
 
 // ENHANCED: Product type specific guidance
@@ -246,6 +247,26 @@ BULLET STRUCTURE (mandatory format):
 [BENEFIT IN CAPS] — [Feature description with specific details, numbers, materials, measurements]
 
 Example: "LONG-LASTING BATTERY — 40-hour playtime on a single charge keeps you listening through workouts, commutes, and long travel days without ever reaching for a charger"
+
+A/B TESTING VARIATIONS (if requested):
+When generating title variations for A/B testing, you MUST:
+- Base variations on ACTUAL PRODUCT FEATURES, not generic marketing phrases
+- Use DIFFERENT TECHNICAL SPECIFICATIONS in each variation (material, size, capacity, power, etc.)
+- Lead with DIFFERENT PRODUCT ATTRIBUTES (brand, type, feature, benefit)
+- NEVER use generic phrases like "Solve Your Problem", "Best Value", "Premium Quality"
+- Each variation should emphasize a DIFFERENT REAL ASPECT of the product
+
+GOOD A/B Testing Examples:
+✓ Version A: "Café Racer Men Leather Jacket - 24" Black/Brown Genuine Sheep Skin Leather" (Feature-focused)
+✓ Version B: "Genuine Sheep Skin Leather - Café Racer Men Leather Jacket - 24" Black/Brown" (Material-first)
+✓ Version C: "24" Black/Brown Café Racer Jacket - Men's Genuine Sheep Skin Leather Motorcycle Style" (Size-first)
+✓ Version D: "Men's Motorcycle Leather Jacket - Café Racer Style - 24" Genuine Sheep Skin Black/Brown" (Style-focused)
+
+BAD A/B Testing Examples (NEVER DO THIS):
+✗ "Solve Your Problem - Café Racer Men Leather Jacket" (Generic marketing fluff)
+✗ "Best Value Café Racer Men Leather Jacket" (Prohibited phrase)
+✗ "Premium Quality Leather Jacket for Men" (Vague, no specifics)
+✗ "Ultimate Café Racer Jacket Solution" (Marketing nonsense)
 
 PROFESSIONAL QUALITY STANDARDS:
 - Use 90-100% of character limits (CRITICAL for SEO ranking and visibility)
