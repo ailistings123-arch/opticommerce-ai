@@ -29,8 +29,11 @@ export default function AdminLogin() {
         return;
       }
 
+      console.log('Attempting login for:', email);
+
       // Sign in with Firebase
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Login successful:', userCredential.user.uid);
       
       // Redirect to admin panel
       router.push('/admin');
@@ -45,9 +48,11 @@ export default function AdminLogin() {
       } else if (error.code === 'auth/invalid-email') {
         setError('Invalid email address format.');
       } else if (error.code === 'auth/too-many-requests') {
-        setError('Too many failed attempts. Please try again later.');
+        setError('Too many failed attempts. Please try again later or reset your password.');
+      } else if (error.code === 'auth/invalid-credential') {
+        setError('Invalid credentials. Please check your email and password.');
       } else {
-        setError('Login failed. Please check your credentials and try again.');
+        setError(`Login failed: ${error.message || 'Please check your credentials and try again.'}`);
       }
       
       setLoading(false);
