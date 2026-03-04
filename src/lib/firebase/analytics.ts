@@ -64,7 +64,7 @@ export const trackEvent = (eventName: AnalyticsEvent, params?: EventParams) => {
   if (!analytics) return;
   
   try {
-    logEvent(analytics, eventName, {
+    logEvent(analytics, eventName as string, {
       ...params,
       timestamp: new Date().toISOString(),
     });

@@ -208,7 +208,7 @@ export default function ActivityLogs({ optimizations, users }: ActivityLogsProps
           >
             <option value="all">All Modes</option>
             {modes.map(m => (
-              <option key={m} value={m}>{m.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</option>
+              <option key={m} value={m}>{m.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</option>
             ))}
           </select>
         </div>

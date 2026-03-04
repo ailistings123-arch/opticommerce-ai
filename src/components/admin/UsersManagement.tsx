@@ -213,8 +213,8 @@ export default function UsersManagement({ users, onRefresh, authToken }: UsersMa
                           </button>
                           <input
                             type="number"
-                            value={editingUser.usageCount}
-                            onChange={(e) => setEditingUser({ ...editingUser, usageCount: parseInt(e.target.value) || 0 })}
+                            value={editingUser?.usageCount || 0}
+                            onChange={(e) => editingUser && setEditingUser({ ...editingUser, usageCount: parseInt(e.target.value) || 0 })}
                             className="w-16 xl:w-20 px-2 py-1 border border-purple-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                           />
                           <button
@@ -239,8 +239,8 @@ export default function UsersManagement({ users, onRefresh, authToken }: UsersMa
                           </button>
                           <input
                             type="number"
-                            value={editingUser.usageLimit}
-                            onChange={(e) => setEditingUser({ ...editingUser, usageLimit: parseInt(e.target.value) || 0 })}
+                            value={editingUser?.usageLimit || 0}
+                            onChange={(e) => editingUser && setEditingUser({ ...editingUser, usageLimit: parseInt(e.target.value) || 0 })}
                             className="w-16 xl:w-20 px-2 py-1 border border-purple-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                           />
                           <button
@@ -345,8 +345,8 @@ export default function UsersManagement({ users, onRefresh, authToken }: UsersMa
                       </button>
                       <input
                         type="number"
-                        value={editingUser.usageCount}
-                        onChange={(e) => setEditingUser({ ...editingUser, usageCount: parseInt(e.target.value) || 0 })}
+                        value={editingUser?.usageCount || 0}
+                        onChange={(e) => editingUser && setEditingUser({ ...editingUser, usageCount: parseInt(e.target.value) || 0 })}
                         className="w-16 px-2 py-1 border border-purple-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                       <button
@@ -373,8 +373,8 @@ export default function UsersManagement({ users, onRefresh, authToken }: UsersMa
                       </button>
                       <input
                         type="number"
-                        value={editingUser.usageLimit}
-                        onChange={(e) => setEditingUser({ ...editingUser, usageLimit: parseInt(e.target.value) || 0 })}
+                        value={editingUser?.usageLimit || 0}
+                        onChange={(e) => editingUser && setEditingUser({ ...editingUser, usageLimit: parseInt(e.target.value) || 0 })}
                         className="w-16 px-2 py-1 border border-purple-300 rounded text-center text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                       <button

@@ -230,7 +230,6 @@ export default function DashboardPage() {
     
     // Track URL analysis started
     trackUrlAnalysis('started', data.url, user?.uid);
-    trackPlatformSelection(data.platform, user?.uid);
     
     try {
       if (!user) throw new Error('Not authenticated');
@@ -266,7 +265,7 @@ export default function DashboardPage() {
         
         // Track successful URL analysis
         trackUrlAnalysis('completed', data.url, user?.uid);
-        trackOptimization('completed', data.platform, 'analyze-url', user?.uid);
+        trackOptimization('completed', 'url-analysis', 'analyze-url', user?.uid);
         
         setTimeout(() => {
           setProgress({ stage: '', percent: 0, isVisible: false });
@@ -280,7 +279,7 @@ export default function DashboardPage() {
       setProgress({ stage: '', percent: 0, isVisible: false });
       
       // Track failed analysis
-      trackOptimization('failed', data.platform, 'analyze-url', user?.uid, error.message);
+      trackOptimization('failed', 'url-analysis', 'analyze-url', user?.uid, error.message);
       
       // Check if it's an Etsy-specific error
       const isEtsyError = error.message?.includes('anti-bot') || error.message?.includes('ALTERNATIVE OPTIONS');
