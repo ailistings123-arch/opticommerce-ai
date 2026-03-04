@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import { Analytics } from '@vercel/analytics/react';
+import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider';
 import "./globals.css";
 
 const poppins = Poppins({
@@ -137,7 +138,9 @@ export default function RootLayout({
         className={`${poppins.variable} antialiased bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen`}
         suppressHydrationWarning
       >
-        {children}
+        <AnalyticsProvider>
+          {children}
+        </AnalyticsProvider>
         <Analytics />
       </body>
     </html>

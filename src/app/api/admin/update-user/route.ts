@@ -3,13 +3,6 @@ import { adminAuth, adminDb } from '@/lib/firebase/admin';
 
 const ADMIN_EMAILS = ['ailistings123@gmail.com', 'mechannel805@gmail.com'];
 
-const TIER_LIMITS: Record<string, number> = {
-  free: 5,
-  starter: 25,
-  professional: 50,
-  enterprise: 999999
-};
-
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -39,31 +32,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userId, tier } = await request.json();
+    const { userId, usageLimit, usageCount, tier } = await request.json();
 
-    if (!userId || !tier) {
+    if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'userId and tier are required' },
+        { success: false, error: 'userId is required' },
         { status: 400 }
       );
     }
 
-    // Update user tier and limit
-    await adminDb.collection('users').doc(userId).update({
-      tier,
-      usageLimit: TIER_LIMITS[tier] || 5,
-      updatedAt: new Date().toISOString()
-    });
+    // Build update object
+    const updateData: any = {};
+    
+    if (usageLimit !== undefined) {
+      updateData.usageLimit = parseInt(usageLimit);
+    }
+    
+    if (usageCount !== undefined) {
+      updateData.usageCount = parseInt(usageCount);
+    }
+    
+    if (tier) {
+      updateData.tier = tier;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No fields to update' },
+        { status: 400 }
+      );
+    }
+
+    // Update user in Firestore
+    await adminDb.collection('users').doc(userId).update(updateData);
+
+    console.log(`✅ User ${userId} updated:`, updateData);
 
     return NextResponse.json({
       success: true,
-      message: 'User updated successfully'
+      message: 'User updated successfully',
+      data: updateData
     });
 
   } catch (error: any) {
-    console.error('Admin update user error:', error);
+    console.error('❌ Update user error:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message || 'Failed to update user' },
       { status: 500 }
     );
   }

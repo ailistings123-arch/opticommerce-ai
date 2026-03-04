@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { signOut } from '@/lib/firebase/auth';
+import { trackEvent, trackOptimization, trackUrlAnalysis, trackPlatformSelection, trackModeSelection } from '@/lib/firebase/analytics';
 import OptimizationModeSelector, { OptimizationMode } from '@/components/dashboard/OptimizationModeSelector';
 import Mode1OptimizeExisting, { Mode1Data } from '@/components/dashboard/modes/Mode1OptimizeExisting';
 import Mode2CreateNew, { Mode2Data } from '@/components/dashboard/modes/Mode2CreateNew';
@@ -67,6 +68,10 @@ export default function DashboardPage() {
     setSubmitting(true);
     setProgress({ stage: 'Analyzing your product...', percent: 10, isVisible: true });
     
+    // Track optimization started
+    trackOptimization('started', data.platform, 'optimize-existing', user?.uid);
+    trackPlatformSelection(data.platform, user?.uid);
+    
     try {
       if (!user) throw new Error('Not authenticated');
       const token = await user.getIdToken();
@@ -106,6 +111,9 @@ export default function DashboardPage() {
         setOriginalData({ title: data.currentTitle, description: data.currentDescription });
         setProgress({ stage: 'Complete!', percent: 100, isVisible: true });
         
+        // Track successful optimization
+        trackOptimization('completed', data.platform, 'optimize-existing', user?.uid);
+        
         setTimeout(() => {
           setProgress({ stage: '', percent: 0, isVisible: false });
         }, 500);
@@ -116,6 +124,10 @@ export default function DashboardPage() {
     } catch (error: any) {
       console.error('Optimization error:', error);
       setProgress({ stage: '', percent: 0, isVisible: false });
+      
+      // Track failed optimization
+      trackOptimization('failed', data.platform, 'optimize-existing', user?.uid, error.message);
+      
       alert(error.message || 'Failed to optimize listing');
     } finally {
       setSubmitting(false);
@@ -136,6 +148,11 @@ export default function DashboardPage() {
 
     setSubmitting(true);
     setProgress({ stage: 'Analyzing product details...', percent: 15, isVisible: true });
+    
+    // Track optimization started
+    trackOptimization('started', data.platform, 'create-new', user?.uid);
+    trackPlatformSelection(data.platform, user?.uid);
+    trackEvent('listing_generated', { platform: data.platform, user_id: user?.uid });
     
     try {
       if (!user) throw new Error('Not authenticated');
@@ -173,6 +190,9 @@ export default function DashboardPage() {
         setOriginalData(null);
         setProgress({ stage: 'Complete!', percent: 100, isVisible: true });
         
+        // Track successful optimization
+        trackOptimization('completed', data.platform, 'create-new', user?.uid);
+        
         setTimeout(() => {
           setProgress({ stage: '', percent: 0, isVisible: false });
         }, 500);
@@ -183,6 +203,10 @@ export default function DashboardPage() {
     } catch (error: any) {
       console.error('Creation error:', error);
       setProgress({ stage: '', percent: 0, isVisible: false });
+      
+      // Track failed optimization
+      trackOptimization('failed', data.platform, 'create-new', user?.uid, error.message);
+      
       alert(error.message || 'Failed to create listing');
     } finally {
       setSubmitting(false);
@@ -203,6 +227,10 @@ export default function DashboardPage() {
 
     setSubmitting(true);
     setProgress({ stage: 'Analyzing URL...', percent: 20, isVisible: true });
+    
+    // Track URL analysis started
+    trackUrlAnalysis('started', data.url, user?.uid);
+    trackPlatformSelection(data.platform, user?.uid);
     
     try {
       if (!user) throw new Error('Not authenticated');
@@ -236,6 +264,10 @@ export default function DashboardPage() {
         setOriginalData(result.data.scrapedData);
         setProgress({ stage: 'Complete!', percent: 100, isVisible: true });
         
+        // Track successful URL analysis
+        trackUrlAnalysis('completed', data.url, user?.uid);
+        trackOptimization('completed', data.platform, 'analyze-url', user?.uid);
+        
         setTimeout(() => {
           setProgress({ stage: '', percent: 0, isVisible: false });
         }, 500);
@@ -246,6 +278,9 @@ export default function DashboardPage() {
     } catch (error: any) {
       console.error('Analysis error:', error);
       setProgress({ stage: '', percent: 0, isVisible: false });
+      
+      // Track failed analysis
+      trackOptimization('failed', data.platform, 'analyze-url', user?.uid, error.message);
       
       // Check if it's an Etsy-specific error
       const isEtsyError = error.message?.includes('anti-bot') || error.message?.includes('ALTERNATIVE OPTIONS');
@@ -356,6 +391,7 @@ export default function DashboardPage() {
                   setMode(newMode);
                   setOptimizationResult(null);
                   setOriginalData(null);
+                  trackModeSelection(newMode, user?.uid);
                 }}
               />
             </div>

@@ -11,7 +11,7 @@ interface AnalyticsDashboardProps {
   data: any;
 }
 
-const COLORS = ['#111827', '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EF4444'];
+const COLORS = ['#8B5CF6', '#6366F1', '#06B6D4', '#3B82F6', '#A855F7', '#7C3AED'];
 
 export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
   const [timeRange, setTimeRange] = useState<'30' | '60' | '90'>('90');
@@ -101,10 +101,10 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
             <button
               key={days}
               onClick={() => setTimeRange(days as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 timeRange === days
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
               }`}
             >
               {days} Days
@@ -117,13 +117,19 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
+          const gradients = [
+            'from-purple-600 to-blue-600',
+            'from-blue-600 to-cyan-600',
+            'from-purple-500 to-pink-600',
+            'from-cyan-600 to-blue-600'
+          ];
           return (
-            <div key={index} className="bg-white border border-gray-200 rounded-xl p-6">
-              <div className={`inline-flex p-3 rounded-lg ${metric.color} mb-4`}>
+            <div key={index} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+              <div className={`inline-flex p-3 rounded-xl bg-gradient-to-r ${gradients[index]} text-white mb-4 shadow-lg shadow-purple-500/30`}>
                 <Icon size={24} />
               </div>
               <p className="text-gray-500 text-sm font-medium mb-1">{metric.label}</p>
-              <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">{metric.value}</p>
             </div>
           );
         })}
@@ -132,10 +138,16 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
       {/* Main Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity Trend */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Activity Trend</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">Activity Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={activityData}>
+              <defs>
+                <linearGradient id="colorOptimizations" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#6366F1" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis dataKey="date" stroke="#6B7280" style={{ fontSize: '12px' }} angle={-45} textAnchor="end" height={80} />
               <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
@@ -143,17 +155,18 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 contentStyle={{ 
                   backgroundColor: 'white', 
                   border: '1px solid #E5E7EB', 
-                  borderRadius: '8px' 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.1)'
                 }}
               />
-              <Area type="monotone" dataKey="optimizations" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.2} />
+              <Area type="monotone" dataKey="optimizations" stroke="#8B5CF6" fill="url(#colorOptimizations)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         {/* User Growth */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">User Growth</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6">User Growth</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={activityData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -163,19 +176,26 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 contentStyle={{ 
                   backgroundColor: 'white', 
                   border: '1px solid #E5E7EB', 
-                  borderRadius: '8px' 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.1)'
                 }}
               />
-              <Line type="monotone" dataKey="newUsers" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} />
+              <Line type="monotone" dataKey="newUsers" stroke="#6366F1" strokeWidth={3} dot={{ fill: '#6366F1', r: 5, strokeWidth: 2, stroke: '#fff' }} />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
         {/* Top Users */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Top 10 Active Users</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">Top 10 Active Users</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={userEngagement} layout="vertical">
+              <defs>
+                <linearGradient id="colorBar" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#8B5CF6" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis type="number" stroke="#6B7280" style={{ fontSize: '12px' }} />
               <YAxis dataKey="user" type="category" stroke="#6B7280" style={{ fontSize: '12px' }} width={100} />
@@ -183,19 +203,30 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 contentStyle={{ 
                   backgroundColor: 'white', 
                   border: '1px solid #E5E7EB', 
-                  borderRadius: '8px' 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.1)'
                 }}
               />
-              <Bar dataKey="optimizations" fill="#111827" radius={[0, 8, 8, 0]} />
+              <Bar dataKey="optimizations" fill="url(#colorBar)" radius={[0, 12, 12, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Platform Performance */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Platform Performance</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent mb-6">Platform Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={platformPerformance}>
+              <defs>
+                <linearGradient id="colorOpts" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8B5CF6" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#06B6D4" />
+                  <stop offset="100%" stopColor="#3B82F6" />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis dataKey="name" stroke="#6B7280" style={{ fontSize: '12px' }} angle={-45} textAnchor="end" height={80} />
               <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
@@ -203,11 +234,12 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 contentStyle={{ 
                   backgroundColor: 'white', 
                   border: '1px solid #E5E7EB', 
-                  borderRadius: '8px' 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.1)'
                 }}
               />
-              <Bar dataKey="optimizations" fill="#3B82F6" radius={[8, 8, 0, 0]} />
-              <Bar dataKey="users" fill="#10B981" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="optimizations" fill="url(#colorOpts)" radius={[12, 12, 0, 0]} />
+              <Bar dataKey="users" fill="url(#colorUsers)" radius={[12, 12, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -216,8 +248,8 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
       {/* Additional Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Tier Distribution */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">User Tiers</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-6">User Tiers</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -234,14 +266,14 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(139, 92, 246, 0.1)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Mode Distribution */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Optimization Modes</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6">Optimization Modes</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
@@ -258,16 +290,22 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip contentStyle={{ borderRadius: '12px', boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.1)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
         {/* Hourly Pattern */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-6">Hourly Activity</h3>
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent mb-6">Hourly Activity</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={hourlyData}>
+              <defs>
+                <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#A855F7" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#EC4899" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
               <XAxis dataKey="hour" stroke="#6B7280" style={{ fontSize: '10px' }} angle={-45} textAnchor="end" height={60} />
               <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
@@ -275,10 +313,11 @@ export default function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
                 contentStyle={{ 
                   backgroundColor: 'white', 
                   border: '1px solid #E5E7EB', 
-                  borderRadius: '8px' 
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgba(168, 85, 247, 0.1)'
                 }}
               />
-              <Area type="monotone" dataKey="activity" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.3} />
+              <Area type="monotone" dataKey="activity" stroke="#A855F7" fill="url(#colorActivity)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

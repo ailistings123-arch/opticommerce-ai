@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
+import { trackEvent } from '@/lib/firebase/analytics';
 import { Input } from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Spinner from '@/components/ui/Spinner';
@@ -20,10 +21,12 @@ export default function LoginForm() {
     setError('');
 
     try {
-      await signInWithEmail(email, password);
+      const user = await signInWithEmail(email, password);
+      trackEvent('login', { method: 'email', user_id: user.uid });
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to sign in');
+      trackEvent('error_occurred', { error_type: 'login_failed', error_message: err.message });
     } finally {
       setLoading(false);
     }
@@ -34,10 +37,12 @@ export default function LoginForm() {
     setError('');
 
     try {
-      await signInWithGoogle();
+      const user = await signInWithGoogle();
+      trackEvent('login', { method: 'google', user_id: user.uid });
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to sign in with Google');
+      trackEvent('error_occurred', { error_type: 'login_failed', error_message: err.message });
     } finally {
       setLoading(false);
     }

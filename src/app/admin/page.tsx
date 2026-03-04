@@ -3,27 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { signOut } from '@/lib/firebase/auth';
 import Spinner from '@/components/ui/Spinner';
 import { 
   LayoutDashboard,
   Users,
   BarChart3,
   Settings,
-  FileText,
-  TrendingUp,
   Activity,
   DollarSign,
-  Search,
-  Filter,
   Download,
   RefreshCw,
-  ChevronDown,
-  Eye,
-  MousePointer,
-  Globe
+  LogOut,
+  Bell,
+  User,
+  ChevronDown
 } from 'lucide-react';
 
-// Import new components
+// Import components
 import DashboardOverview from '@/components/admin/DashboardOverview';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import UsersManagement from '@/components/admin/UsersManagement';
@@ -39,9 +36,15 @@ export default function AdminPanel() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [authToken, setAuthToken] = useState<string>('');
+
+  // Update document title
+  useEffect(() => {
+    document.title = 'ListingOPT Admin Panel';
+  }, []);
 
   useEffect(() => {
     if (!authLoading) {
@@ -58,7 +61,10 @@ export default function AdminPanel() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const token = await user!.getIdToken();
+      if (!user) return;
+      
+      const token = await user.getIdToken();
+      setAuthToken(token);
       
       const [statsRes, usersRes, optimizationsRes, analyticsRes, revenueRes] = await Promise.all([
         fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -68,30 +74,51 @@ export default function AdminPanel() {
         fetch('/api/admin/revenue', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
 
-      const stats = statsRes.ok ? await statsRes.json() : null;
-      const users = usersRes.ok ? await usersRes.json() : null;
-      const optimizations = optimizationsRes.ok ? await optimizationsRes.json() : null;
-      const analytics = analyticsRes.ok ? await analyticsRes.json() : null;
-      const revenue = revenueRes.ok ? await revenueRes.json() : null;
+      const [stats, users, optimizations, analytics, revenue] = await Promise.all([
+        statsRes.json(),
+        usersRes.json(),
+        optimizationsRes.json(),
+        analyticsRes.json(),
+        revenueRes.json()
+      ]);
 
       setData({
-        stats: stats?.data,
-        users: users?.data || [],
-        optimizations: optimizations?.data || [],
-        analytics: analytics?.data,
-        revenue: revenue?.data
+        stats: stats.data,
+        users: users.data,
+        optimizations: optimizations.data,
+        analytics: analytics.data,
+        revenue: revenue.data
       });
     } catch (error) {
-      console.error('Failed to load data:', error);
+      console.error('Failed to load admin data:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/admin/login');
+  };
+
+  const handleExport = () => {
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `admin-data-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <Spinner size="lg" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-gray-600">Loading admin panel...</p>
+        </div>
       </div>
     );
   }
@@ -110,101 +137,137 @@ export default function AdminPanel() {
   ];
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gray-50 border-r border-gray-200 transition-all duration-300 flex flex-col`}>
-        {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-          {!sidebarCollapsed && (
-            <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
-          )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            <ChevronDown className={`transform ${sidebarCollapsed ? 'rotate-90' : '-rotate-90'} transition-transform`} size={20} />
-          </button>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 py-6">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id as TabType)}
-                className={`w-full flex items-center gap-3 px-6 py-3 transition-colors ${
-                  isActive
-                    ? 'bg-gray-900 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Icon size={20} />
-                {!sidebarCollapsed && <span className="font-medium">{item.label}</span>}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* User Info */}
-        <div className="p-6 border-t border-gray-200">
-          {!sidebarCollapsed && (
-            <div>
-              <p className="text-xs text-gray-500">Logged in as</p>
-              <p className="text-sm font-medium text-gray-900 truncate">{user.email}</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Top Navbar */}
+      <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+        <div className="px-3 sm:px-6 py-3">
+          <div className="flex items-center justify-between gap-2">
+            {/* Logo */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-600 via-purple-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <span className="text-white font-bold text-xs sm:text-sm tracking-tight">LO</span>
+              </div>
+              <div className="hidden sm:flex items-baseline gap-0.5">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Listing</span>
+                <span className="text-lg sm:text-xl font-bold text-blue-600">OPT</span>
+              </div>
+              <span className="text-xs font-semibold text-gray-400 px-2 py-1 bg-gray-100 rounded-full">Admin</span>
             </div>
-          )}
+
+            {/* Mobile Navigation Dropdown */}
+            <div className="lg:hidden flex-1 max-w-xs">
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value as TabType)}
+                className="w-full px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                {menuItems.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Desktop Navigation Tabs */}
+            <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id as TabType)}
+                    className={`flex items-center gap-2 px-3 xl:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Icon size={16} />
+                    <span className="hidden xl:inline">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+              <button
+                onClick={loadData}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Refresh Data"
+              >
+                <RefreshCw size={18} className="text-gray-600" />
+              </button>
+              
+              <button
+                onClick={handleExport}
+                className="hidden sm:flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/30 transition-all text-sm font-medium"
+              >
+                <Download size={16} />
+                <span className="hidden md:inline">Export</span>
+              </button>
+
+              <button className="hidden sm:block p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
+                <Bell size={18} className="text-gray-600" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
+                    <User size={15} className="text-white" />
+                  </div>
+                  <ChevronDown size={16} className="text-gray-600 hidden sm:block" />
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2">
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{user.email}</p>
+                      <p className="text-xs text-gray-500 mt-1">Administrator</p>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut size={16} />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </aside>
+      </nav>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              {menuItems.find(m => m.id === activeTab)?.label}
-            </h2>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={loadData}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Refresh"
-            >
-              <RefreshCw size={20} className="text-gray-600" />
-            </button>
-            <button className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2">
-              <Download size={16} />
-              Export
-            </button>
-          </div>
-        </header>
-
-        {/* Content Area */}
-        <div className="p-8">
-          {activeTab === 'dashboard' && data && (
-            <DashboardOverview data={data} onRefresh={loadData} />
-          )}
-          {activeTab === 'analytics' && data && (
-            <AnalyticsDashboard data={data} />
-          )}
-          {activeTab === 'users' && data && (
-            <UsersManagement users={data.users} onRefresh={loadData} />
-          )}
-          {activeTab === 'revenue' && data && (
-            <RevenueAnalytics revenue={data.revenue} />
-          )}
-          {activeTab === 'activity' && data && (
-            <ActivityLogs optimizations={data.optimizations} users={data.users} />
-          )}
-          {activeTab === 'settings' && (
-            <SettingsPanel user={user} />
-          )}
-        </div>
+      <main className="p-3 sm:p-4 md:p-6 max-w-[1600px] mx-auto">
+        {activeTab === 'dashboard' && data && (
+          <DashboardOverview data={data} onRefresh={loadData} />
+        )}
+        {activeTab === 'analytics' && data && (
+          <AnalyticsDashboard data={data} />
+        )}
+        {activeTab === 'users' && data && (
+          <UsersManagement users={data.users} onRefresh={loadData} authToken={authToken} />
+        )}
+        {activeTab === 'revenue' && data && (
+          <RevenueAnalytics revenue={data.revenue} />
+        )}
+        {activeTab === 'activity' && data && (
+          <ActivityLogs optimizations={data.optimizations} users={data.users} />
+        )}
+        {activeTab === 'settings' && user && (
+          <SettingsPanel user={user} />
+        )}
       </main>
     </div>
   );

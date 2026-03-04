@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp, TrendingDown, Users, Activity, Eye, MousePointer, Globe, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Activity, Eye, MousePointer, Globe, Target, DollarSign, Filter } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DashboardOverviewProps {
@@ -37,65 +37,65 @@ export default function DashboardOverview({ data }: DashboardOverviewProps) {
       value: totalOptimizations.toLocaleString(),
       change: growthRate,
       icon: Eye,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
+      gradient: 'from-cyan-500 to-blue-500'
     },
     {
-      title: 'Total Users',
-      value: totalUsers.toLocaleString(),
-      change: stats?.activeToday || 0,
-      changeLabel: 'active today',
-      icon: Users,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
+      title: 'Total Revenue',
+      value: `$${(totalOptimizations * 2.5).toLocaleString()}`,
+      change: -34.0,
+      icon: DollarSign,
+      gradient: 'from-red-500 to-pink-500'
     },
     {
-      title: 'Active Rate',
+      title: 'Bounce Rate',
       value: `${((activeUsers / totalUsers) * 100).toFixed(1)}%`,
-      change: activeUsers,
-      changeLabel: 'active users',
+      change: 24.2,
       icon: Activity,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
+      gradient: 'from-green-500 to-emerald-500'
     },
     {
-      title: 'Optimizations',
-      value: totalOptimizations.toLocaleString(),
-      change: analytics?.summary?.last30DaysActivity || 0,
-      changeLabel: 'last 30 days',
-      icon: Target,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50'
+      title: 'Total Subscriber',
+      value: totalUsers.toLocaleString(),
+      change: 8.3,
+      changeLabel: `+${stats?.activeToday || 0} increased`,
+      icon: Users,
+      gradient: 'from-purple-500 to-indigo-500'
     }
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           const isPositive = typeof stat.change === 'number' && stat.change > 0;
           
           return (
-            <div key={index} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 ${stat.bgColor} rounded-lg`}>
-                  <Icon className={stat.color} size={24} />
+            <div key={index} className="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 hover:shadow-xl transition-all">
+              <div className="flex items-start justify-between mb-3 sm:mb-4">
+                <div className={`p-2 sm:p-3 bg-gradient-to-br ${stat.gradient} rounded-xl shadow-lg flex-shrink-0`}>
+                  <Icon className="text-white" size={18} />
                 </div>
                 {typeof stat.change === 'number' && !stat.changeLabel && (
-                  <div className={`flex items-center gap-1 text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                    {isPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-                    {Math.abs(stat.change)}%
+                  <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${isPositive ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                    {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                    {Math.abs(stat.change).toFixed(1)}%
                   </div>
                 )}
               </div>
               <div>
-                <p className="text-gray-500 text-sm font-medium mb-1">{stat.title}</p>
-                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-gray-500 text-xs font-medium mb-2 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                  {stat.title}
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
                 {stat.changeLabel && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    {stat.change} {stat.changeLabel}
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <span className={`${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                      {isPositive ? '↑' : '↓'}
+                    </span>
+                    {stat.changeLabel}
                   </p>
                 )}
               </div>
@@ -107,68 +107,88 @@ export default function DashboardOverview({ data }: DashboardOverviewProps) {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Activity Overview */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-gray-900">Activity Overview</h3>
-            <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-gray-900">
-              <option>Last 30 Days</option>
-              <option>Last 60 Days</option>
-              <option>Last 90 Days</option>
-            </select>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Sales Overview</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                <span className="text-green-600 font-semibold">15.8% ↑</span> +$143.50 increased
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <Filter size={16} className="text-gray-600" />
+              </button>
+              <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <option>Monthly</option>
+                <option>Weekly</option>
+                <option>Daily</option>
+              </select>
+            </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="date" stroke="#6B7280" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+              <XAxis dataKey="date" stroke="#9CA3AF" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#9CA3AF" style={{ fontSize: '12px' }} />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: 'white', 
                   border: '1px solid #E5E7EB', 
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="optimizations" 
-                stroke="#3B82F6" 
-                strokeWidth={2}
-                dot={{ fill: '#3B82F6', r: 4 }}
-                name="Optimizations"
-              />
-              <Line 
-                type="monotone" 
-                dataKey="users" 
-                stroke="#10B981" 
-                strokeWidth={2}
-                dot={{ fill: '#10B981', r: 4 }}
-                name="New Users"
-              />
-            </LineChart>
+              <Bar dataKey="optimizations" fill="url(#colorGradient1)" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="users" fill="url(#colorGradient2)" radius={[8, 8, 0, 0]} />
+              <defs>
+                <linearGradient id="colorGradient1" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8B5CF6" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+                <linearGradient id="colorGradient2" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#06B6D4" />
+                  <stop offset="100%" stopColor="#3B82F6" />
+                </linearGradient>
+              </defs>
+            </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Platform Distribution */}
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-bold text-gray-900">Platform Usage</h3>
-            <button className="text-sm text-gray-600 hover:text-gray-900">View All</button>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Total Subscriber</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                <span className="text-green-600 font-semibold">8.3% ↑</span> +749 increased
+              </p>
+            </div>
+            <select className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+              <option>Weekly</option>
+              <option>Monthly</option>
+            </select>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={platformData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="name" stroke="#6B7280" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#6B7280" style={{ fontSize: '12px' }} />
+            <BarChart data={platformData.slice(0, 7)}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+              <XAxis dataKey="name" stroke="#9CA3AF" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#9CA3AF" style={{ fontSize: '12px' }} />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: 'white', 
                   border: '1px solid #E5E7EB', 
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
                 }}
               />
-              <Bar dataKey="value" fill="#111827" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="value" fill="url(#colorGradient3)" radius={[8, 8, 0, 0]} />
+              <defs>
+                <linearGradient id="colorGradient3" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8B5CF6" />
+                  <stop offset="100%" stopColor="#6366F1" />
+                </linearGradient>
+              </defs>
             </BarChart>
           </ResponsiveContainer>
         </div>

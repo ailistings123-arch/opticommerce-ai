@@ -88,13 +88,21 @@ export async function GET(request: NextRequest) {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
 
-      const dayActivities = allActivities.filter(a => 
-        a.createdAt?.startsWith(dateStr)
-      );
+      const dayActivities = allActivities.filter(a => {
+        if (!a.createdAt) return false;
+        // Handle both Timestamp objects and ISO strings
+        const activityDate = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        const activityDateStr = activityDate.toISOString().split('T')[0];
+        return activityDateStr === dateStr;
+      });
 
-      const newUsers = users.filter(u => 
-        u.createdAt?.startsWith?.(dateStr)
-      );
+      const newUsers = users.filter(u => {
+        if (!u.createdAt) return false;
+        // Handle both Timestamp objects and ISO strings
+        const userDate = u.createdAt.toDate ? u.createdAt.toDate() : new Date(u.createdAt);
+        const userDateStr = userDate.toISOString().split('T')[0];
+        return userDateStr === dateStr;
+      });
 
       dailyStats.push({
         date: dateStr,
@@ -155,7 +163,8 @@ export async function GET(request: NextRequest) {
       hour,
       activity: allActivities.filter(a => {
         if (!a.createdAt) return false;
-        return new Date(a.createdAt).getHours() === hour;
+        const activityDate = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+        return activityDate.getHours() === hour;
       }).length
     }));
 
@@ -178,7 +187,7 @@ export async function GET(request: NextRequest) {
     // Growth metrics
     const last30Days = allActivities.filter(a => {
       if (!a.createdAt) return false;
-      const activityDate = new Date(a.createdAt);
+      const activityDate = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       return activityDate >= thirtyDaysAgo;
@@ -186,7 +195,7 @@ export async function GET(request: NextRequest) {
 
     const previous30Days = allActivities.filter(a => {
       if (!a.createdAt) return false;
-      const activityDate = new Date(a.createdAt);
+      const activityDate = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
       const sixtyDaysAgo = new Date();
       sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
       const thirtyDaysAgo = new Date();
