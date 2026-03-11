@@ -19,8 +19,8 @@ export class GroqProvider implements AIProvider {
     
     this.config = {
       model: config.model || 'llama-3.3-70b-versatile',
-      maxTokens: config.maxTokens || 8192,
-      temperature: 0.3,
+      maxTokens: config.maxTokens || 12000, // OPTIMIZED: Increased for more detailed content
+      temperature: 0.2, // OPTIMIZED: Lower for maximum consistency and accuracy
       timeout: config.timeout || 60000,
       apiKey: config.apiKey
     };

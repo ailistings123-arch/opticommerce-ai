@@ -45,8 +45,8 @@ export class TrainingExamplesService {
         return false;
       }
 
-      // Only save high-scoring examples
-      if (data.seoScore < 90) {
+      // Only save high-scoring examples (OPTIMIZED: Lowered threshold to capture more quality examples)
+      if (data.seoScore < 85) {
         return false;
       }
 

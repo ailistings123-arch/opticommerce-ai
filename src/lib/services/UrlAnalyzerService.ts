@@ -350,68 +350,251 @@ export class UrlAnalyzerService {
   }
 
   /**
-   * Analyze Etsy product URL
+   * Analyze Etsy product URL - ENHANCED v3 with anti-bot bypass
    */
   private static async analyzeEtsyUrl(url: string): Promise<AnalyzedUrlData> {
     try {
-      const response = await fetch(url, {
+      console.log('[UrlAnalyzer] Analyzing Etsy URL:', url);
+      
+      // Clean URL - remove tracking parameters
+      const cleanUrl = url.split('?')[0];
+      console.log('[UrlAnalyzer] Clean URL:', cleanUrl);
+      
+      const response = await fetch(cleanUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0',
+          'DNT': '1',
+          'Referer': 'https://www.etsy.com/'
         }
       });
 
+      if (!response.ok) {
+        console.error('[UrlAnalyzer] HTTP Error:', response.status, response.statusText);
+        
+        // If 403, try to extract from URL and provide manual input option
+        if (response.status === 403) {
+          // Extract product ID from URL
+          const productIdMatch = cleanUrl.match(/\/listing\/(\d+)/);
+          const productId = productIdMatch ? productIdMatch[1] : '';
+          
+          // Extract title from URL slug
+          const titleMatch = cleanUrl.match(/\/listing\/\d+\/([^?]+)/);
+          let title = 'Etsy Product';
+          if (titleMatch) {
+            title = titleMatch[1]
+              .replace(/-/g, ' ')
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+          }
+          
+          console.log('[UrlAnalyzer] Extracted from URL - Title:', title);
+          
+          return {
+            title: title,
+            description: `This is a handmade/digital product available on Etsy. Please provide more details about the product for better optimization. Product ID: ${productId}`,
+            category: 'Handmade',
+            price: undefined,
+            images: []
+          };
+        }
+        
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
       const html = await response.text();
+      console.log('[UrlAnalyzer] HTML fetched, length:', html.length);
+
+      const title = this.extractEtsyTitle(html);
+      const description = this.extractEtsyDescription(html);
+      const price = this.extractEtsyPrice(html);
+      const images = this.extractEtsyImages(html);
+
+      console.log('[UrlAnalyzer] Extracted - Title:', title, '| Desc length:', description.length, '| Images:', images.length);
 
       return {
-        title: this.extractEtsyTitle(html),
-        description: this.extractEtsyDescription(html),
-        price: this.extractEtsyPrice(html),
-        images: this.extractEtsyImages(html)
+        title,
+        description,
+        price,
+        images,
+        category: 'Handmade' // Default for Etsy
       };
     } catch (error: any) {
+      console.error('[UrlAnalyzer] Etsy analysis failed:', error.message);
+      
+      // Fallback: Extract what we can from the URL
+      const titleMatch = url.match(/\/listing\/\d+\/([^?]+)/);
+      if (titleMatch) {
+        const title = titleMatch[1]
+          .replace(/-/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        
+        console.log('[UrlAnalyzer] Fallback - Extracted title from URL:', title);
+        
+        return {
+          title: title,
+          description: 'Handmade/digital product from Etsy. Please provide additional product details for optimal results.',
+          category: 'Handmade',
+          price: undefined,
+          images: []
+        };
+      }
+      
       throw new Error(`Etsy URL analysis failed: ${error.message}`);
     }
   }
 
   /**
-   * Extract Etsy title
+   * Extract Etsy title - ENHANCED with multiple selectors
    */
   private static extractEtsyTitle(html: string): string {
-    const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-    return titleMatch ? titleMatch[1].trim() : '';
-  }
+    // Try multiple selectors in order of reliability
+    const selectors = [
+      // Meta tags (most reliable)
+      /<meta property="og:title" content="([^"]+)"/i,
+      /<meta name="twitter:title" content="([^"]+)"/i,
+      /<title>([^|<]+)/i,
+      // HTML elements
+      /<h1[^>]*class="[^"]*wt-text-body-03[^"]*"[^>]*>([^<]+)<\/h1>/i,
+      /<h1[^>]*>([^<]+)<\/h1>/i,
+      // JSON-LD structured data
+      /"name"\s*:\s*"([^"]+)"/i
+    ];
 
-  /**
-   * Extract Etsy description
-   */
-  private static extractEtsyDescription(html: string): string {
-    const descMatch = html.match(/<p class="wt-text-body-01[^"]*"[^>]*>([^<]+)<\/p>/i);
-    return descMatch ? descMatch[1].trim() : '';
-  }
-
-  /**
-   * Extract Etsy price
-   */
-  private static extractEtsyPrice(html: string): number | undefined {
-    const priceMatch = html.match(/<p class="wt-text-title-03[^"]*"[^>]*>\$([0-9,.]+)<\/p>/i);
-    return priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : undefined;
-  }
-
-  /**
-   * Extract Etsy images
-   */
-  private static extractEtsyImages(html: string): string[] {
-    const images: string[] = [];
-    const imageRegex = /<img[^>]+data-src="([^"]+)"[^>]*>/gi;
-    let match;
-
-    while ((match = imageRegex.exec(html)) !== null) {
-      if (match[1].includes('il_fullxfull')) {
-        images.push(match[1]);
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1] && match[1].trim().length > 5) {
+        let title = match[1].trim();
+        // Clean up title
+        title = title.replace(/\s*\|\s*Etsy.*$/i, ''); // Remove "| Etsy" suffix
+        title = title.replace(/\s+/g, ' '); // Normalize whitespace
+        title = title.replace(/&amp;/g, '&'); // Decode HTML entities
+        title = title.replace(/&quot;/g, '"');
+        title = title.replace(/&#39;/g, "'");
+        title = title.replace(/&ndash;/g, '–');
+        title = title.replace(/&mdash;/g, '—');
+        if (title.length > 10) {
+          return title;
+        }
       }
     }
 
-    return images;
+    return 'Etsy Product';
+  }
+
+  /**
+   * Extract Etsy description - ENHANCED with multiple selectors
+   */
+  private static extractEtsyDescription(html: string): string {
+    const selectors = [
+      // Meta tags
+      /<meta property="og:description" content="([^"]+)"/i,
+      /<meta name="description" content="([^"]+)"/i,
+      /<meta name="twitter:description" content="([^"]+)"/i,
+      // HTML elements
+      /<p class="wt-text-body-01[^"]*"[^>]*>([^<]+)<\/p>/i,
+      /<div[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]{50,2000}?)<\/div>/i,
+      // JSON-LD
+      /"description"\s*:\s*"([^"]+)"/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1]) {
+        let desc = match[1].trim();
+        // Clean up description
+        desc = desc.replace(/<[^>]+>/g, ' '); // Remove HTML tags
+        desc = desc.replace(/\s+/g, ' '); // Normalize whitespace
+        desc = desc.replace(/&amp;/g, '&'); // Decode HTML entities
+        desc = desc.replace(/&quot;/g, '"');
+        desc = desc.replace(/&#39;/g, "'");
+        desc = desc.replace(/&ndash;/g, '–');
+        desc = desc.replace(/&mdash;/g, '—');
+        if (desc.length > 50) {
+          return desc.substring(0, 2000);
+        }
+      }
+    }
+
+    return 'Handmade product description';
+  }
+
+  /**
+   * Extract Etsy price - ENHANCED with multiple selectors
+   */
+  private static extractEtsyPrice(html: string): number | undefined {
+    const selectors = [
+      // Meta tags
+      /<meta property="og:price:amount" content="([0-9,.]+)"/i,
+      /<meta property="product:price:amount" content="([0-9,.]+)"/i,
+      // HTML elements
+      /<p class="wt-text-title-03[^"]*"[^>]*>\$([0-9,.]+)<\/p>/i,
+      /<span[^>]*class="[^"]*currency-value[^"]*"[^>]*>([0-9,.]+)<\/span>/i,
+      // JSON-LD
+      /"price"\s*:\s*"?([0-9,.]+)"?/i
+    ];
+
+    for (const selector of selectors) {
+      const match = html.match(selector);
+      if (match && match[1]) {
+        const price = parseFloat(match[1].replace(/,/g, ''));
+        if (!isNaN(price) && price > 0) {
+          return price;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Extract Etsy images - ENHANCED with multiple selectors
+   */
+  private static extractEtsyImages(html: string): string[] {
+    const images: string[] = [];
+    
+    // Try multiple image extraction methods
+    const patterns = [
+      // Meta tags
+      /<meta property="og:image" content="([^"]+)"/gi,
+      /<meta name="twitter:image" content="([^"]+)"/gi,
+      // Data attributes
+      /<img[^>]+data-src="([^"]+)"[^>]*>/gi,
+      /<img[^>]+data-src-zoom="([^"]+)"[^>]*>/gi,
+      // Regular src
+      /<img[^>]+src="([^"]+il_fullxfull[^"]+)"[^>]*>/gi,
+      /<img[^>]+src="([^"]+il_1588xN[^"]+)"[^>]*>/gi
+    ];
+
+    for (const pattern of patterns) {
+      let match;
+      while ((match = pattern.exec(html)) !== null) {
+        const imageUrl = match[1];
+        // Only add high-quality Etsy images
+        if (imageUrl && 
+            (imageUrl.includes('il_fullxfull') || 
+             imageUrl.includes('il_1588xN') ||
+             imageUrl.includes('il_794xN'))) {
+          if (!images.includes(imageUrl)) {
+            images.push(imageUrl);
+          }
+        }
+      }
+    }
+
+    return images.slice(0, 10); // Return up to 10 images
   }
 
   /**

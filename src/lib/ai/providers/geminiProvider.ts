@@ -19,8 +19,8 @@ export class GeminiProvider implements AIProvider {
     
     this.config = {
       model: config.model || 'gemini-2.0-flash',
-      maxTokens: config.maxTokens || 8192,
-      temperature: 0.3, // FIXED: Was 0.7 — lower = consistent JSON, no hallucination
+      maxTokens: config.maxTokens || 12000, // OPTIMIZED: Increased for more detailed content
+      temperature: 0.2, // OPTIMIZED: Lower for maximum consistency and accuracy
       timeout: config.timeout || 90000,
       apiKey: config.apiKey
     };

@@ -47,7 +47,7 @@ const PLATFORM_CONFIG: Record<string, {
   },
   etsy: {
     titleMax: 140,
-    titleTarget: '126-140 characters (90-100% of limit)',
+    titleTarget: '126-140 characters (90-100% of limit) — STRICT MAXIMUM 140',
     bulletCount: 5,
     bulletTarget: '100-200 characters each, conversational tone',
     descMin: 400,
@@ -56,7 +56,7 @@ const PLATFORM_CONFIG: Record<string, {
     tone: 'Warm, artisanal, personal, story-driven',
     algorithm: 'Etsy Search — ranks on: listing quality score, recency, shop performance, tags match',
     titleFormat: '[Item] + [Style/Material] + [Occasion] + [Recipient] + pipe separators (|)',
-    specialRules: 'Use pipe (|) separators. Include gift occasions (Gift for Her, Birthday Gift). Mention handmade/handcrafted. All 13 tags must be used. Tags max 20 chars each.',
+    specialRules: 'CRITICAL: Title MUST be under 140 characters. Use pipe (|) separators. Include gift occasions (Gift for Her, Birthday Gift). Mention handmade/handcrafted. All 13 tags must be used. Tags max 20 chars each.',
     seoFocus: 'Use all 13 tags strategically. Include gift-related keywords. Add occasion keywords (wedding, birthday, anniversary). Use material keywords. Include style descriptors (vintage, modern, rustic). Focus on craftsmanship and materials.',
     conversionTips: 'Describe the craftsmanship process. List specific materials used. Mention dimensions and measurements. Highlight customization options. Include care instructions. State production time.'
   },
@@ -134,7 +134,18 @@ const PROHIBITED = [
   'STATE OF THE ART', 'NEXT LEVEL', 'TAKE IT TO', 'CUTTING EDGE',
   'ELEVATE YOUR', 'UNLOCK', 'DISCOVER THE SECRET', 'PROFESSIONAL GRADE',
   'MILITARY GRADE', 'HOSPITAL GRADE', 'COMMERCIAL GRADE', 'STUDIO QUALITY',
-  'BEST VALUE', 'SOLVE YOUR', 'PROBLEM SOLVER', 'SOLUTION FOR'
+  'BEST VALUE', 'SOLVE YOUR', 'PROBLEM SOLVER', 'SOLUTION FOR',
+  
+  // Generic filler words - add NO value
+  'PREMIUM QUALITY', 'HIGH QUALITY', 'TOP QUALITY', 'SUPERIOR QUALITY',
+  'PROFESSIONAL', 'PRO', 'ELITE', 'DELUXE', 'PLUS', 'MAX', 'ULTRA',
+  'SUPER', 'EXTRA', 'SPECIAL', 'UNIQUE', 'EXCEPTIONAL', 'OUTSTANDING',
+  'REMARKABLE', 'IMPRESSIVE', 'STUNNING', 'BEAUTIFUL', 'ELEGANT',
+  'STYLISH', 'MODERN', 'CONTEMPORARY', 'CLASSIC', 'TRADITIONAL',
+  'INNOVATIVE', 'ADVANCED', 'ENHANCED', 'IMPROVED', 'UPGRADED',
+  'NEXT GENERATION', 'LATEST', 'NEWEST', 'BRAND NEW', 'ALL NEW',
+  'GRADE A', 'GRADE B', 'FIRST CLASS', 'WORLD CLASS', 'TOP TIER',
+  'HIGH END', 'UPSCALE', 'REFINED', 'SOPHISTICATED', 'EXQUISITE'
 ];
 
 // ENHANCED: Product type specific guidance
@@ -151,10 +162,10 @@ const PRODUCT_TYPE_GUIDANCE: Record<string, {
     bulletPriority: 'Dimensions, Material Quality, Durability, Easy to Clean/Maintain, Warranty'
   },
   digital: {
-    keywordStrategy: 'Include format, compatibility, instant access, download. Use software/platform names.',
-    titleEmphasis: 'Lead with product type + format + compatibility (PDF, MP4, Compatible with...)',
-    descriptionFocus: 'What they get, format details, how to access, compatibility, usage rights',
-    bulletPriority: 'Instant Access, File Format, Compatibility, Usage Rights, Support Included'
+    keywordStrategy: 'Include format, compatibility, instant access, download, printable. Use software/platform names. For Etsy: emphasize instant download, DIY, customizable, editable.',
+    titleEmphasis: 'Lead with product type + format + use case (PDF Printable, Digital Download, Instant Access). For Etsy: include occasion/recipient (Wedding, Birthday, Gift for Her)',
+    descriptionFocus: 'What they get (files, formats), how to access (instant download), compatibility (software needed), usage rights (personal/commercial), what they can do with it (print, edit, customize)',
+    bulletPriority: 'Instant Download, File Formats Included (PDF, PNG, JPG), Editable/Customizable, Print at Home, Commercial Use Rights'
   },
   handmade: {
     keywordStrategy: 'Include handmade, handcrafted, artisan, custom, unique. Use material keywords.',
@@ -239,9 +250,30 @@ NON-NEGOTIABLE RULES:
 3. DESCRIPTION: Minimum ${cfg.descMin} characters, ${cfg.descTarget}
 4. KEYWORDS: Up to ${cfg.keywordsMax} highly relevant, high-traffic keywords
 5. PROHIBITED WORDS — NEVER USE: ${PROHIBITED.join(', ')}
-6. TONE: ${cfg.tone}
-7. TITLE FORMAT: ${cfg.titleFormat}
-8. PLATFORM RULES: ${cfg.specialRules}
+6. BANNED FILLER WORDS — DO NOT USE: Premium, Professional, Grade, Quality, High-Quality, Top-Quality, Superior, Enhanced, Advanced, Improved, Upgraded, Deluxe, Elite, Pro, Plus, Max, Ultra, Super, Extra, Special, Unique, Exceptional, Outstanding, Remarkable, Impressive, Stunning, Beautiful, Elegant, Stylish, Modern, Contemporary, Classic, Traditional, Innovative, Revolutionary, Cutting-Edge, State-of-the-Art, Next-Generation, Latest, Newest, Brand-New, All-New
+7. TONE: ${cfg.tone}
+8. TITLE FORMAT: ${cfg.titleFormat}
+9. PLATFORM RULES: ${cfg.specialRules}
+10. NEVER INVENT SPECIFICATIONS — Only use specifications explicitly provided in the input. DO NOT add measurements, weights, sizes, or quantities (like "1.7oz", "12oz", "24 inches") unless they are in the original product data.
+11. DEEP PRODUCT ANALYSIS REQUIRED — Analyze the actual product name, description, and category to understand what it REALLY is. Extract REAL features from the input, not generic adjectives.
+
+CRITICAL: DO NOT MAKE UP SPECIFICATIONS OR USE FILLER WORDS
+- If no size/weight/dimensions are provided, DO NOT add them
+- If no quantity is provided, DO NOT add "1.7oz", "12oz", or any measurements
+- Only use specifications that are explicitly in the product data
+- DO NOT use generic filler words like "Premium", "Professional", "Grade", "Quality"
+- ANALYZE the actual product and extract REAL, SPECIFIC features
+- When in doubt, leave it out — never fabricate product details or add meaningless adjectives
+
+EXAMPLES OF WHAT NOT TO DO:
+❌ "Premium Professional Grade Collagen Cream" (generic filler words)
+❌ "High-Quality Advanced Formula Moisturizer" (meaningless adjectives)
+❌ "Superior Elite Pro Wireless Mouse" (stacked generic words)
+
+EXAMPLES OF WHAT TO DO:
+✓ "Collagen Niacinamide Jelly Cream — Hydrating Face Moisturizer for Dry Skin"
+✓ "Wireless Bluetooth Mouse — Ergonomic Design with Silent Click Technology"
+✓ "Stainless Steel Water Bottle — Double-Wall Vacuum Insulated, Leak-Proof Lid"
 
 BULLET STRUCTURE (mandatory format):
 [BENEFIT IN CAPS] — [Feature description with specific details, numbers, materials, measurements]
@@ -290,26 +322,43 @@ You will be REJECTED if you use ANY of these:
 - Breakthrough, Cutting Edge (unless referring to actual blade technology)
 - State of the Art, Next Level, Take It to the Next Level
 
-INSTEAD, ALWAYS USE:
-✓ Exact technical specifications (processor model, RAM amount, storage capacity)
-✓ Precise measurements (dimensions in inches/cm, weight in lbs/kg)
-✓ Specific materials (stainless steel 304, aluminum alloy, tempered glass)
-✓ Actual performance metrics (battery life in hours, speed in RPM/GHz)
-✓ Compatibility details (works with iPhone 12-15, Windows 10/11, USB-C)
-✓ Certifications and standards (FDA approved, CE certified, UL listed)
-✓ Quantifiable features (12-hour battery, 1080p resolution, 5-year warranty)
+INSTEAD, ALWAYS USE (ONLY IF PROVIDED IN INPUT):
+✓ Exact technical specifications (processor model, RAM amount, storage capacity) — ONLY if provided
+✓ Precise measurements (dimensions in inches/cm, weight in lbs/kg) — ONLY if provided
+✓ Specific materials (stainless steel 304, aluminum alloy, tempered glass) — ONLY if provided
+✓ Actual performance metrics (battery life in hours, speed in RPM/GHz) — ONLY if provided
+✓ Compatibility details (works with iPhone 12-15, Windows 10/11, USB-C) — ONLY if provided
+✓ Certifications and standards (FDA approved, CE certified, UL listed) — ONLY if provided
+✓ Quantifiable features (12-hour battery, 1080p resolution, 5-year warranty) — ONLY if provided
+
+⚠️ CRITICAL WARNING: DO NOT INVENT SPECIFICATIONS
+If the product data does NOT include:
+- Size/weight/dimensions → DO NOT add "1.7oz", "12oz", "24 inches", etc.
+- Quantity/volume → DO NOT add measurements
+- Technical specs → DO NOT make up numbers
+- Model numbers → DO NOT fabricate codes
+
+ONLY use information explicitly provided in the product data. When in doubt, leave it out!
 
 PROFESSIONAL WRITING EXAMPLES:
 
-BAD (Marketing Fluff):
+BAD (Generic Filler Words):
 ✗ "Premium quality rice cooker that will transform your cooking experience"
 ✗ "Ultimate solution for perfect rice every time"
-✗ "Game-changing technology for the modern kitchen"
+✗ "Professional grade advanced technology for the modern kitchen"
+✗ "High-quality premium professional wireless mouse" (stacked meaningless words)
+✗ "Superior elite pro collagen cream with advanced formula" (generic adjectives)
 
-GOOD (Professional & Specific):
+GOOD (Specific & Descriptive):
 ✓ "CUCKOO 6-Cup Rice Cooker with Twin Pressure System and Induction Heating Technology"
 ✓ "Stainless steel inner pot with 12 preset cooking modes including GABA rice and porridge"
 ✓ "Silent pressure release system operates at 35dB, voice navigation in English and Spanish"
+✓ "Collagen Niacinamide Jelly Cream — Hydrating Face Moisturizer with Anti-Aging Peptides"
+✓ "Wireless Bluetooth Mouse — Ergonomic Design, Silent Click, 2400 DPI Adjustable Sensor"
+
+NOTICE THE DIFFERENCE:
+❌ BAD: Uses generic words that could describe ANY product (premium, professional, quality)
+✅ GOOD: Uses specific features that describe THIS EXACT product (twin pressure, 35dB, niacinamide)
 
 TITLE STRUCTURE RULES:
 1. Start with BRAND + PRODUCT TYPE
@@ -396,10 +445,24 @@ CRITICAL - WHEN TO OPTIMIZE VS WHEN TO KEEP:
     prompt += '\n\n';
 
     // Product type guidance
-    const productType = (productData as any).productType || 'physical';
+    const productType = (productData as any).productType || this.detectProductType(productData, request.platform);
     const typeGuidance = PRODUCT_TYPE_GUIDANCE[productType] || PRODUCT_TYPE_GUIDANCE['physical'];
     
     prompt += `=== PRODUCT TYPE: ${productType.toUpperCase()} ===\n`;
+    
+    // Special handling for Etsy digital products
+    if (request.platform === 'etsy' && productType === 'digital') {
+      prompt += `⚠️ ETSY DIGITAL PRODUCT DETECTED - SPECIAL REQUIREMENTS:\n`;
+      prompt += `- Emphasize "Instant Download" and "Digital File" in title\n`;
+      prompt += `- Include file formats (PDF, PNG, JPG, SVG, etc.)\n`;
+      prompt += `- Mention if editable/customizable\n`;
+      prompt += `- State if printable at home\n`;
+      prompt += `- Clarify usage rights (personal use, commercial use)\n`;
+      prompt += `- Include occasion/recipient keywords (Wedding, Birthday, Gift)\n`;
+      prompt += `- Use pipe separators (|) between key phrases\n`;
+      prompt += `- All 13 tags MUST be used\n\n`;
+    }
+    
     prompt += `Keyword Strategy: ${typeGuidance.keywordStrategy}\n`;
     prompt += `Title Emphasis: ${typeGuidance.titleEmphasis}\n`;
     prompt += `Description Focus: ${typeGuidance.descriptionFocus}\n`;
@@ -441,39 +504,86 @@ CRITICAL INSTRUCTION: You are writing for AMAZON/E-COMMERCE, not for marketing b
 - Every word must provide SPECIFIC INFORMATION about the product
 - If you cannot state a SPECIFIC FACT, do not write that sentence
 
-STEP 1 - KEYWORD RESEARCH:
+⚠️ ABSOLUTE RULES: 
+1. DO NOT INVENT SPECIFICATIONS
+   - If size/weight/dimensions are NOT in the product data → DO NOT add them
+   - If quantity/volume is NOT provided → DO NOT add "1.7oz", "12oz", "50ml", etc.
+   - If technical specs are NOT given → DO NOT make up numbers
+   - ONLY use information explicitly provided in the input data below
+
+2. DO NOT USE GENERIC FILLER WORDS
+   - BANNED: Premium, Professional, Grade, Quality, High-Quality, Superior, Advanced, Enhanced, Improved, Elite, Pro, Plus, Max, Ultra, Super, Deluxe
+   - These words are MEANINGLESS and add NO value
+   - Instead, describe ACTUAL product features and benefits
+   - Example: Instead of "Premium Moisturizer" → "Collagen Niacinamide Moisturizer with Hyaluronic Acid"
+
+3. DEEPLY ANALYZE THE ACTUAL PRODUCT
+   - Read the product title carefully - what is it REALLY?
+   - Read the description - what are the ACTUAL ingredients/features/materials?
+   - Extract REAL, SPECIFIC information, not generic adjectives
+   - If it says "Collagen Niacinamide Jelly Cream" → use those EXACT ingredients
+   - If it says "Wireless Mouse" → describe the ACTUAL features (wireless, bluetooth, ergonomic, etc.)
+
+STEP 1 - DEEP PRODUCT ANALYSIS (MOST IMPORTANT):
+- What is this product ACTUALLY called? (use the exact name from input)
+- What are the REAL ingredients/materials/components? (extract from title/description)
+- What are the ACTUAL features mentioned? (not generic words, but real features)
+- What is the SPECIFIC use case? (face moisturizer, computer mouse, water bottle, etc.)
+- What makes THIS product different from others? (specific ingredients, technology, design)
+
+STEP 2 - KEYWORD RESEARCH (BASED ON ACTUAL PRODUCT):
 - What is the PRIMARY keyword buyers use to find this product? (high-volume, exact match)
 - What are 3-5 SECONDARY keywords? (related searches, variations)
 - What are 2-3 LONG-TAIL keywords? (specific phrases, lower competition)
 - What LSI keywords should be included? (semantically related terms)
 
-STEP 2 - TECHNICAL ANALYSIS:
-- What are the EXACT specifications? (dimensions, weight, capacity, power)
-- What MATERIALS is it made from? (stainless steel, aluminum, plastic type)
-- What TECHNOLOGY does it use? (induction, pressure, digital, etc.)
-- What CERTIFICATIONS does it have? (FDA, CE, UL, ETL)
-- What is INCLUDED in the package? (accessories, manuals, warranty)
+STEP 3 - EXTRACT REAL FEATURES (FROM PROVIDED DATA ONLY):
+- What INGREDIENTS are mentioned? (collagen, niacinamide, hyaluronic acid, etc.)
+- What MATERIALS are stated? (stainless steel, silicone, leather, cotton, etc.)
+- What TECHNOLOGY is described? (bluetooth, wireless, induction, pressure, etc.)
+- What DESIGN features exist? (ergonomic, foldable, adjustable, portable, etc.)
+- What FUNCTIONS are listed? (hydrating, moisturizing, anti-aging, silent click, etc.)
+- What CERTIFICATIONS are mentioned? (FDA, CE, UL, organic, cruelty-free, etc.)
 
-STEP 3 - FEATURE EXTRACTION:
-- What are the MEASURABLE features? (12 modes, 6-cup capacity, 1100W power)
-- What are the FUNCTIONAL capabilities? (voice navigation, auto shut-off)
-- What COMPATIBILITY does it have? (works with X, fits Y, supports Z)
-- What is the WARRANTY period? (1 year, 3 years, lifetime)
+STEP 4 - IDENTIFY SPECIFIC BENEFITS (NOT GENERIC WORDS):
+- What SPECIFIC problem does it solve? (dry skin → hydrating; wrist pain → ergonomic)
+- What ACTUAL results does it provide? (anti-aging, silent operation, leak-proof, etc.)
+- What REAL advantages does it have? (double-wall insulation, 2400 DPI sensor, etc.)
+- DO NOT use generic words like "premium quality" or "professional grade"
+- USE specific benefits like "reduces fine lines" or "silent click technology"
 
-STEP 4 - COMPETITIVE DIFFERENTIATION:
-- What makes this product TECHNICALLY different? (twin pressure vs single)
-- What SPECIFIC advantages does it have? (35dB vs 60dB noise level)
-- What QUANTIFIABLE benefits? (cooks 30% faster, uses 20% less energy)
+STEP 5 - BUILD TITLE STRATEGY (NO FILLER WORDS):
+- Start with EXACT product name from input (e.g., "Collagen Niacinamide Jelly Cream")
+- Add SPECIFIC features/ingredients (e.g., "with Hyaluronic Acid")
+- Include ACTUAL use case (e.g., "for Dry Skin", "for Gaming", "for Travel")
+- Add REAL benefits (e.g., "Anti-Aging", "Ergonomic Design", "Leak-Proof")
+- DO NOT add generic words like "Premium", "Professional", "Quality", "Grade"
 
-STEP 5 - OPTIMIZATION STRATEGY:
-- How can we maximize character usage (90-100%) with FACTUAL information?
+STEP 6 - OPTIMIZATION STRATEGY:
+- How can we maximize character usage (90-100%) with FACTUAL information FROM THE INPUT?
 - Where should technical keywords be placed for maximum impact?
-- What specific numbers and measurements will drive conversions?
-- How can we stand out with TECHNICAL SUPERIORITY, not marketing claims?
+- What specific numbers and measurements FROM THE PROVIDED DATA will drive conversions?
+- How can we stand out with TECHNICAL SUPERIORITY using ONLY PROVIDED INFORMATION?
 
 Now generate the PROFESSIONAL, TECHNICAL, SEO-OPTIMIZED listing for ${request.platform.toUpperCase()}.
 
-REMEMBER: NO marketing words. ONLY technical facts, specifications, and measurable features.
+REMEMBER: 
+- NO generic filler words (Premium, Professional, Grade, Quality, etc.)
+- NO marketing fluff or meaningless adjectives
+- ONLY use REAL, SPECIFIC features from the product data
+- DEEPLY ANALYZE what the product actually is
+- Extract ACTUAL ingredients, materials, features, and benefits
+- DO NOT add measurements like "1.7oz" unless explicitly provided
+- When in doubt, leave it out
+- EVERY word must add SPECIFIC value and information
+
+FINAL CHECK BEFORE WRITING:
+✓ Did I analyze what this product REALLY is?
+✓ Did I extract ACTUAL features from the input?
+✓ Did I avoid generic words like "Premium", "Professional", "Quality"?
+✓ Did I use SPECIFIC ingredients/materials/features?
+✓ Does every word provide REAL information?
+✓ Would this title help someone understand what this SPECIFIC product is?
 
 === REQUIRED JSON OUTPUT (return this exact structure) ===
 {
@@ -581,6 +691,52 @@ RESULT MUST BE: Professional transformation that ranks higher and converts bette
       default:
         return `TASK: Generate a PROFESSIONAL, SEO-OPTIMIZED product listing for ${platform.toUpperCase()} that ranks and converts.`;
     }
+  }
+
+  /**
+   * Detect product type from product data
+   */
+  private static detectProductType(productData: any, platform: string): string {
+    const title = (productData.title || '').toLowerCase();
+    const description = (productData.description || '').toLowerCase();
+    const combined = `${title} ${description}`;
+    
+    // Digital product keywords
+    const digitalKeywords = [
+      'digital', 'download', 'printable', 'pdf', 'instant', 'file', 'template',
+      'editable', 'customizable', 'svg', 'png', 'jpg', 'jpeg', 'print at home',
+      'diy', 'planner', 'worksheet', 'ebook', 'guide', 'checklist'
+    ];
+    
+    // Handmade keywords
+    const handmadeKeywords = [
+      'handmade', 'handcrafted', 'artisan', 'handwoven', 'hand-made',
+      'hand crafted', 'hand painted', 'hand sewn', 'custom made'
+    ];
+    
+    // Vintage keywords
+    const vintageKeywords = [
+      'vintage', 'antique', 'retro', 'collectible', 'rare',
+      '1950s', '1960s', '1970s', '1980s', '1990s'
+    ];
+    
+    // Check for digital
+    if (digitalKeywords.some(keyword => combined.includes(keyword))) {
+      return 'digital';
+    }
+    
+    // Check for handmade (especially for Etsy)
+    if (platform === 'etsy' && handmadeKeywords.some(keyword => combined.includes(keyword))) {
+      return 'handmade';
+    }
+    
+    // Check for vintage
+    if (vintageKeywords.some(keyword => combined.includes(keyword))) {
+      return 'vintage';
+    }
+    
+    // Default to physical
+    return 'physical';
   }
 
   /**
