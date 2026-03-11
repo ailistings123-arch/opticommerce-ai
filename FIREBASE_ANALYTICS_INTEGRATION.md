@@ -187,6 +187,7 @@ The analytics data can be accessed via Firebase Admin SDK in your admin panel:
 
 ## Privacy & Compliance
 
+
 ### Data Collected
 - User IDs (Firebase UIDs)
 - Email addresses (hashed in analytics)

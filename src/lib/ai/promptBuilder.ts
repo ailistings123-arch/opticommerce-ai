@@ -135,6 +135,7 @@ const PROHIBITED = [
   'ELEVATE YOUR', 'UNLOCK', 'DISCOVER THE SECRET', 'PROFESSIONAL GRADE',
   'MILITARY GRADE', 'HOSPITAL GRADE', 'COMMERCIAL GRADE', 'STUDIO QUALITY',
   'BEST VALUE', 'SOLVE YOUR', 'PROBLEM SOLVER', 'SOLUTION FOR',
+  'BEST FOR', 'BEST CHOICE', 'TOP CHOICE', 'FIRST CHOICE',
   
   // Generic filler words - add NO value
   'PREMIUM QUALITY', 'HIGH QUALITY', 'TOP QUALITY', 'SUPERIOR QUALITY',
@@ -145,7 +146,11 @@ const PROHIBITED = [
   'INNOVATIVE', 'ADVANCED', 'ENHANCED', 'IMPROVED', 'UPGRADED',
   'NEXT GENERATION', 'LATEST', 'NEWEST', 'BRAND NEW', 'ALL NEW',
   'GRADE A', 'GRADE B', 'FIRST CLASS', 'WORLD CLASS', 'TOP TIER',
-  'HIGH END', 'UPSCALE', 'REFINED', 'SOPHISTICATED', 'EXQUISITE'
+  'HIGH END', 'UPSCALE', 'REFINED', 'SOPHISTICATED', 'EXQUISITE',
+  
+  // Problem/solution marketing phrases
+  'YOUR PROBLEM', 'THE PROBLEM', 'SOLVE', 'SOLUTION', 'FIX YOUR',
+  'END YOUR', 'STOP YOUR', 'NO MORE', 'SAY GOODBYE TO', 'ELIMINATE'
 ];
 
 // ENHANCED: Product type specific guidance
@@ -166,6 +171,12 @@ const PRODUCT_TYPE_GUIDANCE: Record<string, {
     titleEmphasis: 'Lead with product type + format + use case (PDF Printable, Digital Download, Instant Access). For Etsy: include occasion/recipient (Wedding, Birthday, Gift for Her)',
     descriptionFocus: 'What they get (files, formats), how to access (instant download), compatibility (software needed), usage rights (personal/commercial), what they can do with it (print, edit, customize)',
     bulletPriority: 'Instant Download, File Formats Included (PDF, PNG, JPG), Editable/Customizable, Print at Home, Commercial Use Rights'
+  },
+  beauty: {
+    keywordStrategy: 'Include active ingredients (Collagen, Niacinamide, Hyaluronic Acid), skin type (dry, oily, combination), benefits (hydrating, anti-aging, brightening), texture (cream, serum, gel)',
+    titleEmphasis: 'Lead with product type + key active ingredients + primary benefit + skin type',
+    descriptionFocus: 'Active ingredients and their benefits, how they work together (formula synergy), skin concerns addressed, texture and absorption, application instructions, suitable skin types',
+    bulletPriority: 'Key Active Ingredients & Benefits, Skin Concerns Addressed, Texture & Absorption, Suitable Skin Types, Application Method'
   },
   handmade: {
     keywordStrategy: 'Include handmade, handcrafted, artisan, custom, unique. Use material keywords.',
@@ -450,6 +461,49 @@ CRITICAL - WHEN TO OPTIMIZE VS WHEN TO KEEP:
     
     prompt += `=== PRODUCT TYPE: ${productType.toUpperCase()} ===\n`;
     
+    // Special handling for beauty/skincare products
+    if (productType === 'beauty') {
+      prompt += `⚠️ BEAUTY/SKINCARE PRODUCT DETECTED - ANALYZE FORMULA & BENEFITS:\n`;
+      prompt += `\n`;
+      prompt += `STEP 1 - IDENTIFY ACTIVE INGREDIENTS:\n`;
+      prompt += `- Extract ALL active ingredients from title/description (Collagen, Niacinamide, Hyaluronic Acid, Peptides, Vitamins, etc.)\n`;
+      prompt += `- List each ingredient separately\n`;
+      prompt += `- DO NOT use generic terms like "active ingredients" - name them specifically\n`;
+      prompt += `\n`;
+      prompt += `STEP 2 - ANALYZE EACH INGREDIENT'S BENEFIT:\n`;
+      prompt += `- Collagen: Improves skin elasticity, reduces fine lines, firms skin\n`;
+      prompt += `- Niacinamide: Brightens skin tone, minimizes pores, reduces redness\n`;
+      prompt += `- Hyaluronic Acid: Deep hydration, plumps skin, retains moisture\n`;
+      prompt += `- Peptides: Stimulates collagen production, anti-aging, firms skin\n`;
+      prompt += `- Vitamin C: Brightens, evens skin tone, antioxidant protection\n`;
+      prompt += `- Retinol: Reduces wrinkles, improves texture, increases cell turnover\n`;
+      prompt += `\n`;
+      prompt += `STEP 3 - IDENTIFY SKIN CONCERNS ADDRESSED:\n`;
+      prompt += `- What problems does this formula solve? (dryness, aging, dullness, uneven tone, fine lines, wrinkles, dark spots)\n`;
+      prompt += `- What skin types benefit most? (dry, oily, combination, sensitive, mature, all skin types)\n`;
+      prompt += `\n`;
+      prompt += `STEP 4 - DESCRIBE TEXTURE & APPLICATION:\n`;
+      prompt += `- What is the texture? (lightweight gel, rich cream, silky serum, jelly cream, etc.)\n`;
+      prompt += `- How does it absorb? (fast-absorbing, non-greasy, lightweight, rich, etc.)\n`;
+      prompt += `- When to use? (morning, night, day and night)\n`;
+      prompt += `\n`;
+      prompt += `STEP 5 - BUILD TITLE WITH REAL BENEFITS:\n`;
+      prompt += `- Start with product type (Face Cream, Serum, Moisturizer, etc.)\n`;
+      prompt += `- Add key active ingredients (Collagen Niacinamide, Hyaluronic Acid, etc.)\n`;
+      prompt += `- Include primary benefit (Hydrating, Anti-Aging, Brightening, Firming)\n`;
+      prompt += `- Add skin concern (for Dry Skin, for Fine Lines, for Dull Skin)\n`;
+      prompt += `- DO NOT use: "Solve Your Problem", "Best Value", "Best For", generic marketing phrases\n`;
+      prompt += `\n`;
+      prompt += `EXAMPLE GOOD TITLE:\n`;
+      prompt += `"Collagen Niacinamide Jelly Cream — Hydrating Face Moisturizer with Hyaluronic Acid for Dry Skin — Reduces Fine Lines and Brightens Complexion"\n`;
+      prompt += `\n`;
+      prompt += `EXAMPLE BAD TITLES (NEVER DO THIS):\n`;
+      prompt += `❌ "Solve Your Problem - Collagen Niacinamide Jelly Cream"\n`;
+      prompt += `❌ "Best Value Collagen Cream for All Your Skin Needs"\n`;
+      prompt += `❌ "Best For Dry Skin - Face Moisturizer"\n`;
+      prompt += `\n\n`;
+    }
+    
     // Special handling for Etsy digital products
     if (request.platform === 'etsy' && productType === 'digital') {
       prompt += `⚠️ ETSY DIGITAL PRODUCT DETECTED - SPECIAL REQUIREMENTS:\n`;
@@ -699,7 +753,17 @@ RESULT MUST BE: Professional transformation that ranks higher and converts bette
   private static detectProductType(productData: any, platform: string): string {
     const title = (productData.title || '').toLowerCase();
     const description = (productData.description || '').toLowerCase();
-    const combined = `${title} ${description}`;
+    const category = (productData.category || '').toLowerCase();
+    const combined = `${title} ${description} ${category}`;
+    
+    // Beauty/skincare keywords
+    const beautyKeywords = [
+      'cream', 'serum', 'moisturizer', 'lotion', 'gel', 'mask', 'cleanser',
+      'toner', 'essence', 'oil', 'balm', 'treatment', 'skincare', 'skin care',
+      'collagen', 'niacinamide', 'hyaluronic', 'retinol', 'vitamin c', 'peptide',
+      'anti-aging', 'anti aging', 'wrinkle', 'hydrating', 'brightening',
+      'face', 'facial', 'eye cream', 'night cream', 'day cream', 'beauty'
+    ];
     
     // Digital product keywords
     const digitalKeywords = [
@@ -719,6 +783,11 @@ RESULT MUST BE: Professional transformation that ranks higher and converts bette
       'vintage', 'antique', 'retro', 'collectible', 'rare',
       '1950s', '1960s', '1970s', '1980s', '1990s'
     ];
+    
+    // Check for beauty/skincare (highest priority for this use case)
+    if (beautyKeywords.some(keyword => combined.includes(keyword))) {
+      return 'beauty';
+    }
     
     // Check for digital
     if (digitalKeywords.some(keyword => combined.includes(keyword))) {
