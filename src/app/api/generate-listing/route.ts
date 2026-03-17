@@ -51,9 +51,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check API key
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('[API] GEMINI_API_KEY not configured');
+    // Check API key (supports Groq, Gemini, or Cloudflare)
+    const hasApiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.CLOUDFLARE_API_KEY;
+    if (!hasApiKey) {
+      console.error('[API] No AI API key configured');
       return NextResponse.json(
         { error: 'AI service not configured. Please contact administrator.' },
         { status: 500 }

@@ -135,10 +135,13 @@ export class ResponseValidator {
 
     // Check length
     if (sanitized.length > rules.titleRange.max) {
-      errors.push(`Title exceeds maximum length of ${rules.titleRange.max} characters (current: ${sanitized.length})`);
-      // Auto-fix: truncate
+      // Auto-fix: truncate to max, then back to last word boundary
       sanitized = sanitized.substring(0, rules.titleRange.max).trim();
-      sanitized = sanitized.substring(0, sanitized.lastIndexOf(' ')); // Remove incomplete word
+      const lastSpace = sanitized.lastIndexOf(' ');
+      if (lastSpace > rules.titleRange.max * 0.7) {
+        sanitized = sanitized.substring(0, lastSpace);
+      }
+      warnings.push(`Title auto-truncated to ${sanitized.length}/${rules.titleRange.max} characters`);
     }
 
     if (sanitized.length < rules.titleRange.min) {

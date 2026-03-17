@@ -710,59 +710,200 @@ export class UrlAnalyzerService {
   }
 
   /**
-   * Analyze Walmart product URL
+   * Analyze Walmart product URL — extracts from __NEXT_DATA__ JSON embedded in page
+   * Falls back to URL slug extraction when Walmart bot-detection blocks the request
    */
   private static async analyzeWalmartUrl(url: string): Promise<AnalyzedUrlData> {
     try {
-      // Extract product ID from URL as fallback
+      // Extract product ID and slug from URL as fallback
       const itemIdMatch = url.match(/\/ip\/(?:[^/]+\/)?(\d+)/);
       const itemId = itemIdMatch ? itemIdMatch[1] : null;
-
-      // Extract title from URL slug
-      const slugMatch = url.match(/\/ip\/([^/]+)\//);
+      const slugMatch = url.match(/\/ip\/([^/\d][^/]*)\//);
       let urlTitle = '';
       if (slugMatch && slugMatch[1]) {
         urlTitle = slugMatch[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       }
 
-      const response = await fetch(url, {
+      // Clean URL — strip tracking params
+      const cleanUrl = url.split('?')[0];
+
+      const response = await fetch(cleanUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
           'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0',
+          'DNT': '1'
         }
       });
 
       const html = await response.text();
 
-      // Walmart uses heavy JS rendering — check if we got real content
-      const hasRealContent = html.includes('product-title') || html.includes('prod-ProductTitle') || html.includes('"name"');
-      
-      if (!hasRealContent || html.length < 5000) {
-        console.warn('[UrlAnalyzer] Walmart JS-rendered page — using URL-extracted data');
-        return {
-          title: urlTitle || `Walmart Product${itemId ? ` (Item: ${itemId})` : ''}`,
-          description: `Walmart product${itemId ? ` item #${itemId}` : ''}. Walmart uses JavaScript rendering which limits automated extraction — please paste the product details manually for best results.`,
-          category: 'Walmart Product',
-          price: undefined,
-          images: []
-        };
+      // Try __NEXT_DATA__ first — Walmart embeds full product JSON here
+      const nextDataResult = this.extractWalmartFromNextData(html);
+      if (nextDataResult) {
+        console.log('[UrlAnalyzer] Walmart: extracted from __NEXT_DATA__');
+        return nextDataResult;
       }
 
-      return {
-        title: this.extractWalmartTitle(html),
-        description: this.extractWalmartDescription(html),
-        price: this.extractWalmartPrice(html)
-      };
+      // Bot detection or JS-only page — use URL slug as data source
+      // The slug is rich enough for AI to generate a good listing
+      console.warn('[UrlAnalyzer] Walmart bot-detection triggered — extracting from URL slug');
+      return this.extractWalmartFromSlug(url, urlTitle, itemId);
+
     } catch (error: any) {
       throw new Error(`Walmart URL analysis failed: ${error.message}`);
     }
   }
 
   /**
-   * Extract Walmart title
+   * Extract rich product data from Walmart URL slug
+   * Walmart slugs are descriptive enough for AI optimization
+   */
+  private static extractWalmartFromSlug(url: string, urlTitle: string, itemId: string | null): AnalyzedUrlData {
+    const slug = urlTitle.toLowerCase();
+    const words = urlTitle.split(' ').filter(w => w.length > 1);
+    const brand = words[0] || '';
+
+    // Build a description that gives the AI enough context without hallucination triggers
+    const description = `Product: ${urlTitle}. Brand: ${brand}. ` +
+      `This is a physical product sold at Walmart. ` +
+      `Only use features and specifications that can be reasonably inferred from the product name. ` +
+      `Do not invent specifications, quantities, or technical details not present in the product name.`;
+
+    // Detect category from slug keywords
+    let category = 'Walmart Product';
+    if (/curling|hair|straighten|flat iron|wand/i.test(slug)) category = 'Hair Care';
+    else if (/keyboard|mouse|laptop|computer|monitor/i.test(slug)) category = 'Electronics';
+    else if (/shirt|pants|dress|jacket|shoes/i.test(slug)) category = 'Clothing';
+    else if (/toy|game|puzzle|lego/i.test(slug)) category = 'Toys';
+    else if (/vitamin|supplement|protein/i.test(slug)) category = 'Health';
+    else if (/coffee|blender|air fryer|instant pot/i.test(slug)) category = 'Kitchen';
+
+    return {
+      title: urlTitle,
+      description,
+      category,
+      brand,
+      price: undefined,
+      images: [],
+      bullets: [],
+      specifications: []
+    };
+  }
+
+  /**
+   * Extract Walmart product data from __NEXT_DATA__ JSON blob
+   */
+  private static extractWalmartFromNextData(html: string): AnalyzedUrlData | null {
+    try {
+      const match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+      if (!match) return null;
+
+      const json = JSON.parse(match[1]);
+
+      // Navigate to product data — Walmart nests it under props.pageProps.initialData.data.product
+      const product =
+        json?.props?.pageProps?.initialData?.data?.product ||
+        json?.props?.pageProps?.initialData?.data?.idmlData ||
+        null;
+
+      if (!product) {
+        // Try alternate path
+        const altProduct = json?.props?.pageProps?.initialData?.data?.contentLayout?.modules
+          ?.find((m: any) => m?.type === 'ProductSummary' || m?.configs?.product)
+          ?.configs?.product;
+        if (!altProduct) return null;
+        return this.parseWalmartProduct(altProduct);
+      }
+
+      return this.parseWalmartProduct(product);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Parse a Walmart product object into AnalyzedUrlData
+   */
+  private static parseWalmartProduct(p: any): AnalyzedUrlData | null {
+    const name = p?.name || p?.title || '';
+    if (!name) return null;
+
+    // Description — try multiple fields
+    const rawDesc = p?.longDescription || p?.shortDescription || p?.description || '';
+    const description = rawDesc
+      ? rawDesc.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 2000)
+      : '';
+
+    // Price
+    let price: number | undefined;
+    const priceInfo = p?.priceInfo?.currentPrice || p?.price || p?.priceInfo;
+    if (priceInfo?.price) price = parseFloat(priceInfo.price);
+    else if (typeof priceInfo === 'number') price = priceInfo;
+
+    // Brand
+    const brand = p?.brand || p?.brandName || undefined;
+
+    // Images
+    const images: string[] = [];
+    const imgArr = p?.imageInfo?.thumbnailUrl ? [p.imageInfo.thumbnailUrl] : [];
+    const allImages = p?.imageInfo?.allImages || p?.images || imgArr;
+    if (Array.isArray(allImages)) {
+      allImages.forEach((img: any) => {
+        const src = typeof img === 'string' ? img : img?.url || img?.src || '';
+        if (src && src.startsWith('http')) images.push(src);
+      });
+    }
+
+    // Specifications
+    const specs: Array<{ name: string; value: string }> = [];
+    const specArr = p?.specifications || p?.productAttributes || [];
+    if (Array.isArray(specArr)) {
+      specArr.forEach((s: any) => {
+        const name = s?.name || s?.key || '';
+        const value = s?.value || s?.values?.join(', ') || '';
+        if (name && value) specs.push({ name, value });
+      });
+    }
+
+    // Key features as bullets
+    const bullets: string[] = [];
+    const features = p?.keyFeatures || p?.highlights || [];
+    if (Array.isArray(features)) {
+      features.forEach((f: any) => {
+        const text = typeof f === 'string' ? f : f?.description || f?.text || '';
+        if (text) bullets.push(text.replace(/<[^>]+>/g, '').trim());
+      });
+    }
+
+    // Rating
+    const rating = p?.averageRating || p?.rating?.averageRating || undefined;
+    const reviewCount = p?.numberOfReviews || p?.rating?.numberOfReviews || undefined;
+
+    return {
+      title: name,
+      description: description || `${name} — available at Walmart.`,
+      price,
+      brand,
+      images: images.slice(0, 6),
+      specifications: specs.slice(0, 10),
+      bullets: bullets.slice(0, 6),
+      category: p?.category?.name || p?.categoryPath || 'Walmart Product',
+      rating: rating ? parseFloat(rating) : undefined,
+      reviewCount: reviewCount ? parseInt(reviewCount) : undefined
+    };
+  }
+
+  /**
+   * Extract Walmart title (HTML fallback)
    */
   private static extractWalmartTitle(html: string): string {
     const selectors = [
@@ -772,62 +913,48 @@ export class UrlAnalyzerService {
       /<meta property="og:title" content="([^"]+)"/i,
       /<title>([^<|]+)/i
     ];
-
     for (const selector of selectors) {
       const match = html.match(selector);
-      if (match && match[1].trim()) {
-        return match[1].trim().replace(/\s+/g, ' ');
-      }
+      if (match && match[1].trim()) return match[1].trim().replace(/\s+/g, ' ');
     }
-
-    return 'Product Title';
+    return '';
   }
 
   /**
-   * Extract Walmart description
+   * Extract Walmart description (HTML fallback)
    */
   private static extractWalmartDescription(html: string): string {
     const selectors = [
       /<div[^>]*itemprop="description"[^>]*>([\s\S]*?)<\/div>/i,
-      /<div[^>]*class="[^"]*about-desc[^"]*"[^>]*>([\s\S]*?)<\/div>/i,
-      /<div[^>]*data-automation-id="product-description"[^>]*>([\s\S]*?)<\/div>/i,
       /<meta property="og:description" content="([^"]+)"/i,
       /<meta name="description" content="([^"]+)"/i
     ];
-
     for (const selector of selectors) {
       const match = html.match(selector);
       if (match && match[1]) {
-        let desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (desc.length > 50) {
-          return desc.substring(0, 2000);
-        }
+        const desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (desc.length > 50) return desc.substring(0, 2000);
       }
     }
-
     return 'Product description';
   }
 
   /**
-   * Extract Walmart price
+   * Extract Walmart price (HTML fallback)
    */
   private static extractWalmartPrice(html: string): number | undefined {
-    const pricePatterns = [
+    const patterns = [
       /<span[^>]*itemprop="price"[^>]*content="([0-9.]+)"/i,
-      /<span[^>]*class="[^"]*price-characteristic[^"]*"[^>]*>([0-9]+)<\/span>/i,
+      /"currentPrice"\s*:\s*([0-9.]+)/,
       /\$([0-9,.]+)/
     ];
-
-    for (const pattern of pricePatterns) {
-      const match = html.match(pattern);
-      if (match && match[1]) {
-        const price = parseFloat(match[1].replace(/,/g, ''));
-        if (!isNaN(price) && price > 0) {
-          return price;
-        }
+    for (const p of patterns) {
+      const m = html.match(p);
+      if (m) {
+        const v = parseFloat(m[1].replace(/,/g, ''));
+        if (!isNaN(v) && v > 0) return v;
       }
     }
-
     return undefined;
   }
 
