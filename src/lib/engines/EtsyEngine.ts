@@ -19,8 +19,8 @@ export class EtsyEngine extends BasePlatformEngine {
   getPlatformRules(): EnhancedPlatformRules {
     return {
       name: 'Etsy',
-      titleRange: { min: 60, max: 140 },
-      minDescription: 800,
+      titleRange: { min: 100, max: 140 },
+      minDescription: 500,
       maxTags: 13,
       tagFormat: 'multi-word-phrases',
       guidelines: [

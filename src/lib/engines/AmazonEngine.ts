@@ -19,9 +19,9 @@ export class AmazonEngine extends BasePlatformEngine {
   getPlatformRules(): EnhancedPlatformRules {
     return {
       name: 'Amazon',
-      titleRange: { min: 80, max: 200 },
-      minDescription: 2000,
-      maxTags: 10,
+      titleRange: { min: 150, max: 200 },
+      minDescription: 1000,
+      maxTags: 15,
       tagFormat: 'lowercase-hyphenated',
       guidelines: [
         'Front-load important keywords in first 80 characters',

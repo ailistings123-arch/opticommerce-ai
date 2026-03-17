@@ -41,6 +41,16 @@ export class ResponseValidator {
       sanitized.title = titleValidation.sanitized;
     }
 
+    // Auto-extend title if utilization < 90% — append keywords until we hit 90%
+    const titleUtil = (sanitized.title.length / rules.titleRange.max) * 100;
+    if (titleUtil < 90 && sanitized.keywords && sanitized.keywords.length > 0) {
+      sanitized.title = this.extendTitle(sanitized.title, sanitized.keywords, rules.titleRange.max);
+      const newUtil = Math.round((sanitized.title.length / rules.titleRange.max) * 100);
+      if (newUtil > Math.round(titleUtil)) {
+        warnings.push(`Auto-extended title to ${newUtil}% utilization (${sanitized.title.length}/${rules.titleRange.max} chars)`);
+      }
+    }
+
     // Validate bullets
     const bulletsValidation = this.validateBullets(sanitized.bullets);
     errors.push(...bulletsValidation.errors);
@@ -140,6 +150,8 @@ export class ResponseValidator {
     if (utilization < 90) {
       warnings.push(`Title utilization: ${Math.round(utilization)}% (target: 90-100%). Current: ${sanitized.length}/${rules.titleRange.max} chars`);
     }
+
+    return { errors, warnings, sanitized };
 
     // Check for HTML entities and decode them
     if (/&[a-z]+;/i.test(sanitized)) {
@@ -401,6 +413,35 @@ export class ResponseValidator {
     });
 
     return sanitized;
+  }
+
+  /**
+   * Extend title by appending keywords until 90% utilization is reached
+   */
+  private static extendTitle(title: string, keywords: string[], maxLength: number): string {
+    const target = Math.floor(maxLength * 0.90);
+    if (title.length >= target) return title;
+
+    // Collect candidate phrases from keywords — prefer multi-word, title-cased
+    const candidates: string[] = keywords
+      .map(k => k.trim())
+      .filter(k => k.length > 2)
+      // Convert to Title Case for natural title flow
+      .map(k => k.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '))
+      // Deduplicate against existing title words
+      .filter(k => !title.toLowerCase().includes(k.toLowerCase()));
+
+    let extended = title;
+    for (const kw of candidates) {
+      const separator = ' - ';
+      const candidate = separator + kw;
+      if (extended.length + candidate.length <= maxLength) {
+        extended += candidate;
+        if (extended.length >= target) break;
+      }
+    }
+
+    return extended;
   }
 
   /**

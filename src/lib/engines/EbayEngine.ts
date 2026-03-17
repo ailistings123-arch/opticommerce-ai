@@ -19,9 +19,9 @@ export class EbayEngine extends BasePlatformEngine {
   getPlatformRules(): EnhancedPlatformRules {
     return {
       name: 'eBay',
-      titleRange: { min: 40, max: 80 },
-      minDescription: 300,
-      maxTags: 20,
+      titleRange: { min: 60, max: 80 },
+      minDescription: 400,
+      maxTags: 10,
       tagFormat: 'item-specifics',
       guidelines: [
         'Keyword-dense, front-loaded important terms',

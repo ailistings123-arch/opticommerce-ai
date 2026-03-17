@@ -49,23 +49,77 @@ export class UrlAnalyzerService {
    */
   private static async analyzeAmazonUrl(url: string): Promise<AnalyzedUrlData> {
     try {
+      // Extract ASIN from URL as fallback identifier
+      const asinMatch = url.match(/\/(?:dp|gp\/product|ASIN)\/([A-Z0-9]{10})/i);
+      const asin = asinMatch ? asinMatch[1] : null;
+
+      // Extract title from URL slug as best-effort fallback
+      const slugMatch = url.match(/\/dp\/[A-Z0-9]+\/|\/([^/]+)\/dp\//i);
+      let urlTitle = '';
+      if (slugMatch && slugMatch[1]) {
+        urlTitle = slugMatch[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0',
+          'DNT': '1'
         }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      // Amazon often returns 503 or redirects to CAPTCHA — handle gracefully
+      if (!response.ok || response.status === 503) {
+        console.warn(`[UrlAnalyzer] Amazon returned ${response.status} — using URL-extracted data`);
+        return {
+          title: urlTitle || `Amazon Product${asin ? ` (ASIN: ${asin})` : ''}`,
+          description: `Amazon product${asin ? ` ASIN ${asin}` : ''}. Amazon blocks automated access — please paste the product title, description, and key features manually for best results.`,
+          category: 'Amazon Product',
+          price: undefined,
+          images: [],
+          bullets: [],
+          specifications: []
+        };
       }
 
       const html = await response.text();
 
+      // Detect CAPTCHA / robot check page
+      const isCaptcha = html.includes('robot check') || html.includes('captcha') || html.includes('Enter the characters you see below');
+      if (isCaptcha) {
+        console.warn('[UrlAnalyzer] Amazon CAPTCHA detected — using URL-extracted data');
+        return {
+          title: urlTitle || `Amazon Product${asin ? ` (ASIN: ${asin})` : ''}`,
+          description: `Amazon product${asin ? ` ASIN ${asin}` : ''}. Amazon requires CAPTCHA verification — please paste the product details manually for best results.`,
+          category: 'Amazon Product',
+          price: undefined,
+          images: [],
+          bullets: [],
+          specifications: []
+        };
+      }
+
+      const title = this.extractAmazonTitle(html);
+      const bullets = this.extractAmazonBullets(html);
+      const description = this.extractAmazonDescription(html);
+
+      // If we got no real data, fall back to URL-extracted title
+      const finalTitle = (title && title !== 'Product Title') ? title : (urlTitle || 'Amazon Product');
+
       return {
-        title: this.extractAmazonTitle(html),
-        description: this.extractAmazonDescription(html),
+        title: finalTitle,
+        description: description || 'Amazon product — please add product details for better optimization.',
         price: this.extractAmazonPrice(html),
-        bullets: this.extractAmazonBullets(html),
+        bullets,
         images: this.extractAmazonImages(html),
         specifications: this.extractAmazonSpecs(html),
         brand: this.extractAmazonBrand(html),
@@ -81,17 +135,27 @@ export class UrlAnalyzerService {
    * Extract Amazon title
    */
   private static extractAmazonTitle(html: string): string {
+    // productTitle span has leading/trailing whitespace and newlines — use [\s\S]*?
     const selectors = [
-      /<span id="productTitle"[^>]*>([^<]+)<\/span>/i,
-      /<h1[^>]*id="title"[^>]*>([^<]+)<\/h1>/i,
+      /<span id="productTitle"[^>]*>([\s\S]*?)<\/span>/i,
+      /<h1[^>]*id="title"[^>]*>([\s\S]*?)<\/h1>/i,
+      /<meta name="title" content="([^"]+)"/i,
       /<meta property="og:title" content="([^"]+)"/i,
-      /<title>([^<:]+)/i
+      /<title>([^<]+)/i
     ];
 
     for (const selector of selectors) {
       const match = html.match(selector);
-      if (match && match[1].trim()) {
-        return match[1].trim().replace(/\s+/g, ' ');
+      if (match && match[1]) {
+        // Strip HTML tags, decode entities, normalize whitespace
+        let title = match[1]
+          .replace(/<[^>]+>/g, '')
+          .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+          .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+          .replace(/\s+/g, ' ').trim();
+        // Remove "Amazon.com: " prefix from meta title
+        title = title.replace(/^Amazon\.com\s*:\s*/i, '');
+        if (title.length > 10) return title;
       }
     }
 
@@ -102,21 +166,24 @@ export class UrlAnalyzerService {
    * Extract Amazon description
    */
   private static extractAmazonDescription(html: string): string {
-    const selectors = [
-      /<div id="productDescription"[^>]*>[\s\S]*?<p>([^<]+)<\/p>/i,
-      /<div id="feature-bullets"[^>]*>([\s\S]*?)<\/div>/i,
-      /<meta property="og:description" content="([^"]+)"/i,
-      /<meta name="description" content="([^"]+)"/i
-    ];
+    // Try productDescription div first
+    const descDiv = html.match(/<div id="productDescription"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i);
+    if (descDiv) {
+      const text = descDiv[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (text.length > 50) return text.substring(0, 2000);
+    }
 
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1]) {
-        let desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (desc.length > 50) {
-          return desc.substring(0, 2000);
-        }
-      }
+    // Try feature-bullets section (has the bullet text)
+    const bulletsDiv = html.match(/id="feature-bullets"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i);
+    if (bulletsDiv) {
+      const text = bulletsDiv[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      if (text.length > 50) return text.substring(0, 2000);
+    }
+
+    // Meta description
+    const metaDesc = html.match(/<meta name="description" content="([^"]+)"/i);
+    if (metaDesc && metaDesc[1].length > 50) {
+      return metaDesc[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
     }
 
     return 'Product description';
@@ -126,10 +193,15 @@ export class UrlAnalyzerService {
    * Extract Amazon price
    */
   private static extractAmazonPrice(html: string): number | undefined {
-    const priceMatch = html.match(/<span class="a-price-whole">([0-9,]+)<\/span>/i);
-    if (priceMatch) {
-      return parseFloat(priceMatch[1].replace(/,/g, ''));
+    // Try corePriceDisplay first (most reliable)
+    const corePrice = html.match(/class="a-price-whole">([\d,]+)</i);
+    if (corePrice) {
+      const val = parseFloat(corePrice[1].replace(/,/g, ''));
+      if (!isNaN(val) && val < 100000) return val; // sanity check
     }
+    // Try JSON price data
+    const jsonPrice = html.match(/"priceAmount"\s*:\s*([\d.]+)/);
+    if (jsonPrice) return parseFloat(jsonPrice[1]);
     return undefined;
   }
 
@@ -138,11 +210,20 @@ export class UrlAnalyzerService {
    */
   private static extractAmazonBullets(html: string): string[] {
     const bullets: string[] = [];
-    const bulletRegex = /<span class="a-list-item">([^<]+)<\/span>/gi;
+
+    // Find the feature-bullets section first to scope the search
+    const bulletsSection = html.match(/id="feature-bullets"[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/i);
+    const searchHtml = bulletsSection ? bulletsSection[1] : html;
+
+    // a-list-item spans can have nested HTML — use [\s\S]*? and strip tags
+    const bulletRegex = /<span class="a-list-item">([\s\S]*?)<\/span>/gi;
     let match;
 
-    while ((match = bulletRegex.exec(html)) !== null) {
-      const bullet = match[1].trim();
+    while ((match = bulletRegex.exec(searchHtml)) !== null) {
+      const bullet = match[1]
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+        .replace(/\s+/g, ' ').trim();
       if (bullet && bullet.length > 20) {
         bullets.push(bullet);
       }
@@ -171,25 +252,52 @@ export class UrlAnalyzerService {
    */
   private static extractAmazonSpecs(html: string): Array<{ name: string; value: string }> {
     const specs: Array<{ name: string; value: string }> = [];
-    const specRegex = /<th class="a-color-secondary a-size-base prodDetSectionEntry">([^<]+)<\/th>[\s\S]*?<td class="a-size-base prodDetAttrValue">([^<]+)<\/td>/gi;
-    let match;
 
+    // Product details table — th/td pairs with whitespace
+    const specRegex = /<th[^>]*class="[^"]*prodDetSectionEntry[^"]*"[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*class="[^"]*prodDetAttrValue[^"]*"[^>]*>([\s\S]*?)<\/td>/gi;
+    let match;
     while ((match = specRegex.exec(html)) !== null) {
-      specs.push({
-        name: match[1].trim(),
-        value: match[2].trim()
-      });
+      const name = match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      const value = match[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      if (name && value) specs.push({ name, value });
     }
 
-    return specs;
+    // Also try the newer product details format
+    if (specs.length === 0) {
+      const detailRegex = /<span class="a-text-bold">([\s\S]*?)<\/span>[\s\S]*?<span>([\s\S]*?)<\/span>/gi;
+      while ((match = detailRegex.exec(html)) !== null) {
+        const name = match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().replace(/:$/, '');
+        const value = match[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        if (name && value && name.length < 50 && value.length < 100) {
+          specs.push({ name, value });
+        }
+      }
+    }
+
+    return specs.slice(0, 10);
   }
 
   /**
    * Extract Amazon brand
    */
   private static extractAmazonBrand(html: string): string | undefined {
-    const brandMatch = html.match(/<a id="bylineInfo"[^>]*>([^<]+)<\/a>/i);
-    return brandMatch ? brandMatch[1].replace('Visit the', '').replace('Store', '').trim() : undefined;
+    // bylineInfo link — can have nested spans
+    const byline = html.match(/<a id="bylineInfo"[^>]*>([\s\S]*?)<\/a>/i);
+    if (byline) {
+      const text = byline[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+        .replace(/^Visit the\s+/i, '').replace(/\s+Store$/i, '').trim();
+      if (text.length > 1) return text;
+    }
+    // Try brand in product details table
+    const brandRow = html.match(/Brand[^<]*<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i);
+    if (brandRow) {
+      const text = brandRow[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+      if (text.length > 1) return text;
+    }
+    // Try JSON
+    const jsonBrand = html.match(/"brand"\s*:\s*"([^"]+)"/i);
+    if (jsonBrand) return jsonBrand[1];
+    return undefined;
   }
 
   /**
@@ -215,7 +323,11 @@ export class UrlAnalyzerService {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
         }
       });
 
@@ -602,13 +714,42 @@ export class UrlAnalyzerService {
    */
   private static async analyzeWalmartUrl(url: string): Promise<AnalyzedUrlData> {
     try {
+      // Extract product ID from URL as fallback
+      const itemIdMatch = url.match(/\/ip\/(?:[^/]+\/)?(\d+)/);
+      const itemId = itemIdMatch ? itemIdMatch[1] : null;
+
+      // Extract title from URL slug
+      const slugMatch = url.match(/\/ip\/([^/]+)\//);
+      let urlTitle = '';
+      if (slugMatch && slugMatch[1]) {
+        urlTitle = slugMatch[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
         }
       });
 
       const html = await response.text();
+
+      // Walmart uses heavy JS rendering — check if we got real content
+      const hasRealContent = html.includes('product-title') || html.includes('prod-ProductTitle') || html.includes('"name"');
+      
+      if (!hasRealContent || html.length < 5000) {
+        console.warn('[UrlAnalyzer] Walmart JS-rendered page — using URL-extracted data');
+        return {
+          title: urlTitle || `Walmart Product${itemId ? ` (Item: ${itemId})` : ''}`,
+          description: `Walmart product${itemId ? ` item #${itemId}` : ''}. Walmart uses JavaScript rendering which limits automated extraction — please paste the product details manually for best results.`,
+          category: 'Walmart Product',
+          price: undefined,
+          images: []
+        };
+      }
 
       return {
         title: this.extractWalmartTitle(html),
@@ -697,9 +838,28 @@ export class UrlAnalyzerService {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
         }
       });
+
+      if (!response.ok) {
+        // Try to extract from URL slug as fallback
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split('/').filter(Boolean);
+        const lastPart = pathParts[pathParts.length - 1] || '';
+        const urlTitle = lastPart.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+
+        return {
+          title: urlTitle || 'Product',
+          description: 'Could not fetch product page. Please paste the product details manually for best results.',
+          price: undefined,
+          images: []
+        };
+      }
 
       const html = await response.text();
 

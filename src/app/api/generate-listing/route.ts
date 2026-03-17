@@ -175,7 +175,7 @@ function validateRequest(body: any): { valid: boolean; error?: string } {
     return { valid: false, error: 'Platform is required' };
   }
 
-  const validPlatforms = ['amazon', 'ebay', 'etsy', 'shopify', 'walmart'];
+  const validPlatforms = ['amazon', 'ebay', 'etsy', 'shopify', 'walmart', 'woocommerce'];
   if (!validPlatforms.includes(body.platform)) {
     return { valid: false, error: `Invalid platform. Must be one of: ${validPlatforms.join(', ')}` };
   }

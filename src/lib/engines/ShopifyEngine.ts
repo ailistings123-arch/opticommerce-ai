@@ -19,9 +19,9 @@ export class ShopifyEngine extends BasePlatformEngine {
   getPlatformRules(): EnhancedPlatformRules {
     return {
       name: 'Shopify',
-      titleRange: { min: 40, max: 70 },  // For Google SERP display
-      minDescription: 150,
-      maxTags: 250,  // Shopify allows many tags
+      titleRange: { min: 55, max: 70 },
+      minDescription: 300,
+      maxTags: 10,
       tagFormat: 'comma-separated',
       guidelines: [
         'Optimize for Google search, not internal marketplace',

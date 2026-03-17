@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { url, analysisType, purpose, productDifferences, yourPricePoint, yourBrandName, additionalFeatures } = body;
+    const { url, analysisType, purpose, productDifferences, yourPricePoint, yourBrandName, additionalFeatures, targetPlatform } = body;
 
     // Validate required fields
     if (!url) {
@@ -78,15 +78,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Extract platform from URL
+    // Extract platform from URL — targetPlatform overrides auto-detection
     let platform: Platform = 'amazon';
-    const urlLower = url.toLowerCase();
-    if (urlLower.includes('amazon')) platform = 'amazon';
-    else if (urlLower.includes('ebay')) platform = 'ebay';
-    else if (urlLower.includes('etsy')) platform = 'etsy';
-    else if (urlLower.includes('shopify') || urlLower.includes('.store') || urlLower.includes('.shop')) platform = 'shopify';
-    else if (urlLower.includes('walmart')) platform = 'walmart';
-    else if (urlLower.includes('/product/') || urlLower.includes('/shop/') || urlLower.includes('woocommerce')) platform = 'woocommerce';
+    if (targetPlatform) {
+      platform = targetPlatform as Platform;
+    } else {
+      const urlLower = url.toLowerCase();
+      if (urlLower.includes('amazon')) platform = 'amazon';
+      else if (urlLower.includes('ebay')) platform = 'ebay';
+      else if (urlLower.includes('etsy')) platform = 'etsy';
+      else if (urlLower.includes('shopify') || urlLower.includes('.store') || urlLower.includes('.shop')) platform = 'shopify';
+      else if (urlLower.includes('walmart')) platform = 'walmart';
+      else if (urlLower.includes('/product/') || urlLower.includes('/shop/') || urlLower.includes('woocommerce')) platform = 'woocommerce';
+      else platform = 'shopify'; // default for unknown custom domains
+    }
 
     // Scrape the URL to get actual product data
     let scrapedData;

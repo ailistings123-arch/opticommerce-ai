@@ -10,6 +10,7 @@ import { EbayEngine } from './EbayEngine';
 import { EtsyEngine } from './EtsyEngine';
 import { ShopifyEngine } from './ShopifyEngine';
 import { WalmartEngine } from './WalmartEngine';
+import { WooCommerceEngine } from './WooCommerceEngine';
 
 export class PlatformEngineFactory {
   private static engines: Map<Platform, BasePlatformEngine> = new Map();
@@ -42,6 +43,9 @@ export class PlatformEngineFactory {
       case 'walmart':
         engine = new WalmartEngine();
         break;
+      case 'woocommerce':
+        engine = new WooCommerceEngine();
+        break;
       default:
         throw new Error(`Unsupported platform: ${platform}`);
     }
@@ -56,7 +60,7 @@ export class PlatformEngineFactory {
    * Get all supported platforms
    */
   static getSupportedPlatforms(): Platform[] {
-    return ['amazon', 'ebay', 'etsy', 'shopify', 'walmart'];
+    return ['amazon', 'ebay', 'etsy', 'shopify', 'walmart', 'woocommerce'];
   }
 
   /**

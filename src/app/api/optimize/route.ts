@@ -168,10 +168,13 @@ export async function POST(request: NextRequest) {
     // Calculate SEO score
     optimized.seoScore = calculateSEOScore(optimized, platform as Platform);
 
-    // Update usage count
+    // Update usage count atomically and save to history
     if (adminDb) {
-      await adminDb.collection('users').doc(userId).update({
-        usageCount: (await adminDb.collection('users').doc(userId).get()).data()?.usageCount + 1 || 1,
+      const userRef = adminDb.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+      const currentUsage = userDoc.data()?.usageCount || 0;
+      await userRef.update({
+        usageCount: currentUsage + 1,
         lastUsed: new Date().toISOString()
       });
 
