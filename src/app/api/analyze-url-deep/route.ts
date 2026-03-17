@@ -153,16 +153,39 @@ export async function POST(request: NextRequest) {
       mode: 'analyze'
     };
 
-    console.log('[API] Step 4: Generating optimized listing with AI...');
+    console.log('[API] Step 4: Generating optimized listing with AI (with backend SEO verification)...');
     
-    // Step 4: Generate optimized listing
-    const optimizedListing = await AIService.generateListing(aiRequest, {
-      maxRetries: 2,
-      validateResponse: true,
-      sanitizeInput: true
-    });
+    // Step 4: Generate optimized listing with quality verification
+    let optimizedListing;
+    let attempts = 0;
+    const maxAttempts = 3; // Try up to 3 times to get 80+ score
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      console.log(`[API] Generation attempt ${attempts}/${maxAttempts}...`);
+      
+      optimizedListing = await AIService.generateListing(aiRequest, {
+        maxRetries: 1,
+        validateResponse: true,
+        sanitizeInput: true
+      });
 
-    console.log('[API] Listing generated successfully');
+      const seoScore = optimizedListing.qualityScore?.percentage || 0;
+      console.log(`[API] Attempt ${attempts} - SEO score: ${seoScore}%`);
+      
+      // Backend SEO verification - check if score meets quality threshold
+      if (seoScore >= 80) {
+        console.log('[API] ✅ SEO verification passed - Score meets quality threshold (80+)');
+        break;
+      } else if (attempts < maxAttempts) {
+        console.log(`[API] ⚠️  SEO score below threshold (${seoScore}% < 80%), regenerating...`);
+        console.log('[API] Issues:', optimizedListing.qualityScore?.recommendations.slice(0, 3).join(', '));
+      } else {
+        console.log(`[API] ⚠️  Final attempt - Score: ${seoScore}% (below 80% threshold)`);
+      }
+    }
+
+    console.log('[API] Listing generated successfully, Final SEO score:', optimizedListing.qualityScore?.percentage);
 
     // Return comprehensive response
     return NextResponse.json({

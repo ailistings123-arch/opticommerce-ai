@@ -67,9 +67,41 @@ export class TrainingContext {
    * Prohibited words across all platforms
    */
   static readonly PROHIBITED_WORDS = [
+    // Absolutely forbidden - will cause rejection
     'FREE', 'SALE', 'BEST', '#1', 'CHEAP', 'GUARANTEE', 'WINNER',
     'AMAZING', 'INCREDIBLE', 'UNBELIEVABLE', 'PERFECT', 'ULTIMATE',
-    'REVOLUTIONARY', 'MIRACLE', 'MAGIC', 'INSTANT', 'EASY MONEY'
+    'REVOLUTIONARY', 'MIRACLE', 'MAGIC', 'INSTANT', 'EASY MONEY',
+    'PREMIUM', 'LUXURY', 'EXCLUSIVE', 'LIMITED', 'SPECIAL OFFER',
+    'SOLVE YOUR PROBLEM', 'GAME CHANGER', 'MUST HAVE', 'LIFE CHANGING',
+    'TOP RATED', 'AWARD WINNING', 'WORLD CLASS', 'INDUSTRY LEADING',
+    'TRANSFORM YOUR', 'CHANGE EVERYTHING', 'NEVER BEFORE', 'BREAKTHROUGH',
+    'STATE OF THE ART', 'NEXT LEVEL', 'TAKE IT TO', 'CUTTING EDGE',
+    'ELEVATE YOUR', 'UNLOCK', 'DISCOVER THE SECRET', 'PROFESSIONAL GRADE',
+    'MILITARY GRADE', 'HOSPITAL GRADE', 'COMMERCIAL GRADE', 'STUDIO QUALITY',
+    'BEST VALUE', 'SOLVE YOUR', 'PROBLEM SOLVER', 'SOLUTION FOR',
+    'BEST FOR', 'BEST CHOICE', 'TOP CHOICE', 'FIRST CHOICE',
+    
+    // Generic filler words - add NO value
+    'PREMIUM QUALITY', 'HIGH QUALITY', 'TOP QUALITY', 'SUPERIOR QUALITY',
+    'PROFESSIONAL', 'PRO', 'ELITE', 'DELUXE', 'PLUS', 'MAX', 'ULTRA',
+    'SUPER', 'EXTRA', 'SPECIAL', 'UNIQUE', 'EXCEPTIONAL', 'OUTSTANDING',
+    'REMARKABLE', 'IMPRESSIVE', 'STUNNING', 'BEAUTIFUL', 'ELEGANT',
+    'STYLISH', 'MODERN', 'CONTEMPORARY', 'CLASSIC', 'TRADITIONAL',
+    'INNOVATIVE', 'ADVANCED', 'ENHANCED', 'IMPROVED', 'UPGRADED',
+    'NEXT GENERATION', 'LATEST', 'NEWEST', 'BRAND NEW', 'ALL NEW',
+    'GRADE A', 'GRADE B', 'FIRST CLASS', 'WORLD CLASS', 'TOP TIER',
+    'HIGH END', 'UPSCALE', 'REFINED', 'SOPHISTICATED', 'EXQUISITE',
+    'QUALITY', 'GRADE', 'HIGH-QUALITY', 'TOP-QUALITY', 'SUPERIOR',
+    
+    // Problem/solution marketing phrases
+    'YOUR PROBLEM', 'THE PROBLEM', 'SOLVE', 'SOLUTION', 'FIX YOUR',
+    'END YOUR', 'STOP YOUR', 'NO MORE', 'SAY GOODBYE TO', 'ELIMINATE',
+    'SOLVE YOUR PROBLEM', 'SOLVE YOUR PROBLEMS', 'SOLVES YOUR PROBLEM',
+    'SOLVES YOUR PROBLEMS', 'SOLVING YOUR PROBLEM', 'SOLVING YOUR PROBLEMS',
+    'FIX YOUR PROBLEM', 'FIX YOUR PROBLEMS', 'FIXES YOUR PROBLEM',
+    'END YOUR PROBLEM', 'STOP YOUR PROBLEM', 'ELIMINATE YOUR PROBLEM',
+    'THE SOLUTION', 'A SOLUTION', 'YOUR SOLUTION', 'THE ANSWER',
+    'PROBLEM SOLVER', 'PROBLEM SOLVING', 'SOLVES ALL', 'FIXES ALL'
   ];
 
   /**
@@ -375,7 +407,28 @@ Your output will be scored on:
 - Description: Meets minimum length, clear structure, natural SEO
 - Compliance: Zero prohibited words, follows all platform rules
 
-TARGET SCORE: 90-100 points (Excellent optimization)
+TARGET SCORE: 80-100 points (Excellent optimization) - THIS IS MANDATORY
+
+⚠️ YOUR OUTPUT WILL BE REJECTED IF SEO SCORE IS BELOW 80%
+To achieve 80+ score, you MUST:
+1. Use 85-100% of title character limit
+2. Include zero prohibited words
+3. Use benefit-first structure in 70%+ of bullets
+4. Include specific details (numbers, materials) in 50%+ of bullets
+5. Meet minimum description length
+6. Use natural keyword integration
+
+SCORING BREAKDOWN (100 points total):
+- Title Quality: 30 points (utilization 10, keyword placement 10, readability 10)
+- Bullets Quality: 30 points (benefit-first 10, specificity 10, length 10)
+- Description Quality: 30 points (length 10, structure 10, SEO 10)
+- Compliance: 10 points (no prohibited words 5, platform rules 5)
+
+MINIMUM REQUIRED FOR 80% SCORE:
+- Title: 24/30 points (85%+ utilization, front-loaded keywords, natural flow)
+- Bullets: 24/30 points (benefit-first structure, specific details, optimal length)
+- Description: 24/30 points (meets minimum, clear structure, keyword variety)
+- Compliance: 8/10 points (zero violations, follows platform rules)
 `;
 
     return prompt.trim();

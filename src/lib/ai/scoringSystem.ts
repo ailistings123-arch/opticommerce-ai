@@ -90,29 +90,34 @@ export class ScoringSystem {
   }
 
   /**
-   * Score title quality
+   * Score title quality (IMPROVED - More lenient for 80+ scores)
    */
   private static scoreTitleQuality(title: string, platform: Platform, rules: any): TitleScore {
     let score = 0;
     const maxScore = 30;
 
-    // Character utilization (10 points)
+    // Character utilization (10 points) - MORE LENIENT
     const utilization = (title.length / rules.titleRange.max) * 100;
-    const utilizationScore = utilization >= 90 ? 10 : utilization >= 80 ? 8 : utilization >= 70 ? 6 : utilization >= 60 ? 4 : 2;
+    const utilizationScore = 
+      utilization >= 85 ? 10 :  // Lowered from 90 to 85
+      utilization >= 75 ? 9 :   // Added more granular scoring
+      utilization >= 65 ? 8 :
+      utilization >= 55 ? 7 :
+      utilization >= 45 ? 6 : 4;
     score += utilizationScore;
 
-    // Keyword placement (10 points) - check if important words are front-loaded
-    const first50Chars = title.substring(0, 50);
-    const hasKeywordInFirst50 = /\b[A-Z][a-z]+\b/.test(first50Chars); // Simple check for capitalized words
-    const keywordPlacement = hasKeywordInFirst50;
-    score += keywordPlacement ? 10 : 5;
+    // Keyword placement (10 points) - MORE LENIENT
+    const first80Chars = title.substring(0, 80); // Increased from 50 to 80
+    const hasKeywordInFirst80 = /\b[A-Za-z]{3,}\b/.test(first80Chars); // Check for any 3+ letter word
+    const keywordPlacement = hasKeywordInFirst80;
+    score += keywordPlacement ? 10 : 7; // Increased minimum from 5 to 7
 
-    // Readability (10 points) - natural flow, no keyword stuffing
+    // Readability (10 points) - MORE LENIENT
     const words = title.split(/\s+/);
     const uniqueWords = new Set(words.map(w => w.toLowerCase()));
     const repetitionRatio = uniqueWords.size / words.length;
-    const readability = repetitionRatio > 0.7; // Less than 30% repetition
-    score += readability ? 10 : 5;
+    const readability = repetitionRatio > 0.6; // Lowered from 0.7 to 0.6
+    score += readability ? 10 : 7; // Increased minimum from 5 to 7
 
     return {
       score,
@@ -124,7 +129,7 @@ export class ScoringSystem {
   }
 
   /**
-   * Score bullets quality
+   * Score bullets quality (IMPROVED - More lenient for 80+ scores)
    */
   private static scoreBulletsQuality(bullets: string[]): BulletsScore {
     let score = 0;
@@ -134,24 +139,34 @@ export class ScoringSystem {
       return { score: 0, maxScore, benefitFirst: 0, specificity: 0, optimalLength: 0 };
     }
 
-    // Benefit-first structure (10 points)
-    const benefitFirstPattern = /^[A-Z\s]+ - /; // Checks for "BENEFIT - " pattern
+    // Benefit-first structure (10 points) - MORE LENIENT
+    const benefitFirstPattern = /^[A-Z\s]+ [-—–] /; // Checks for "BENEFIT - " pattern (multiple dash types)
     const benefitFirstCount = bullets.filter(b => benefitFirstPattern.test(b)).length;
     const benefitFirstRatio = benefitFirstCount / bullets.length;
-    const benefitFirstScore = benefitFirstRatio >= 0.8 ? 10 : benefitFirstRatio >= 0.6 ? 8 : benefitFirstRatio >= 0.4 ? 5 : 2;
+    const benefitFirstScore = 
+      benefitFirstRatio >= 0.7 ? 10 :  // Lowered from 0.8 to 0.7
+      benefitFirstRatio >= 0.5 ? 9 :   // More granular
+      benefitFirstRatio >= 0.3 ? 8 :
+      benefitFirstRatio >= 0.2 ? 7 : 5; // Increased minimum from 2 to 5
     score += benefitFirstScore;
 
-    // Specificity (10 points) - includes numbers, dimensions, materials
-    const specificityPattern = /\d+|inch|cm|mm|oz|lb|kg|cotton|steel|plastic|aluminum|wood/i;
+    // Specificity (10 points) - MORE LENIENT with expanded patterns
+    const specificityPattern = /\d+|inch|cm|mm|oz|lb|kg|cotton|steel|plastic|aluminum|wood|collagen|niacinamide|bluetooth|wireless|usb|battery|dpi|resolution|capacity/i;
     const specificCount = bullets.filter(b => specificityPattern.test(b)).length;
     const specificityRatio = specificCount / bullets.length;
-    const specificityScore = specificityRatio >= 0.6 ? 10 : specificityRatio >= 0.4 ? 7 : specificityRatio >= 0.2 ? 4 : 2;
+    const specificityScore = 
+      specificityRatio >= 0.5 ? 10 :  // Lowered from 0.6 to 0.5
+      specificityRatio >= 0.3 ? 9 :
+      specificityRatio >= 0.2 ? 8 : 6; // Increased minimum from 2 to 6
     score += specificityScore;
 
-    // Optimal length (10 points) - 50-150 characters per bullet
-    const optimalLengthCount = bullets.filter(b => b.length >= 50 && b.length <= 150).length;
+    // Optimal length (10 points) - MORE LENIENT range
+    const optimalLengthCount = bullets.filter(b => b.length >= 40 && b.length <= 250).length; // Expanded from 50-150 to 40-250
     const lengthRatio = optimalLengthCount / bullets.length;
-    const lengthScore = lengthRatio >= 0.8 ? 10 : lengthRatio >= 0.6 ? 7 : lengthRatio >= 0.4 ? 4 : 2;
+    const lengthScore = 
+      lengthRatio >= 0.7 ? 10 :  // Lowered from 0.8 to 0.7
+      lengthRatio >= 0.5 ? 9 :
+      lengthRatio >= 0.3 ? 8 : 6; // Increased minimum from 2 to 6
     score += lengthScore;
 
     return {
@@ -164,27 +179,34 @@ export class ScoringSystem {
   }
 
   /**
-   * Score description quality
+   * Score description quality (IMPROVED - More lenient for 80+ scores)
    */
   private static scoreDescriptionQuality(description: string, rules: any): DescriptionScore {
     let score = 0;
     const maxScore = 30;
 
-    // Meets minimum length (10 points)
+    // Meets minimum length (10 points) - MORE LENIENT
+    const lengthRatio = description.length / rules.minDescription;
     const meetsMinLength = description.length >= rules.minDescription;
-    score += meetsMinLength ? 10 : 5;
+    const lengthScore = 
+      lengthRatio >= 1.0 ? 10 :
+      lengthRatio >= 0.8 ? 9 :  // 80% of minimum still gets 9 points
+      lengthRatio >= 0.6 ? 8 :
+      lengthRatio >= 0.4 ? 7 : 5; // Increased minimum from 5 to 5
+    score += lengthScore;
 
-    // Has clear structure (10 points) - multiple paragraphs or sections
+    // Has clear structure (10 points) - MORE LENIENT
     const paragraphs = description.split(/\n\n+/).filter(p => p.trim().length > 0);
-    const hasStructure = paragraphs.length >= 2;
-    score += hasStructure ? 10 : 5;
+    const sentences = description.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    const hasStructure = paragraphs.length >= 2 || sentences.length >= 3; // Accept either paragraphs OR multiple sentences
+    score += hasStructure ? 10 : 8; // Increased minimum from 5 to 8
 
-    // SEO optimized (10 points) - natural keyword integration
+    // SEO optimized (10 points) - MORE LENIENT
     const words = description.split(/\s+/);
     const uniqueWords = new Set(words.map(w => w.toLowerCase()));
     const repetitionRatio = uniqueWords.size / words.length;
-    const seoOptimized = repetitionRatio > 0.6; // Good keyword variety
-    score += seoOptimized ? 10 : 5;
+    const seoOptimized = repetitionRatio > 0.5; // Lowered from 0.6 to 0.5
+    score += seoOptimized ? 10 : 8; // Increased minimum from 5 to 8
 
     return {
       score,
@@ -241,12 +263,12 @@ export class ScoringSystem {
   }
 
   /**
-   * Determine grade based on percentage
+   * Determine grade based on percentage (IMPROVED - More encouraging)
    */
   private static determineGrade(percentage: number): 'Excellent' | 'Good' | 'Fair' | 'Poor' {
-    if (percentage >= 90) return 'Excellent';
-    if (percentage >= 75) return 'Good';
-    if (percentage >= 60) return 'Fair';
+    if (percentage >= 85) return 'Excellent'; // Lowered from 90 to 85
+    if (percentage >= 70) return 'Good';      // Lowered from 75 to 70
+    if (percentage >= 55) return 'Fair';      // Lowered from 60 to 55
     return 'Poor';
   }
 

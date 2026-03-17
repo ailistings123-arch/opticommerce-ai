@@ -21,9 +21,9 @@ export class CloudflareProvider implements AIProvider {
     
     this.config = {
       model: config.model || '@cf/meta/llama-3.1-70b-instruct',
-      maxTokens: config.maxTokens || 12000, // OPTIMIZED: Increased for more detailed content
-      temperature: 0.2, // OPTIMIZED: Lower for maximum consistency and accuracy
-      timeout: config.timeout || 60000,
+      maxTokens: config.maxTokens || 16000, // OPTIMIZED: Increased for comprehensive content
+      temperature: 0.5, // OPTIMIZED: Higher for better instruction following
+      timeout: config.timeout || 90000, // Increased timeout for deep analysis
       apiKey: config.apiKey,
       accountId: config.accountId
     };

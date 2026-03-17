@@ -101,24 +101,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // NOW OPTIMIZE WITH AI - this is the missing piece!
-    console.log('[API] Optimizing with AI...');
+    // NOW OPTIMIZE WITH AI - WITH BACKEND SEO VERIFICATION
+    console.log('[API] Optimizing with AI (with backend SEO verification)...');
     
     try {
-      const aiResult = await AIService.generateListing({
-        platform,
-        productData: {
-          title: scrapedData.title || 'Product Title',
-          description: scrapedData.description || 'Product description',
-          keywords: scrapedData.bullets || [],
-          category: scrapedData.category,
-          price: scrapedData.price,
-          specifications: scrapedData.specifications
-        },
-        mode: 'analyze' // Use analyze mode for URL analysis
-      });
+      let aiResult;
+      let attempts = 0;
+      const maxAttempts = 3; // Try up to 3 times to get 80+ score
+      
+      while (attempts < maxAttempts) {
+        attempts++;
+        console.log(`[API] Generation attempt ${attempts}/${maxAttempts}...`);
+        
+        aiResult = await AIService.generateListing({
+          platform,
+          productData: {
+            title: scrapedData.title || 'Product Title',
+            description: scrapedData.description || 'Product description',
+            keywords: scrapedData.bullets || [],
+            category: scrapedData.category,
+            price: scrapedData.price,
+            specifications: scrapedData.specifications
+          },
+          mode: 'analyze' // Use analyze mode for URL analysis
+        }, {
+          maxRetries: 1, // Reduce retries for faster response
+          validateResponse: true,
+          sanitizeInput: true
+        });
 
-      console.log('[API] AI optimization complete, SEO score:', aiResult.qualityScore?.percentage);
+        const seoScore = aiResult.qualityScore?.percentage || 0;
+        console.log(`[API] Attempt ${attempts} - SEO score: ${seoScore}%`);
+        
+        // Backend SEO verification - check if score meets quality threshold
+        if (seoScore >= 80) {
+          console.log('[API] ✅ SEO verification passed - Score meets quality threshold (80+)');
+          break;
+        } else if (attempts < maxAttempts) {
+          console.log(`[API] ⚠️  SEO score below threshold (${seoScore}% < 80%), regenerating...`);
+          console.log('[API] Issues:', aiResult.qualityScore?.recommendations.slice(0, 3).join(', '));
+        } else {
+          console.log(`[API] ⚠️  Final attempt - Score: ${seoScore}% (below 80% threshold)`);
+        }
+      }
+
+      console.log('[API] AI optimization complete, Final SEO score:', aiResult.qualityScore?.percentage);
 
       // Build optimized analysis
       const analysis: any = {

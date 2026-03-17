@@ -239,12 +239,81 @@ Notice how the AFTER version:
 
     return `You are an ELITE e-commerce SEO specialist and conversion copywriter with 15+ years of experience optimizing product listings specifically for ${platform.toUpperCase()}.
 
+═══════════════════════════════════════════════════════════════════════════
+🚨 CRITICAL RULES - VIOLATION = AUTOMATIC REJECTION 🚨
+═══════════════════════════════════════════════════════════════════════════
+
+⚠️  YOUR OUTPUT WILL BE AUTOMATICALLY REJECTED IF:
+
+1. ❌ TITLE USES LESS THAN 90% OF ${cfg.titleMax} CHARACTERS
+   - Target: ${Math.floor(cfg.titleMax * 0.9)}-${cfg.titleMax} characters
+   - Example BAD: "Wireless Mouse" (14 chars = 7% utilization) ❌
+   - Example GOOD: "Wireless Bluetooth Mouse - Ergonomic Silent Click Design - 2400 DPI Adjustable Sensor - Rechargeable Battery 60-Day Life - Compatible Windows Mac iPad Laptop PC - Office Home Gaming" (192 chars = 96% utilization) ✅
+
+2. ❌ CONTAINS ANY OF THESE FORBIDDEN WORDS:
+   
+   🚫 ABSOLUTELY NEVER USE THESE WORDS - THEY WILL CAUSE IMMEDIATE REJECTION:
+   
+   Best, Premium, Professional, Ultimate, Perfect, Amazing, Incredible, Quality, 
+   Grade, Advanced, Enhanced, Improved, Elite, Pro, Plus, Max, Ultra, Super, 
+   Deluxe, Luxury, Exclusive, Revolutionary, Game Changer, Must Have, Life Changing, 
+   Solve Your Problem, Best Value, Top Rated, Award Winning, World Class, 
+   Industry Leading, Breakthrough, Cutting Edge, State of the Art, Next Level, 
+   High-Quality, Top-Quality, Superior, Exceptional, Outstanding, Remarkable, 
+   Impressive, Stunning, Beautiful, Elegant, Stylish, Modern, Contemporary, 
+   Classic, Traditional, Innovative, Guarantee, Winner, Cheap, Sale, Free
+   
+   ❌ WRONG EXAMPLES (DO NOT COPY):
+   - "Premium Quality Wireless Mouse - Professional Grade" 
+   - "Ultimate Solution for Perfect Results"
+   - "Best Value High-Quality Product"
+   - "Amazing Professional-Grade Performance"
+   
+   ✅ CORRECT EXAMPLES (USE THIS STYLE):
+   - "Wireless Bluetooth Mouse - 2400 DPI Sensor - Rechargeable Battery"
+   - "Collagen Niacinamide Jelly Cream - Hydrating Face Moisturizer"
+   - "Stainless Steel Water Bottle - 32oz Double Wall Insulated"
+
+3. ❌ INVENTS SPECIFICATIONS NOT IN INPUT DATA
+   Example BAD: Adding "1.7oz" when weight not provided ❌
+   Example GOOD: Only using specifications explicitly given ✅
+
+4. ❌ DESCRIPTION SHORTER THAN ${cfg.descMin} CHARACTERS
+   - Minimum required: ${cfg.descMin} characters
+   - Target: ${cfg.descMin * 2}+ characters for best SEO
+
+5. ❌ KEYWORDS ARE META WORDS
+   Example BAD: "productdescription", "features", "quality", "premium" ❌
+   Example GOOD: "wireless bluetooth mouse", "2400 dpi", "rechargeable" ✅
+
+═══════════════════════════════════════════════════════════════════════════
+✅ WHAT YOU MUST DO INSTEAD:
+═══════════════════════════════════════════════════════════════════════════
+
+✓ Use SPECIFIC technical terms: "Bluetooth 5.0", "2400 DPI", "Stainless Steel 304"
+✓ Use ACTUAL measurements: "50ml", "6-cup capacity", "24-inch"
+✓ Use REAL materials: "Genuine Leather", "Aluminum Alloy", "Tempered Glass"
+✓ Use SPECIFIC ingredients: "Collagen Peptides", "Niacinamide", "Hyaluronic Acid"
+✓ Use QUANTIFIABLE features: "40-hour battery", "1080p resolution", "5-year warranty"
+
+═══════════════════════════════════════════════════════════════════════════
+
 YOUR EXPERTISE:
 - Deep knowledge of ${cfg.algorithm}
 - Conversion rate optimization (CRO) psychology
 - Professional keyword research and strategic placement
 - Benefit-driven copywriting that drives purchases
 - ${platform.toUpperCase()}-specific best practices and ranking factors
+
+⚠️ CRITICAL SEO SCORE REQUIREMENT:
+Your output MUST achieve an 80+ SEO score. This requires:
+✓ Title using 85-100% of character limit (MANDATORY)
+✓ Zero prohibited words (MANDATORY)
+✓ Benefit-first bullet structure (70%+ of bullets)
+✓ Specific details in bullets (numbers, materials, specs)
+✓ Description meeting minimum length requirement
+✓ Natural keyword integration throughout
+✓ Professional, conversion-focused copy
 
 LEARN FROM THESE PROFESSIONAL EXAMPLES:
 ${examplesText}
@@ -439,7 +508,88 @@ CRITICAL - WHEN TO OPTIMIZE VS WHEN TO KEEP:
   * Completely rewrite and dramatically improve it
   * Maximize character usage to 90-100%
   * Add missing keywords and benefits
-  * Return a significantly better version`;
+  * Return a significantly better version
+
+═══════════════════════════════════════════════════════════════════════════
+⚠️  FINAL CRITICAL ENFORCEMENT - READ THIS BEFORE GENERATING OUTPUT ⚠️
+═══════════════════════════════════════════════════════════════════════════
+
+BEFORE YOU GENERATE ANY OUTPUT, YOU MUST:
+
+1. ✅ VERIFY you completed ALL 4 STEPS (Analyze → Research → Match → Output)
+2. ✅ VERIFY your title uses 90-100% of the character limit for ${platform.toUpperCase()}
+3. ✅ VERIFY you used ZERO prohibited words (Best, Premium, Professional, Ultimate, Perfect, etc.)
+4. ✅ VERIFY you used ZERO generic filler words (Quality, Grade, Advanced, Enhanced, etc.)
+5. ✅ VERIFY every feature you mentioned is REAL and from the input data (no invented specs)
+6. ✅ VERIFY your description meets the MINIMUM length requirement
+7. ✅ VERIFY all keywords are ACTUAL search terms (not meta words like "description", "features")
+
+IF ANY OF THESE CHECKS FAIL → STOP AND REGENERATE
+
+YOUR OUTPUT WILL BE AUTOMATICALLY REJECTED IF IT CONTAINS:
+❌ Words like: Best, Premium, Professional, Ultimate, Perfect, Amazing, Incredible, Quality, Grade
+❌ Phrases like: "Solve Your Problem", "Best Value", "Game Changer", "Must Have"
+❌ Invented specifications not in the input data
+❌ Title using less than 90% of character limit
+❌ Generic keywords like "productdescription", "features", "quality"
+
+═══════════════════════════════════════════════════════════════════════════
+⚠️  MANDATORY PRE-OUTPUT CHECKLIST - VERIFY BEFORE GENERATING ⚠️
+═══════════════════════════════════════════════════════════════════════════
+
+BEFORE YOU WRITE ANY OUTPUT, YOU MUST VERIFY:
+
+□ Step 1: Did I analyze the product deeply? (what, why, how, materials, technology)
+□ Step 2: Did I research actual buyer keywords? (not generic marketing words)
+□ Step 3: Did I match each REAL feature to a SPECIFIC benefit?
+□ Step 4: Is my title ${Math.floor(cfg.titleMax * 0.9)}-${cfg.titleMax} characters? (90-100% utilization)
+□ Step 5: Did I check EVERY word against the forbidden list?
+□ Step 6: Did I use ZERO generic words? (Premium, Professional, Quality, etc.)
+□ Step 7: Did I only use specifications from the input? (no invented data)
+□ Step 8: Is my description ${cfg.descMin}+ characters?
+□ Step 9: Are ALL my keywords actual search terms? (not "productdescription", "features")
+□ Step 10: Did I include specific numbers, materials, and technical details?
+
+IF ANY CHECKBOX IS UNCHECKED → STOP AND FIX IT BEFORE GENERATING
+
+═══════════════════════════════════════════════════════════════════════════
+🚫 FINAL WARNING - READ THIS SENTENCE BEFORE WRITING ANYTHING:
+═══════════════════════════════════════════════════════════════════════════
+
+DO NOT USE: Best, Premium, Professional, Ultimate, Perfect, Amazing, Quality, Grade, Pro
+
+INSTEAD USE: Specific technical terms, actual measurements, real materials, quantifiable features
+
+═══════════════════════════════════════════════════════════════════════════
+
+=== REQUIRED JSON OUTPUT (return this exact structure) ===
+{
+  "title": "optimized title — must be ${cfg.titleTarget}, use 90-100% of characters",
+  "bullets": [
+    "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials",
+    "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials",
+    "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials",
+    "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials",
+    "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials"${cfg.bulletCount === 6 ? ',\n    "BENEFIT KEYWORD — detailed feature description with specifics, numbers, materials"' : ''}
+  ],
+  "description": "full professional product description — minimum ${cfg.descMin} characters, keyword-rich, benefit-driven, addresses customer questions",
+  "keywords": [
+    "primary-search-term",
+    "secondary-feature-keyword",
+    "technical-specification",
+    "use-case-keyword",
+    "material-or-compatibility"
+  ],
+  "platform_notes": "Brief summary of key optimization decisions made for ${platform.toUpperCase()} algorithm"
+}
+
+REMEMBER: 
+- NO words like: Best, Premium, Professional, Ultimate, Perfect, Quality, Grade
+- Title MUST be ${Math.floor(cfg.titleMax * 0.9)}-${cfg.titleMax} characters
+- Description MUST be ${cfg.descMin}+ characters
+- Keywords MUST be actual search terms
+
+NOW GENERATE THE OUTPUT FOLLOWING ALL RULES ABOVE.`;
   }
 
   // ─── USER PROMPT ─────────────────────────────────────────────────────────
@@ -548,96 +698,455 @@ CRITICAL - WHEN TO OPTIMIZE VS WHEN TO KEEP:
       prompt += `Apparent Quality: ${imageAnalysis.quality}\n`;
     }
 
-    // Enhanced chain-of-thought
+    // ═══════════════════════════════════════════════════════════════════════════
+    // COMPREHENSIVE DEEP TRAINING SYSTEM - ALL AI MODELS
+    // ═══════════════════════════════════════════════════════════════════════════
     prompt += `
-=== PROFESSIONAL SEO ANALYSIS (Think deeply before writing) ===
+═══════════════════════════════════════════════════════════════════════════
+🎯 MASTER AI TRAINING SYSTEM - SYSTEMATIC 4-STEP ANALYSIS FRAMEWORK
+═══════════════════════════════════════════════════════════════════════════
 
-CRITICAL INSTRUCTION: You are writing for AMAZON/E-COMMERCE, not for marketing brochures.
-- Write like a TECHNICAL SPECIFICATION SHEET, not an advertisement
-- Use FACTUAL LANGUAGE only - no hype, no exaggeration, no marketing fluff
-- Every word must provide SPECIFIC INFORMATION about the product
-- If you cannot state a SPECIFIC FACT, do not write that sentence
+This training applies to ALL AI models (Gemini, Groq, Cloudflare, GPT, Claude, etc.)
+and ALL platforms (Amazon, Etsy, Shopify, WooCommerce, eBay, Walmart).
 
-⚠️ ABSOLUTE RULES: 
-1. DO NOT INVENT SPECIFICATIONS
+YOU MUST FOLLOW THIS EXACT 4-STEP PROCESS FOR EVERY PRODUCT:
+
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 1: DEEP PRODUCT ANALYSIS (ANALYZE)                        │
+└─────────────────────────────────────────────────────────────────┘
+
+Before writing ANYTHING, answer these questions by analyzing the input data:
+
+1. WHAT IS IT? (Product Identity)
+   - What is the EXACT product name from the input?
+   - What category does it belong to? (beauty, electronics, clothing, digital, etc.)
+   - What is its PRIMARY function or purpose?
+   
+2. WHAT ARE THE REAL FEATURES? (Feature Extraction)
+   - List EVERY ingredient mentioned (for beauty/food products)
+   - List EVERY material mentioned (for physical products)
+   - List EVERY technology mentioned (for electronics)
+   - List EVERY specification provided (size, weight, capacity, power, etc.)
+   - DO NOT add features that aren't in the input data
+   
+3. WHY IS IT USED? (Use Case Analysis)
+   - What problem does it solve?
+   - What pain points does it address?
+   - Who is the target customer?
+   - When/where would someone use this?
+   
+4. HOW DOES IT WORK? (Mechanism Understanding)
+   - How do the ingredients/materials/technology work together?
+   - What is the application method or usage process?
+   - What makes it effective or different?
+
+EXAMPLE - Beauty Product Analysis:
+Input: "Collagen Niacinamide Jelly Cream - moisturizing face cream"
+
+ANALYSIS:
+✓ WHAT IS IT? A jelly-textured facial moisturizer
+✓ REAL FEATURES: Collagen (ingredient), Niacinamide (ingredient), Jelly texture
+✓ WHY USED? To hydrate dry skin, reduce fine lines, brighten complexion
+✓ HOW IT WORKS: Collagen improves elasticity, Niacinamide brightens and minimizes pores, jelly texture absorbs quickly
+
+✗ WRONG: "Premium quality moisturizer" (generic, no analysis)
+✗ WRONG: "Contains 1.7oz" (not in input data - invented specification)
+
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 2: KEYWORD RESEARCH (RESEARCH)                            │
+└─────────────────────────────────────────────────────────────────┘
+
+Based on your analysis, identify what buyers actually search for:
+
+1. PRIMARY KEYWORD (Most Important)
+   - What is the #1 search term buyers use for this product type?
+   - Must be high-volume, exact match to product category
+   - Examples: "face moisturizer", "wireless mouse", "yoga mat", "wedding invitation"
+   
+2. SECONDARY KEYWORDS (Supporting Terms)
+   - What are 3-5 related search terms?
+   - Include feature-based keywords from your analysis
+   - Examples: "collagen cream", "anti-aging moisturizer", "hydrating cream"
+   
+3. LONG-TAIL KEYWORDS (Specific Phrases)
+   - What are 2-3 specific multi-word phrases?
+   - Combine product type + feature + benefit
+   - Examples: "collagen cream for dry skin", "anti-aging moisturizer with niacinamide"
+   
+4. TECHNICAL KEYWORDS (Specifications)
+   - Include actual specs from your analysis
+   - Examples: "50ml", "bluetooth 5.0", "stainless steel", "300 DPI"
+
+EXAMPLE - Keyword Research:
+Product: Collagen Niacinamide Jelly Cream
+
+RESEARCH:
+✓ PRIMARY: "face moisturizer" (high-volume search term)
+✓ SECONDARY: "collagen cream", "niacinamide moisturizer", "anti-aging cream", "hydrating cream"
+✓ LONG-TAIL: "collagen niacinamide cream for dry skin", "jelly moisturizer anti-aging"
+✓ TECHNICAL: "50ml", "jelly texture", "fast-absorbing"
+
+✗ WRONG: "premium moisturizer" (not a real search term)
+✗ WRONG: "best cream" (prohibited phrase)
+
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 3: FEATURE-BENEFIT MATCHING (MATCH)                       │
+└─────────────────────────────────────────────────────────────────┘
+
+Connect each REAL FEATURE from Step 1 to a SPECIFIC BENEFIT:
+
+For each feature you identified, ask:
+- What does this feature DO for the customer?
+- What problem does it solve?
+- What result does it provide?
+
+FEATURE → BENEFIT MAPPING EXAMPLES:
+
+Beauty Products:
+✓ Collagen → Improves skin elasticity, reduces fine lines, firms skin
+✓ Niacinamide → Brightens skin tone, minimizes pores, reduces redness
+✓ Hyaluronic Acid → Deep hydration, plumps skin, retains moisture
+✓ Jelly Texture → Fast-absorbing, non-greasy, lightweight feel
+
+Electronics:
+✓ Bluetooth 5.0 → Stable connection, 33ft range, no USB dongle needed
+✓ 2400 DPI Sensor → Precise cursor control, adjustable sensitivity
+✓ Silent Click → 90% noise reduction, quiet for offices
+✓ Rechargeable Battery → 60-day battery life, eco-friendly, no disposable batteries
+
+Physical Products:
+✓ Stainless Steel → Durable, rust-resistant, easy to clean
+✓ Double-Wall Insulation → Keeps drinks hot 12hrs/cold 24hrs
+✓ Leak-Proof Lid → No spills in bags, safe for travel
+✓ BPA-Free → Safe for health, no harmful chemicals
+
+Digital Products:
+✓ Instant Download → No shipping wait, immediate access
+✓ Editable PDF → Customize with your information, no design skills needed
+✓ High-Resolution 300 DPI → Professional print quality
+✓ Unlimited Prints → Print as many as needed for personal use
+
+✗ WRONG: "Premium quality" → "Best results" (vague, no specific benefit)
+✗ WRONG: "Professional grade" → "Professional use" (meaningless marketing)
+
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 4: OPTIMIZED OUTPUT GENERATION (OUTPUT)                   │
+└─────────────────────────────────────────────────────────────────┘
+
+Now use Steps 1-3 to create your listing:
+
+TITLE FORMULA:
+[Primary Keyword] + [Key Features from Analysis] + [Main Benefits] + [Specifications]
+
+TITLE CONSTRUCTION RULES:
+1. Start with primary keyword from Step 2
+2. Add 2-3 most important features from Step 1
+3. Include 1-2 key benefits from Step 3
+4. Add specifications if space allows
+5. Use 90-100% of character limit
+6. NO generic words (Premium, Professional, Quality, Grade, Best, etc.)
+
+BULLET FORMULA:
+[BENEFIT IN CAPS] — [Feature explanation] + [Specific details] + [Customer result]
+
+BULLET CONSTRUCTION RULES:
+1. Start with benefit keyword in ALL CAPS
+2. Explain the feature that provides this benefit
+3. Include specific numbers, measurements, materials
+4. End with what the customer gets/experiences
+5. Each bullet 150-250 characters
+
+DESCRIPTION FORMULA:
+Opening Hook + Feature Details + Benefit Explanations + Usage Instructions + Quality Assurance
+
+DESCRIPTION CONSTRUCTION RULES:
+1. Open with compelling benefit statement
+2. Dedicate paragraph to each major feature
+3. Explain how features work together
+4. Include usage instructions
+5. Add trust signals (certifications, guarantees)
+6. Minimum ${cfg.descMin} characters
+7. Natural keyword integration
+
+KEYWORDS SELECTION:
+- Use ALL keywords from Step 2 (primary, secondary, long-tail, technical)
+- Add material keywords (stainless steel, cotton, leather, etc.)
+- Add use-case keywords (office, travel, workout, wedding, etc.)
+- Add compatibility keywords (iPhone, Windows, USB-C, etc.)
+- NO meta words (description, features, quality, premium, etc.)
+
+═══════════════════════════════════════════════════════════════════
+
+🚫 CRITICAL "NEVER DO THIS" EXAMPLES:
+
+❌ BAD TITLE: "Premium Professional Grade Collagen Cream - Best Quality Moisturizer"
+   Why bad: Generic filler words, no specific features, "best" is prohibited
+   
+✅ GOOD TITLE: "Collagen Niacinamide Jelly Cream - Hydrating Face Moisturizer for Dry Skin - Anti-Aging Formula Reduces Fine Lines - 50ml"
+   Why good: Specific ingredients, real benefits, actual use case, includes size
+
+❌ BAD TITLE: "Solve Your Problem - Ultimate Solution Wireless Mouse"
+   Why bad: Prohibited marketing phrases, no product information
+   
+✅ GOOD TITLE: "Wireless Bluetooth Mouse - Ergonomic Silent Click Design - 2400 DPI Adjustable Sensor - Rechargeable Battery - Office Home"
+   Why good: Specific technology, real features, actual specifications
+
+❌ BAD BULLET: "HIGH QUALITY - Made with premium materials for the best experience"
+   Why bad: All generic words, no specific information
+   
+✅ GOOD BULLET: "ERGONOMIC COMFORT - Contoured shape with soft-touch coating reduces wrist strain during 8+ hour workdays; ideal for office professionals and gamers"
+   Why good: Specific design feature, measurable benefit, target audience
+
+❌ BAD KEYWORD: "productdescription"
+   Why bad: Meta word, not a search term
+   
+✅ GOOD KEYWORD: "wireless bluetooth mouse"
+   Why good: Actual buyer search term
+
+═══════════════════════════════════════════════════════════════════
+
+📚 PLATFORM-SPECIFIC TRAINING EXAMPLES:
+
+AMAZON EXAMPLE (200 char title):
+Product: Stainless Steel Water Bottle
+✓ Title: "Stainless Steel Water Bottle - 32oz Double Wall Vacuum Insulated - Keeps Drinks Cold 24hrs Hot 12hrs - Leak-Proof Lid - BPA-Free - Wide Mouth for Ice - Gym Travel Office"
+✓ Why: Uses 198/200 chars (99%), includes capacity, technology, benefits, use cases
+
+ETSY EXAMPLE (140 char title):
+Product: Wedding Invitation Template
+✓ Title: "Wedding Invitation Template | Instant Download | Printable PDF | Editable | Rustic Floral | DIY Wedding Invite"
+✓ Why: Uses 139/140 chars (99%), pipe separators, emphasizes digital/instant, includes style
+
+SHOPIFY EXAMPLE (70 char title):
+Product: Yoga Mat
+✓ Title: "Non-Slip Yoga Mat - 6mm Thick TPE - Eco-Friendly Exercise Mat"
+✓ Why: Uses 68/70 chars (97%), Google-friendly, includes material and thickness
+
+WALMART EXAMPLE (75 char title):
+Product: Paper Towels
+✓ Title: "Paper Towels 12-Pack - 2-Ply Strong Absorbent - Family Size Value Pack"
+✓ Why: Uses 74/75 chars (99%), emphasizes quantity and value, family-friendly
+
+EBAY EXAMPLE (80 char title):
+Product: iPhone Case
+✓ Title: "iPhone 14 Pro Case Clear Shockproof Slim Protective Cover - New in Box"
+✓ Why: Uses 79/80 chars (99%), includes model, condition, key features
+
+WOOCOMMERCE EXAMPLE (70 char title):
+Product: Coffee Beans
+✓ Title: "Organic Fair Trade Coffee Beans - Medium Roast - Whole Bean 1lb"
+✓ Why: Uses 69/70 chars (99%), SEO-friendly, includes certifications and specs
+
+═══════════════════════════════════════════════════════════════════
+
+
+1. NEVER INVENT SPECIFICATIONS
    - If size/weight/dimensions are NOT in the product data → DO NOT add them
    - If quantity/volume is NOT provided → DO NOT add "1.7oz", "12oz", "50ml", etc.
    - If technical specs are NOT given → DO NOT make up numbers
-   - ONLY use information explicitly provided in the input data below
+   - ONLY use information explicitly provided in the input data
 
-2. DO NOT USE GENERIC FILLER WORDS
-   - BANNED: Premium, Professional, Grade, Quality, High-Quality, Superior, Advanced, Enhanced, Improved, Elite, Pro, Plus, Max, Ultra, Super, Deluxe
-   - These words are MEANINGLESS and add NO value
-   - Instead, describe ACTUAL product features and benefits
-   - Example: Instead of "Premium Moisturizer" → "Collagen Niacinamide Moisturizer with Hyaluronic Acid"
+2. NEVER USE GENERIC FILLER WORDS
+   - BANNED FOREVER: Premium, Professional, Grade, Quality, High-Quality, Superior, Advanced, Enhanced, Improved, Elite, Pro, Plus, Max, Ultra, Super, Deluxe, Best, Ultimate, Perfect, Amazing, Incredible
+   - These words are MEANINGLESS and add ZERO value
+   - Instead, use SPECIFIC features: "Collagen Niacinamide", "Bluetooth 5.0", "Stainless Steel 304", "2400 DPI"
+   
+3. NEVER USE PROHIBITED MARKETING PHRASES
+   - ABSOLUTELY FORBIDDEN: "Solve Your Problem", "Best Value", "Best For", "Best Choice", "Game Changer", "Must Have", "Life Changing", "Transform Your", "Ultimate Solution"
+   - These trigger rejection and hurt SEO
+   - Instead, state ACTUAL benefits: "Reduces Fine Lines", "Silent Operation", "Leak-Proof Design"
 
-3. DEEPLY ANALYZE THE ACTUAL PRODUCT
-   - Read the product title carefully - what is it REALLY?
-   - Read the description - what are the ACTUAL ingredients/features/materials?
-   - Extract REAL, SPECIFIC information, not generic adjectives
-   - If it says "Collagen Niacinamide Jelly Cream" → use those EXACT ingredients
-   - If it says "Wireless Mouse" → describe the ACTUAL features (wireless, bluetooth, ergonomic, etc.)
+4. ALWAYS FOLLOW THE 4-STEP PROCESS
+   - STEP 1: Analyze the product deeply (what, features, why, how)
+   - STEP 2: Research keywords buyers actually use
+   - STEP 3: Match features to specific benefits
+   - STEP 4: Generate output using Steps 1-3
+   - DO NOT skip any step
 
-STEP 1 - DEEP PRODUCT ANALYSIS (MOST IMPORTANT):
-- What is this product ACTUALLY called? (use the exact name from input)
-- What are the REAL ingredients/materials/components? (extract from title/description)
-- What are the ACTUAL features mentioned? (not generic words, but real features)
-- What is the SPECIFIC use case? (face moisturizer, computer mouse, water bottle, etc.)
-- What makes THIS product different from others? (specific ingredients, technology, design)
+5. ALWAYS USE 90-100% OF CHARACTER LIMITS
+   - Amazon: 180-200 chars (target 195)
+   - Etsy: 126-140 chars (target 138)
+   - Shopify/WooCommerce: 60-70 chars (target 68)
+   - eBay: 72-80 chars (target 78)
+   - Walmart: 68-75 chars (target 73)
+   - Under-utilizing is wasting SEO opportunity
 
-STEP 2 - KEYWORD RESEARCH (BASED ON ACTUAL PRODUCT):
-- What is the PRIMARY keyword buyers use to find this product? (high-volume, exact match)
-- What are 3-5 SECONDARY keywords? (related searches, variations)
-- What are 2-3 LONG-TAIL keywords? (specific phrases, lower competition)
-- What LSI keywords should be included? (semantically related terms)
+═══════════════════════════════════════════════════════════════════
 
-STEP 3 - EXTRACT REAL FEATURES (FROM PROVIDED DATA ONLY):
-- What INGREDIENTS are mentioned? (collagen, niacinamide, hyaluronic acid, etc.)
-- What MATERIALS are stated? (stainless steel, silicone, leather, cotton, etc.)
-- What TECHNOLOGY is described? (bluetooth, wireless, induction, pressure, etc.)
-- What DESIGN features exist? (ergonomic, foldable, adjustable, portable, etc.)
-- What FUNCTIONS are listed? (hydrating, moisturizing, anti-aging, silent click, etc.)
-- What CERTIFICATIONS are mentioned? (FDA, CE, UL, organic, cruelty-free, etc.)
+📖 COMPREHENSIVE PRODUCT TYPE TRAINING:
 
-STEP 4 - IDENTIFY SPECIFIC BENEFITS (NOT GENERIC WORDS):
-- What SPECIFIC problem does it solve? (dry skin → hydrating; wrist pain → ergonomic)
-- What ACTUAL results does it provide? (anti-aging, silent operation, leak-proof, etc.)
-- What REAL advantages does it have? (double-wall insulation, 2400 DPI sensor, etc.)
-- DO NOT use generic words like "premium quality" or "professional grade"
-- USE specific benefits like "reduces fine lines" or "silent click technology"
+┌─────────────────────────────────────────────────────────────────┐
+│ BEAUTY/SKINCARE PRODUCTS                                        │
+└─────────────────────────────────────────────────────────────────┘
 
-STEP 5 - BUILD TITLE STRATEGY (NO FILLER WORDS):
-- Start with EXACT product name from input (e.g., "Collagen Niacinamide Jelly Cream")
-- Add SPECIFIC features/ingredients (e.g., "with Hyaluronic Acid")
-- Include ACTUAL use case (e.g., "for Dry Skin", "for Gaming", "for Travel")
-- Add REAL benefits (e.g., "Anti-Aging", "Ergonomic Design", "Leak-Proof")
-- DO NOT add generic words like "Premium", "Professional", "Quality", "Grade"
+ANALYSIS CHECKLIST:
+✓ Identify ALL active ingredients (Collagen, Niacinamide, Hyaluronic Acid, Retinol, Vitamin C, Peptides, etc.)
+✓ Determine texture (cream, serum, gel, jelly, lotion, oil, balm)
+✓ Identify skin concerns addressed (dryness, aging, acne, dullness, sensitivity)
+✓ Determine suitable skin types (dry, oily, combination, sensitive, all types)
+✓ Note application method (morning, night, both)
 
-STEP 6 - OPTIMIZATION STRATEGY:
-- How can we maximize character usage (90-100%) with FACTUAL information FROM THE INPUT?
-- Where should technical keywords be placed for maximum impact?
-- What specific numbers and measurements FROM THE PROVIDED DATA will drive conversions?
-- How can we stand out with TECHNICAL SUPERIORITY using ONLY PROVIDED INFORMATION?
+INGREDIENT BENEFIT DATABASE:
+• Collagen → Improves elasticity, reduces fine lines, firms skin
+• Niacinamide → Brightens tone, minimizes pores, reduces redness
+• Hyaluronic Acid → Deep hydration, plumps skin, retains moisture
+• Retinol → Reduces wrinkles, improves texture, increases cell turnover
+• Vitamin C → Brightens, evens tone, antioxidant protection
+• Peptides → Stimulates collagen, anti-aging, firms skin
+• Salicylic Acid → Unclogs pores, treats acne, exfoliates
+• Glycolic Acid → Exfoliates, brightens, smooths texture
+• Ceramides → Strengthens barrier, locks moisture, protects
+• Alpha Arbutin → Fades dark spots, brightens, evens tone
+
+TITLE FORMULA FOR BEAUTY:
+[Ingredient Names] + [Product Type] + [Primary Benefit] + [Skin Type/Concern] + [Size if provided]
+
+EXAMPLE:
+Input: "Collagen Niacinamide Jelly Cream, 50ml"
+Output: "Collagen Niacinamide Jelly Cream - Hydrating Face Moisturizer for Dry Skin - Anti-Aging Formula Reduces Fine Lines & Brightens Complexion - Lightweight Fast-Absorbing 50ml"
+
+✗ NEVER: "Premium Quality Collagen Cream - Best Anti-Aging Solution"
+✗ NEVER: "Solve Your Skin Problems - Ultimate Moisturizer"
+
+┌─────────────────────────────────────────────────────────────────┐
+│ ELECTRONICS PRODUCTS                                            │
+└─────────────────────────────────────────────────────────────────┘
+
+ANALYSIS CHECKLIST:
+✓ Identify connectivity (Bluetooth, WiFi, Wired, Wireless, USB-C, etc.)
+✓ Note technical specs (DPI, battery life, resolution, power, capacity)
+✓ Determine compatibility (Windows, Mac, iPhone, Android, etc.)
+✓ Identify key technology (noise cancelling, fast charging, etc.)
+✓ Note physical specs (size, weight, color, material)
+
+TECHNOLOGY BENEFIT DATABASE:
+• Bluetooth 5.0 → Stable connection, 33ft range, low power consumption
+• 2400 DPI Sensor → Precise control, adjustable sensitivity
+• Silent Click → 90% noise reduction, quiet operation
+• Rechargeable Battery → Long-lasting, eco-friendly, cost-effective
+• Noise Cancelling → Blocks ambient sound, immersive audio
+• Fast Charging → Quick power-up, less downtime
+• USB-C → Universal compatibility, fast data transfer
+• Wireless → No cable clutter, freedom of movement
+
+TITLE FORMULA FOR ELECTRONICS:
+[Product Type] + [Key Technology] + [Main Specs] + [Compatibility] + [Use Case]
+
+EXAMPLE:
+Input: "Wireless Mouse, Bluetooth 5.0, 2400 DPI, Rechargeable"
+Output: "Wireless Bluetooth Mouse - Ergonomic Silent Click Design - 2400 DPI Adjustable Sensor - Rechargeable Battery 60-Day Life - Compatible Windows Mac iPad - Office Home Gaming"
+
+✗ NEVER: "Premium Professional Grade Wireless Mouse - Ultimate Solution"
+✗ NEVER: "Best Quality Mouse for All Your Computing Needs"
+
+┌─────────────────────────────────────────────────────────────────┐
+│ DIGITAL PRODUCTS (Etsy Focus)                                   │
+└─────────────────────────────────────────────────────────────────┘
+
+ANALYSIS CHECKLIST:
+✓ Identify file formats (PDF, PNG, JPG, SVG, PSD, etc.)
+✓ Determine if editable (Yes/No, what software needed)
+✓ Note if printable (home printer, professional print shop)
+✓ Identify usage rights (personal use, commercial use)
+✓ Determine occasion/theme (wedding, birthday, business, etc.)
+
+DIGITAL PRODUCT KEYWORDS:
+• Instant Download → Immediate access, no shipping
+• Printable → Can print at home or print shop
+• Editable → Customizable with your information
+• PDF Template → Easy to use, no special software
+• High Resolution → Professional print quality (300 DPI)
+• DIY → Do-it-yourself, budget-friendly
+• Digital File → No physical item shipped
+
+TITLE FORMULA FOR DIGITAL (Etsy 140 chars):
+[Product Type] | Instant Download | [Format] | Editable | [Style/Theme] | [Occasion]
+
+EXAMPLE:
+Input: "Wedding Invitation Template, PDF, Printable"
+Output: "Wedding Invitation Template | Instant Download | Printable PDF | Editable | Rustic Floral Design | DIY Wedding Invite"
+
+✗ NEVER: "Best Wedding Invitation - Premium Quality Template"
+✗ NEVER: "Professional Grade Invitation - Ultimate Solution"
+
+│ PHYSICAL PRODUCTS (General)                                     │
+└─────────────────────────────────────────────────────────────────┘
+
+ANALYSIS CHECKLIST:
+✓ Identify material (stainless steel, cotton, leather, plastic, wood, etc.)
+✓ Note dimensions/size (if provided - never invent)
+✓ Identify key features (waterproof, foldable, adjustable, portable, etc.)
+✓ Determine use case (gym, travel, office, home, outdoor, etc.)
+✓ Note certifications (BPA-free, FDA approved, CE certified, etc.)
+
+MATERIAL BENEFIT DATABASE:
+• Stainless Steel → Durable, rust-resistant, easy to clean
+• Silicone → Flexible, heat-resistant, non-stick, BPA-free
+• Leather (Genuine) → Durable, ages well, premium feel
+• Cotton (Organic) → Soft, breathable, hypoallergenic
+• Aluminum → Lightweight, strong, corrosion-resistant
+• Tempered Glass → Scratch-resistant, shatter-proof, clear
+• Bamboo → Eco-friendly, sustainable, naturally antibacterial
+
+TITLE FORMULA FOR PHYSICAL:
+[Material] + [Product Type] + [Key Features] + [Size/Capacity if provided] + [Use Case]
+
+EXAMPLE:
+Input: "Stainless Steel Water Bottle, 32oz, Double Wall Insulated"
+Output: "Stainless Steel Water Bottle - 32oz Double Wall Vacuum Insulated - Keeps Drinks Cold 24hrs Hot 12hrs - Leak-Proof Lid - BPA-Free - Gym Travel Office"
+
+✗ NEVER: "Premium Quality Water Bottle - Best for All Your Needs"
+✗ NEVER: "Professional Grade Bottle - Ultimate Hydration Solution"
+
+═══════════════════════════════════════════════════════════════════
+
+🎓 FINAL TRAINING REINFORCEMENT:
+
+BEFORE YOU WRITE, ASK YOURSELF:
+
+1. Did I complete STEP 1 (Analyze)?
+   ✓ What is it? ✓ Real features? ✓ Why used? ✓ How it works?
+
+2. Did I complete STEP 2 (Research)?
+   ✓ Primary keyword? ✓ Secondary keywords? ✓ Long-tail? ✓ Technical terms?
+
+3. Did I complete STEP 3 (Match)?
+   ✓ Feature → Benefit mapping for each feature?
+
+4. Am I about to use ANY of these BANNED words?
+   ✗ Premium, Professional, Grade, Quality, Best, Ultimate, Perfect, Amazing
+   ✗ Solve Your Problem, Best Value, Best For, Game Changer, Must Have
+   
+5. Am I inventing ANY specifications not in the input?
+   ✗ Adding "1.7oz" when size not provided?
+   ✗ Making up dimensions?
+   ✗ Fabricating technical specs?
+
+6. Is my title using 90-100% of character limit?
+   ✓ Amazon: 180-200 chars
+   ✓ Etsy: 126-140 chars
+   ✓ Shopify/WooCommerce: 60-70 chars
+   ✓ eBay: 72-80 chars
+   ✓ Walmart: 68-75 chars
+
+7. Does EVERY word provide SPECIFIC information?
+   ✓ "Collagen Niacinamide" (specific ingredients)
+   ✓ "2400 DPI Sensor" (specific technology)
+   ✓ "Stainless Steel 304" (specific material)
+   ✗ "High Quality" (meaningless generic)
+   ✗ "Premium Grade" (meaningless generic)
+
+IF YOU ANSWERED "NO" OR "✗" TO ANY QUESTION ABOVE:
+→ STOP and revise your approach
+→ Go back to the 4-step process
+→ Remove all generic/prohibited words
+→ Add more specific details from the input
+
+═══════════════════════════════════════════════════════════════════
 
 Now generate the PROFESSIONAL, TECHNICAL, SEO-OPTIMIZED listing for ${request.platform.toUpperCase()}.
 
-REMEMBER: 
-- NO generic filler words (Premium, Professional, Grade, Quality, etc.)
-- NO marketing fluff or meaningless adjectives
-- ONLY use REAL, SPECIFIC features from the product data
-- DEEPLY ANALYZE what the product actually is
-- Extract ACTUAL ingredients, materials, features, and benefits
-- DO NOT add measurements like "1.7oz" unless explicitly provided
-- When in doubt, leave it out
-- EVERY word must add SPECIFIC value and information
 
-FINAL CHECK BEFORE WRITING:
-✓ Did I analyze what this product REALLY is?
-✓ Did I extract ACTUAL features from the input?
-✓ Did I avoid generic words like "Premium", "Professional", "Quality"?
-✓ Did I use SPECIFIC ingredients/materials/features?
-✓ Does every word provide REAL information?
-✓ Would this title help someone understand what this SPECIFIC product is?
 
 === REQUIRED JSON OUTPUT (return this exact structure) ===
 {

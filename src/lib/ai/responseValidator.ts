@@ -27,7 +27,7 @@ export class ResponseValidator {
   ): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
-    const sanitized = { ...response };
+    let sanitized = { ...response }; // Changed from const to let for reassignment
 
     // Get platform rules
     const engine = PlatformEngineFactory.getEngine(platform);
@@ -65,9 +65,22 @@ export class ResponseValidator {
       sanitized.keywords = keywordsValidation.sanitized;
     }
 
-    // Check for prohibited words using training context
+    // Check for prohibited words using training context - CRITICAL ENFORCEMENT
     const prohibitedCheck = this.checkProhibitedWords(sanitized);
-    warnings.push(...prohibitedCheck);
+    if (prohibitedCheck.length > 0) {
+      // Try to auto-fix by removing prohibited words
+      console.warn('[Validator] Attempting to auto-fix prohibited words...');
+      sanitized = this.removeProhibitedWords(sanitized);
+      
+      // Check again after auto-fix
+      const recheckProhibited = this.checkProhibitedWords(sanitized);
+      if (recheckProhibited.length > 0) {
+        // Still has prohibited words after auto-fix - reject
+        errors.push(...recheckProhibited.map(w => `CRITICAL: ${w} - This will cause rejection`));
+      } else {
+        warnings.push('Auto-fixed: Removed prohibited words from output');
+      }
+    }
 
     // Calculate quality score
     let qualityScore: QualityScore | undefined;
@@ -120,6 +133,12 @@ export class ResponseValidator {
 
     if (sanitized.length < rules.titleRange.min) {
       warnings.push(`Title is below recommended minimum of ${rules.titleRange.min} characters (current: ${sanitized.length})`);
+    }
+
+    // CRITICAL: Check character utilization (must be 90-100%)
+    const utilization = (sanitized.length / rules.titleRange.max) * 100;
+    if (utilization < 90) {
+      warnings.push(`Title utilization: ${Math.round(utilization)}% (target: 90-100%). Current: ${sanitized.length}/${rules.titleRange.max} chars`);
     }
 
     // Check for HTML entities and decode them
@@ -316,17 +335,72 @@ export class ResponseValidator {
    */
   private static checkProhibitedWords(response: AIGenerationResponse): string[] {
     const warnings: string[] = [];
-    const allText = `${response.title} ${response.description} ${response.bullets.join(' ')}`.toLowerCase();
+    const allText = `${response.title} ${response.description} ${response.bullets.join(' ')}`;
     const prohibitedWords = TrainingContext.PROHIBITED_WORDS;
 
     prohibitedWords.forEach(word => {
-      const regex = new RegExp(`\\b${word.toLowerCase()}\\b`, 'i');
+      // Escape special regex characters
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Use word boundaries for single words, flexible matching for phrases
+      const regex = word.includes(' ')
+        ? new RegExp(escapedWord, 'gi')
+        : new RegExp(`\\b${escapedWord}\\b`, 'gi');
+      
       if (regex.test(allText)) {
         warnings.push(`Contains prohibited word: "${word}"`);
       }
     });
 
     return warnings;
+  }
+
+  /**
+   * Remove prohibited words from response
+   */
+  private static removeProhibitedWords(response: AIGenerationResponse): AIGenerationResponse {
+    const prohibitedWords = TrainingContext.PROHIBITED_WORDS;
+    const sanitized = { ...response };
+
+    // Sort by length (longest first) to handle multi-word phrases before single words
+    const sortedWords = [...prohibitedWords].sort((a, b) => b.length - a.length);
+
+    // Remove from title
+    sortedWords.forEach(word => {
+      // Escape special regex characters
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Use word boundaries for single words, flexible matching for phrases
+      const regex = word.includes(' ') 
+        ? new RegExp(escapedWord, 'gi')
+        : new RegExp(`\\b${escapedWord}\\b`, 'gi');
+      sanitized.title = sanitized.title.replace(regex, '').replace(/\s+/g, ' ').trim();
+      // Remove leading/trailing dashes or commas
+      sanitized.title = sanitized.title.replace(/^[\s\-,]+|[\s\-,]+$/g, '');
+    });
+
+    // Remove from bullets
+    sanitized.bullets = sanitized.bullets.map(bullet => {
+      let cleaned = bullet;
+      sortedWords.forEach(word => {
+        const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = word.includes(' ')
+          ? new RegExp(escapedWord, 'gi')
+          : new RegExp(`\\b${escapedWord}\\b`, 'gi');
+        cleaned = cleaned.replace(regex, '').replace(/\s+/g, ' ').trim();
+        cleaned = cleaned.replace(/^[\s\-,]+|[\s\-,]+$/g, '');
+      });
+      return cleaned;
+    });
+
+    // Remove from description
+    sortedWords.forEach(word => {
+      const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = word.includes(' ')
+        ? new RegExp(escapedWord, 'gi')
+        : new RegExp(`\\b${escapedWord}\\b`, 'gi');
+      sanitized.description = sanitized.description.replace(regex, '').replace(/\s+/g, ' ').trim();
+    });
+
+    return sanitized;
   }
 
   /**
