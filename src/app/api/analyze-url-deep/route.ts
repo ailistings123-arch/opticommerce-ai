@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     console.log('[API] Step 4: Generating optimized listing with AI (with backend SEO verification)...');
     
     // Step 4: Generate optimized listing with quality verification
-    let optimizedListing;
+    let optimizedListing: Awaited<ReturnType<typeof AIService.generateListing>> | undefined;
     let attempts = 0;
     const maxAttempts = 3; // Try up to 3 times to get 80+ score
     
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('[API] Listing generated successfully, Final SEO score:', optimizedListing.qualityScore?.percentage);
+    console.log('[API] Listing generated successfully, Final SEO score:', optimizedListing!.qualityScore?.percentage);
 
     // Return comprehensive response
     return NextResponse.json({

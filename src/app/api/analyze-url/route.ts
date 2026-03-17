@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     console.log('[API] Optimizing with AI (with backend SEO verification)...');
     
     try {
-      let aiResult;
+      let aiResult: Awaited<ReturnType<typeof AIService.generateListing>> | undefined;
       let attempts = 0;
       const maxAttempts = 3; // Try up to 3 times to get 80+ score
       
@@ -145,21 +145,21 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      console.log('[API] AI optimization complete, Final SEO score:', aiResult.qualityScore?.percentage);
+      console.log('[API] AI optimization complete, Final SEO score:', aiResult!.qualityScore?.percentage);
 
       // Build optimized analysis
       const analysis: any = {
-        title: aiResult.listing.title,
-        description: aiResult.listing.description,
-        bullets: aiResult.listing.bullets || [],
-        tags: aiResult.listing.keywords || [],
-        seoScore: aiResult.qualityScore?.percentage || 85,
-        improvements: aiResult.qualityScore?.recommendations || [],
+        title: aiResult!.listing.title,
+        description: aiResult!.listing.description,
+        bullets: aiResult!.listing.bullets || [],
+        tags: aiResult!.listing.keywords || [],
+        seoScore: aiResult!.qualityScore?.percentage || 85,
+        improvements: aiResult!.qualityScore?.recommendations || [],
         platform: platform as Platform,
         analysisType,
         purpose,
         images: scrapedData.images || [],
-        platform_notes: aiResult.listing.platform_notes
+        platform_notes: aiResult!.listing.platform_notes
       };
 
       // Add optional fields
