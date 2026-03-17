@@ -1,6 +1,6 @@
 /**
- * URL Analyzer Service
- * Analyzes product URLs to extract listing data
+ * URL Analyzer Service — Unified scraper for all e-commerce platforms
+ * Strategy: JSON-LD → meta tags → HTML selectors → URL slug fallback
  */
 
 export interface AnalyzedUrlData {
@@ -17,1048 +17,583 @@ export interface AnalyzedUrlData {
   availability?: string;
 }
 
+// Rotate user agents to reduce bot detection
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
+];
+
+function randomUA(): string {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+function baseHeaders(referer?: string): Record<string, string> {
+  return {
+    'User-Agent': randomUA(),
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'Cache-Control': 'no-cache',
+    'DNT': '1',
+    ...(referer ? { 'Referer': referer } : {}),
+  };
+}
+
 export class UrlAnalyzerService {
-  /**
-   * Analyze product URL and extract data
-   */
   static async analyzeUrl(url: string): Promise<AnalyzedUrlData> {
-    try {
-      // Validate URL
-      const urlObj = new URL(url);
-      const hostname = urlObj.hostname.toLowerCase();
+    const urlObj = new URL(url);
+    const host = urlObj.hostname.toLowerCase();
 
-      // Determine platform
-      if (hostname.includes('amazon')) {
-        return await this.analyzeAmazonUrl(url);
-      } else if (hostname.includes('ebay')) {
-        return await this.analyzeEbayUrl(url);
-      } else if (hostname.includes('etsy')) {
-        return await this.analyzeEtsyUrl(url);
-      } else if (hostname.includes('walmart')) {
-        return await this.analyzeWalmartUrl(url);
-      } else {
-        return await this.analyzeGenericUrl(url);
-      }
-    } catch (error: any) {
-      throw new Error(`Failed to analyze URL: ${error.message}`);
-    }
+    if (host.includes('amazon')) return this.analyzeAmazon(url);
+    if (host.includes('ebay')) return this.analyzeEbay(url);
+    if (host.includes('etsy')) return this.analyzeEtsy(url);
+    if (host.includes('walmart')) return this.analyzeWalmart(url);
+    return this.analyzeGeneric(url);
   }
 
-  /**
-   * Analyze Amazon product URL
-   */
-  private static async analyzeAmazonUrl(url: string): Promise<AnalyzedUrlData> {
-    try {
-      // Extract ASIN from URL as fallback identifier
-      const asinMatch = url.match(/\/(?:dp|gp\/product|ASIN)\/([A-Z0-9]{10})/i);
-      const asin = asinMatch ? asinMatch[1] : null;
+  // ─── SHARED UTILITIES ────────────────────────────────────────────────────
 
-      // Extract title from URL slug as best-effort fallback
-      const slugMatch = url.match(/\/dp\/[A-Z0-9]+\/|\/([^/]+)\/dp\//i);
-      let urlTitle = '';
-      if (slugMatch && slugMatch[1]) {
-        urlTitle = slugMatch[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      }
+  /** Extract JSON-LD Product schema — works on most modern e-commerce sites */
+  private static extractJsonLd(html: string): AnalyzedUrlData | null {
+    const matches = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)];
+    for (const m of matches) {
+      try {
+        const data = JSON.parse(m[1]);
+        const items = Array.isArray(data) ? data : [data];
+        for (const item of items) {
+          const product = item['@type'] === 'Product' ? item
+            : item['@graph']?.find((n: any) => n['@type'] === 'Product');
+          if (!product) continue;
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          'Cache-Control': 'max-age=0',
-          'DNT': '1'
-        }
-      });
+          const name = product.name || '';
+          if (!name) continue;
 
-      // Amazon often returns 503 or redirects to CAPTCHA — handle gracefully
-      if (!response.ok || response.status === 503) {
-        console.warn(`[UrlAnalyzer] Amazon returned ${response.status} — using URL-extracted data`);
-        return {
-          title: urlTitle || `Amazon Product${asin ? ` (ASIN: ${asin})` : ''}`,
-          description: `Amazon product${asin ? ` ASIN ${asin}` : ''}. Amazon blocks automated access — please paste the product title, description, and key features manually for best results.`,
-          category: 'Amazon Product',
-          price: undefined,
-          images: [],
-          bullets: [],
-          specifications: []
-        };
-      }
+          const desc = product.description || '';
+          let price: number | undefined;
+          const offer = Array.isArray(product.offers) ? product.offers[0] : product.offers;
+          if (offer?.price) price = parseFloat(offer.price);
 
-      const html = await response.text();
-
-      // Detect CAPTCHA / robot check page
-      const isCaptcha = html.includes('robot check') || html.includes('captcha') || html.includes('Enter the characters you see below');
-      if (isCaptcha) {
-        console.warn('[UrlAnalyzer] Amazon CAPTCHA detected — using URL-extracted data');
-        return {
-          title: urlTitle || `Amazon Product${asin ? ` (ASIN: ${asin})` : ''}`,
-          description: `Amazon product${asin ? ` ASIN ${asin}` : ''}. Amazon requires CAPTCHA verification — please paste the product details manually for best results.`,
-          category: 'Amazon Product',
-          price: undefined,
-          images: [],
-          bullets: [],
-          specifications: []
-        };
-      }
-
-      const title = this.extractAmazonTitle(html);
-      const bullets = this.extractAmazonBullets(html);
-      const description = this.extractAmazonDescription(html);
-
-      // If we got no real data, fall back to URL-extracted title
-      const finalTitle = (title && title !== 'Product Title') ? title : (urlTitle || 'Amazon Product');
-
-      return {
-        title: finalTitle,
-        description: description || 'Amazon product — please add product details for better optimization.',
-        price: this.extractAmazonPrice(html),
-        bullets,
-        images: this.extractAmazonImages(html),
-        specifications: this.extractAmazonSpecs(html),
-        brand: this.extractAmazonBrand(html),
-        rating: this.extractAmazonRating(html),
-        reviewCount: this.extractAmazonReviewCount(html)
-      };
-    } catch (error: any) {
-      throw new Error(`Amazon URL analysis failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Extract Amazon title
-   */
-  private static extractAmazonTitle(html: string): string {
-    // productTitle span has leading/trailing whitespace and newlines — use [\s\S]*?
-    const selectors = [
-      /<span id="productTitle"[^>]*>([\s\S]*?)<\/span>/i,
-      /<h1[^>]*id="title"[^>]*>([\s\S]*?)<\/h1>/i,
-      /<meta name="title" content="([^"]+)"/i,
-      /<meta property="og:title" content="([^"]+)"/i,
-      /<title>([^<]+)/i
-    ];
-
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1]) {
-        // Strip HTML tags, decode entities, normalize whitespace
-        let title = match[1]
-          .replace(/<[^>]+>/g, '')
-          .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-          .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
-          .replace(/\s+/g, ' ').trim();
-        // Remove "Amazon.com: " prefix from meta title
-        title = title.replace(/^Amazon\.com\s*:\s*/i, '');
-        if (title.length > 10) return title;
-      }
-    }
-
-    return 'Product Title';
-  }
-
-  /**
-   * Extract Amazon description
-   */
-  private static extractAmazonDescription(html: string): string {
-    // Try productDescription div first
-    const descDiv = html.match(/<div id="productDescription"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i);
-    if (descDiv) {
-      const text = descDiv[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-      if (text.length > 50) return text.substring(0, 2000);
-    }
-
-    // Try feature-bullets section (has the bullet text)
-    const bulletsDiv = html.match(/id="feature-bullets"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i);
-    if (bulletsDiv) {
-      const text = bulletsDiv[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-      if (text.length > 50) return text.substring(0, 2000);
-    }
-
-    // Meta description
-    const metaDesc = html.match(/<meta name="description" content="([^"]+)"/i);
-    if (metaDesc && metaDesc[1].length > 50) {
-      return metaDesc[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
-    }
-
-    return 'Product description';
-  }
-
-  /**
-   * Extract Amazon price
-   */
-  private static extractAmazonPrice(html: string): number | undefined {
-    // Try corePriceDisplay first (most reliable)
-    const corePrice = html.match(/class="a-price-whole">([\d,]+)</i);
-    if (corePrice) {
-      const val = parseFloat(corePrice[1].replace(/,/g, ''));
-      if (!isNaN(val) && val < 100000) return val; // sanity check
-    }
-    // Try JSON price data
-    const jsonPrice = html.match(/"priceAmount"\s*:\s*([\d.]+)/);
-    if (jsonPrice) return parseFloat(jsonPrice[1]);
-    return undefined;
-  }
-
-  /**
-   * Extract Amazon bullet points
-   */
-  private static extractAmazonBullets(html: string): string[] {
-    const bullets: string[] = [];
-
-    // Find the feature-bullets section first to scope the search
-    const bulletsSection = html.match(/id="feature-bullets"[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/i);
-    const searchHtml = bulletsSection ? bulletsSection[1] : html;
-
-    // a-list-item spans can have nested HTML — use [\s\S]*? and strip tags
-    const bulletRegex = /<span class="a-list-item">([\s\S]*?)<\/span>/gi;
-    let match;
-
-    while ((match = bulletRegex.exec(searchHtml)) !== null) {
-      const bullet = match[1]
-        .replace(/<[^>]+>/g, '')
-        .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-        .replace(/\s+/g, ' ').trim();
-      if (bullet && bullet.length > 20) {
-        bullets.push(bullet);
-      }
-    }
-
-    return bullets.slice(0, 5);
-  }
-
-  /**
-   * Extract Amazon images
-   */
-  private static extractAmazonImages(html: string): string[] {
-    const images: string[] = [];
-    const imageRegex = /"hiRes":"([^"]+)"/g;
-    let match;
-
-    while ((match = imageRegex.exec(html)) !== null) {
-      images.push(match[1]);
-    }
-
-    return images.slice(0, 6);
-  }
-
-  /**
-   * Extract Amazon specifications
-   */
-  private static extractAmazonSpecs(html: string): Array<{ name: string; value: string }> {
-    const specs: Array<{ name: string; value: string }> = [];
-
-    // Product details table — th/td pairs with whitespace
-    const specRegex = /<th[^>]*class="[^"]*prodDetSectionEntry[^"]*"[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*class="[^"]*prodDetAttrValue[^"]*"[^>]*>([\s\S]*?)<\/td>/gi;
-    let match;
-    while ((match = specRegex.exec(html)) !== null) {
-      const name = match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-      const value = match[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-      if (name && value) specs.push({ name, value });
-    }
-
-    // Also try the newer product details format
-    if (specs.length === 0) {
-      const detailRegex = /<span class="a-text-bold">([\s\S]*?)<\/span>[\s\S]*?<span>([\s\S]*?)<\/span>/gi;
-      while ((match = detailRegex.exec(html)) !== null) {
-        const name = match[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().replace(/:$/, '');
-        const value = match[2].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-        if (name && value && name.length < 50 && value.length < 100) {
-          specs.push({ name, value });
-        }
-      }
-    }
-
-    return specs.slice(0, 10);
-  }
-
-  /**
-   * Extract Amazon brand
-   */
-  private static extractAmazonBrand(html: string): string | undefined {
-    // bylineInfo link — can have nested spans
-    const byline = html.match(/<a id="bylineInfo"[^>]*>([\s\S]*?)<\/a>/i);
-    if (byline) {
-      const text = byline[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
-        .replace(/^Visit the\s+/i, '').replace(/\s+Store$/i, '').trim();
-      if (text.length > 1) return text;
-    }
-    // Try brand in product details table
-    const brandRow = html.match(/Brand[^<]*<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i);
-    if (brandRow) {
-      const text = brandRow[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-      if (text.length > 1) return text;
-    }
-    // Try JSON
-    const jsonBrand = html.match(/"brand"\s*:\s*"([^"]+)"/i);
-    if (jsonBrand) return jsonBrand[1];
-    return undefined;
-  }
-
-  /**
-   * Extract Amazon rating
-   */
-  private static extractAmazonRating(html: string): number | undefined {
-    const ratingMatch = html.match(/<span class="a-icon-alt">([0-9.]+) out of 5 stars<\/span>/i);
-    return ratingMatch ? parseFloat(ratingMatch[1]) : undefined;
-  }
-
-  /**
-   * Extract Amazon review count
-   */
-  private static extractAmazonReviewCount(html: string): number | undefined {
-    const reviewMatch = html.match(/<span id="acrCustomerReviewText">([0-9,]+) ratings<\/span>/i);
-    return reviewMatch ? parseInt(reviewMatch[1].replace(/,/g, '')) : undefined;
-  }
-
-  /**
-   * Analyze eBay product URL
-   */
-  private static async analyzeEbayUrl(url: string): Promise<AnalyzedUrlData> {
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
-        }
-      });
-
-      const html = await response.text();
-
-      return {
-        title: this.extractEbayTitle(html),
-        description: this.extractEbayDescription(html),
-        price: this.extractEbayPrice(html),
-        images: this.extractEbayImages(html),
-        specifications: this.extractEbaySpecs(html)
-      };
-    } catch (error: any) {
-      throw new Error(`eBay URL analysis failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Extract eBay title
-   */
-  private static extractEbayTitle(html: string): string {
-    // Try multiple selectors for eBay title
-    const selectors = [
-      /<h1 class="x-item-title__mainTitle"[^>]*><span class="ux-textspans[^"]*">([^<]+)<\/span><\/h1>/i,
-      /<h1 class="x-item-title__mainTitle"[^>]*>([^<]+)<\/h1>/i,
-      /<h1[^>]*itemprop="name"[^>]*>([^<]+)<\/h1>/i,
-      /<meta property="og:title" content="([^"]+)"/i,
-      /<title>([^<|]+)/i
-    ];
-
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1].trim()) {
-        return match[1].trim().replace(/\s+/g, ' ');
-      }
-    }
-
-    return 'Product Title';
-  }
-
-  /**
-   * Extract eBay description
-   */
-  private static extractEbayDescription(html: string): string {
-    // Try multiple selectors for description
-    const selectors = [
-      /<div class="x-item-description"[^>]*>([\s\S]*?)<\/div>/i,
-      /<div[^>]*id="desc_div"[^>]*>([\s\S]*?)<\/div>/i,
-      /<meta property="og:description" content="([^"]+)"/i,
-      /<meta name="description" content="([^"]+)"/i
-    ];
-
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1]) {
-        let desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (desc.length > 50) {
-          return desc.substring(0, 2000);
-        }
-      }
-    }
-
-    return 'Product description';
-  }
-
-  /**
-   * Extract eBay price
-   */
-  private static extractEbayPrice(html: string): number | undefined {
-    // Try multiple price selectors
-    const pricePatterns = [
-      /<span class="ux-textspans">US \$([0-9,.]+)<\/span>/i,
-      /<span[^>]*class="[^"]*x-price-primary[^"]*"[^>]*>US \$([0-9,.]+)<\/span>/i,
-      /<span[^>]*itemprop="price"[^>]*content="([0-9.]+)"/i,
-      /\$([0-9,.]+)/
-    ];
-
-    for (const pattern of pricePatterns) {
-      const match = html.match(pattern);
-      if (match && match[1]) {
-        const price = parseFloat(match[1].replace(/,/g, ''));
-        if (!isNaN(price) && price > 0) {
-          return price;
-        }
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Extract eBay images
-   */
-  private static extractEbayImages(html: string): string[] {
-    const images: string[] = [];
-    const imageRegex = /<img[^>]+src="([^"]+)"[^>]*class="[^"]*ux-image-carousel-item[^"]*"/gi;
-    let match;
-
-    while ((match = imageRegex.exec(html)) !== null) {
-      images.push(match[1]);
-    }
-
-    return images;
-  }
-
-  /**
-   * Extract eBay specifications
-   */
-  private static extractEbaySpecs(html: string): Array<{ name: string; value: string }> {
-    const specs: Array<{ name: string; value: string }> = [];
-    
-    // Try multiple spec patterns
-    const patterns = [
-      /<dt class="ux-labels-values__labels"[^>]*><span[^>]*>([^<]+)<\/span><\/dt>[\s\S]*?<dd class="ux-labels-values__values"[^>]*><span[^>]*>([^<]+)<\/span><\/dd>/gi,
-      /<dt class="ux-labels-values__labels"[^>]*>([^<]+)<\/dt>[\s\S]*?<dd class="ux-labels-values__values"[^>]*>([^<]+)<\/dd>/gi,
-      /<div class="ux-layout-section-evo__col"[^>]*><span class="ux-textspans ux-textspans--BOLD">([^<]+)<\/span><\/div>[\s\S]*?<div class="ux-layout-section-evo__col"[^>]*><span class="ux-textspans">([^<]+)<\/span><\/div>/gi
-    ];
-
-    for (const pattern of patterns) {
-      let match;
-      while ((match = pattern.exec(html)) !== null) {
-        const name = match[1].trim();
-        const value = match[2].trim();
-        if (name && value && name.length < 100 && value.length < 200) {
-          specs.push({ name, value });
-        }
-      }
-      if (specs.length > 0) break;
-    }
-
-    return specs.slice(0, 15);
-  }
-
-  /**
-   * Analyze Etsy product URL - ENHANCED v3 with anti-bot bypass
-   */
-  private static async analyzeEtsyUrl(url: string): Promise<AnalyzedUrlData> {
-    try {
-      console.log('[UrlAnalyzer] Analyzing Etsy URL:', url);
-      
-      // Clean URL - remove tracking parameters
-      const cleanUrl = url.split('?')[0];
-      console.log('[UrlAnalyzer] Clean URL:', cleanUrl);
-      
-      const response = await fetch(cleanUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          'Cache-Control': 'max-age=0',
-          'DNT': '1',
-          'Referer': 'https://www.etsy.com/'
-        }
-      });
-
-      if (!response.ok) {
-        console.error('[UrlAnalyzer] HTTP Error:', response.status, response.statusText);
-        
-        // If 403, try to extract from URL and provide manual input option
-        if (response.status === 403) {
-          // Extract product ID from URL
-          const productIdMatch = cleanUrl.match(/\/listing\/(\d+)/);
-          const productId = productIdMatch ? productIdMatch[1] : '';
-          
-          // Extract title from URL slug
-          const titleMatch = cleanUrl.match(/\/listing\/\d+\/([^?]+)/);
-          let title = 'Etsy Product';
-          if (titleMatch) {
-            title = titleMatch[1]
-              .replace(/-/g, ' ')
-              .split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
+          const images: string[] = [];
+          if (product.image) {
+            const imgs = Array.isArray(product.image) ? product.image : [product.image];
+            imgs.forEach((img: any) => {
+              const src = typeof img === 'string' ? img : img?.url || img?.contentUrl || '';
+              if (src) images.push(src);
+            });
           }
-          
-          console.log('[UrlAnalyzer] Extracted from URL - Title:', title);
-          
+
+          const specs: Array<{ name: string; value: string }> = [];
+          if (product.additionalProperty) {
+            (Array.isArray(product.additionalProperty) ? product.additionalProperty : [product.additionalProperty])
+              .forEach((p: any) => {
+                if (p.name && p.value) specs.push({ name: p.name, value: String(p.value) });
+              });
+          }
+
           return {
-            title: title,
-            description: `This is a handmade/digital product available on Etsy. Please provide more details about the product for better optimization. Product ID: ${productId}`,
-            category: 'Handmade',
-            price: undefined,
-            images: []
+            title: name,
+            description: desc.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 2000),
+            price,
+            images: images.slice(0, 6),
+            specifications: specs.slice(0, 10),
+            brand: typeof product.brand === 'string' ? product.brand : product.brand?.name,
+            rating: product.aggregateRating?.ratingValue ? parseFloat(product.aggregateRating.ratingValue) : undefined,
+            reviewCount: product.aggregateRating?.reviewCount ? parseInt(product.aggregateRating.reviewCount) : undefined,
+            category: product.category || undefined,
           };
         }
-        
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const html = await response.text();
-      console.log('[UrlAnalyzer] HTML fetched, length:', html.length);
-
-      const title = this.extractEtsyTitle(html);
-      const description = this.extractEtsyDescription(html);
-      const price = this.extractEtsyPrice(html);
-      const images = this.extractEtsyImages(html);
-
-      console.log('[UrlAnalyzer] Extracted - Title:', title, '| Desc length:', description.length, '| Images:', images.length);
-
-      return {
-        title,
-        description,
-        price,
-        images,
-        category: 'Handmade' // Default for Etsy
-      };
-    } catch (error: any) {
-      console.error('[UrlAnalyzer] Etsy analysis failed:', error.message);
-      
-      // Fallback: Extract what we can from the URL
-      const titleMatch = url.match(/\/listing\/\d+\/([^?]+)/);
-      if (titleMatch) {
-        const title = titleMatch[1]
-          .replace(/-/g, ' ')
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        
-        console.log('[UrlAnalyzer] Fallback - Extracted title from URL:', title);
-        
-        return {
-          title: title,
-          description: 'Handmade/digital product from Etsy. Please provide additional product details for optimal results.',
-          category: 'Handmade',
-          price: undefined,
-          images: []
-        };
-      }
-      
-      throw new Error(`Etsy URL analysis failed: ${error.message}`);
+      } catch { /* skip malformed JSON-LD */ }
     }
+    return null;
   }
 
-  /**
-   * Extract Etsy title - ENHANCED with multiple selectors
-   */
-  private static extractEtsyTitle(html: string): string {
-    // Try multiple selectors in order of reliability
-    const selectors = [
-      // Meta tags (most reliable)
-      /<meta property="og:title" content="([^"]+)"/i,
-      /<meta name="twitter:title" content="([^"]+)"/i,
-      /<title>([^|<]+)/i,
-      // HTML elements
-      /<h1[^>]*class="[^"]*wt-text-body-03[^"]*"[^>]*>([^<]+)<\/h1>/i,
-      /<h1[^>]*>([^<]+)<\/h1>/i,
-      // JSON-LD structured data
-      /"name"\s*:\s*"([^"]+)"/i
-    ];
-
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1] && match[1].trim().length > 5) {
-        let title = match[1].trim();
-        // Clean up title
-        title = title.replace(/\s*\|\s*Etsy.*$/i, ''); // Remove "| Etsy" suffix
-        title = title.replace(/\s+/g, ' '); // Normalize whitespace
-        title = title.replace(/&amp;/g, '&'); // Decode HTML entities
-        title = title.replace(/&quot;/g, '"');
-        title = title.replace(/&#39;/g, "'");
-        title = title.replace(/&ndash;/g, '–');
-        title = title.replace(/&mdash;/g, '—');
-        if (title.length > 10) {
-          return title;
-        }
-      }
-    }
-
-    return 'Etsy Product';
-  }
-
-  /**
-   * Extract Etsy description - ENHANCED with multiple selectors
-   */
-  private static extractEtsyDescription(html: string): string {
-    const selectors = [
-      // Meta tags
-      /<meta property="og:description" content="([^"]+)"/i,
-      /<meta name="description" content="([^"]+)"/i,
-      /<meta name="twitter:description" content="([^"]+)"/i,
-      // HTML elements
-      /<p class="wt-text-body-01[^"]*"[^>]*>([^<]+)<\/p>/i,
-      /<div[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]{50,2000}?)<\/div>/i,
-      // JSON-LD
-      /"description"\s*:\s*"([^"]+)"/i
-    ];
-
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1]) {
-        let desc = match[1].trim();
-        // Clean up description
-        desc = desc.replace(/<[^>]+>/g, ' '); // Remove HTML tags
-        desc = desc.replace(/\s+/g, ' '); // Normalize whitespace
-        desc = desc.replace(/&amp;/g, '&'); // Decode HTML entities
-        desc = desc.replace(/&quot;/g, '"');
-        desc = desc.replace(/&#39;/g, "'");
-        desc = desc.replace(/&ndash;/g, '–');
-        desc = desc.replace(/&mdash;/g, '—');
-        if (desc.length > 50) {
-          return desc.substring(0, 2000);
-        }
-      }
-    }
-
-    return 'Handmade product description';
-  }
-
-  /**
-   * Extract Etsy price - ENHANCED with multiple selectors
-   */
-  private static extractEtsyPrice(html: string): number | undefined {
-    const selectors = [
-      // Meta tags
-      /<meta property="og:price:amount" content="([0-9,.]+)"/i,
-      /<meta property="product:price:amount" content="([0-9,.]+)"/i,
-      // HTML elements
-      /<p class="wt-text-title-03[^"]*"[^>]*>\$([0-9,.]+)<\/p>/i,
-      /<span[^>]*class="[^"]*currency-value[^"]*"[^>]*>([0-9,.]+)<\/span>/i,
-      // JSON-LD
-      /"price"\s*:\s*"?([0-9,.]+)"?/i
-    ];
-
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1]) {
-        const price = parseFloat(match[1].replace(/,/g, ''));
-        if (!isNaN(price) && price > 0) {
-          return price;
-        }
-      }
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Extract Etsy images - ENHANCED with multiple selectors
-   */
-  private static extractEtsyImages(html: string): string[] {
-    const images: string[] = [];
-    
-    // Try multiple image extraction methods
-    const patterns = [
-      // Meta tags
-      /<meta property="og:image" content="([^"]+)"/gi,
-      /<meta name="twitter:image" content="([^"]+)"/gi,
-      // Data attributes
-      /<img[^>]+data-src="([^"]+)"[^>]*>/gi,
-      /<img[^>]+data-src-zoom="([^"]+)"[^>]*>/gi,
-      // Regular src
-      /<img[^>]+src="([^"]+il_fullxfull[^"]+)"[^>]*>/gi,
-      /<img[^>]+src="([^"]+il_1588xN[^"]+)"[^>]*>/gi
-    ];
-
-    for (const pattern of patterns) {
-      let match;
-      while ((match = pattern.exec(html)) !== null) {
-        const imageUrl = match[1];
-        // Only add high-quality Etsy images
-        if (imageUrl && 
-            (imageUrl.includes('il_fullxfull') || 
-             imageUrl.includes('il_1588xN') ||
-             imageUrl.includes('il_794xN'))) {
-          if (!images.includes(imageUrl)) {
-            images.push(imageUrl);
-          }
-        }
-      }
-    }
-
-    return images.slice(0, 10); // Return up to 10 images
-  }
-
-  /**
-   * Analyze Walmart product URL — extracts from __NEXT_DATA__ JSON embedded in page
-   * Falls back to URL slug extraction when Walmart bot-detection blocks the request
-   */
-  private static async analyzeWalmartUrl(url: string): Promise<AnalyzedUrlData> {
-    try {
-      // Extract product ID and slug from URL as fallback
-      const itemIdMatch = url.match(/\/ip\/(?:[^/]+\/)?(\d+)/);
-      const itemId = itemIdMatch ? itemIdMatch[1] : null;
-      const slugMatch = url.match(/\/ip\/([^/\d][^/]*)\//);
-      let urlTitle = '';
-      if (slugMatch && slugMatch[1]) {
-        urlTitle = slugMatch[1].replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      }
-
-      // Clean URL — strip tracking params
-      const cleanUrl = url.split('?')[0];
-
-      const response = await fetch(cleanUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          'Cache-Control': 'max-age=0',
-          'DNT': '1'
-        }
-      });
-
-      const html = await response.text();
-
-      // Try __NEXT_DATA__ first — Walmart embeds full product JSON here
-      const nextDataResult = this.extractWalmartFromNextData(html);
-      if (nextDataResult) {
-        console.log('[UrlAnalyzer] Walmart: extracted from __NEXT_DATA__');
-        return nextDataResult;
-      }
-
-      // Bot detection or JS-only page — use URL slug as data source
-      // The slug is rich enough for AI to generate a good listing
-      console.warn('[UrlAnalyzer] Walmart bot-detection triggered — extracting from URL slug');
-      return this.extractWalmartFromSlug(url, urlTitle, itemId);
-
-    } catch (error: any) {
-      throw new Error(`Walmart URL analysis failed: ${error.message}`);
-    }
-  }
-
-  /**
-   * Extract rich product data from Walmart URL slug
-   * Walmart slugs are descriptive enough for AI optimization
-   */
-  private static extractWalmartFromSlug(url: string, urlTitle: string, itemId: string | null): AnalyzedUrlData {
-    const slug = urlTitle.toLowerCase();
-    const words = urlTitle.split(' ').filter(w => w.length > 1);
-    const brand = words[0] || '';
-
-    // Build a description that gives the AI enough context without hallucination triggers
-    const description = `Product: ${urlTitle}. Brand: ${brand}. ` +
-      `This is a physical product sold at Walmart. ` +
-      `Only use features and specifications that can be reasonably inferred from the product name. ` +
-      `Do not invent specifications, quantities, or technical details not present in the product name.`;
-
-    // Detect category from slug keywords
-    let category = 'Walmart Product';
-    if (/curling|hair|straighten|flat iron|wand/i.test(slug)) category = 'Hair Care';
-    else if (/keyboard|mouse|laptop|computer|monitor/i.test(slug)) category = 'Electronics';
-    else if (/shirt|pants|dress|jacket|shoes/i.test(slug)) category = 'Clothing';
-    else if (/toy|game|puzzle|lego/i.test(slug)) category = 'Toys';
-    else if (/vitamin|supplement|protein/i.test(slug)) category = 'Health';
-    else if (/coffee|blender|air fryer|instant pot/i.test(slug)) category = 'Kitchen';
+  /** Extract Open Graph / meta tag data — universal fallback */
+  private static extractMeta(html: string): Partial<AnalyzedUrlData> {
+    const get = (pattern: RegExp) => html.match(pattern)?.[1]?.trim() || '';
+    const title = get(/<meta property="og:title" content="([^"]+)"/i)
+      || get(/<meta name="twitter:title" content="([^"]+)"/i)
+      || get(/<title>([^<|]+)/i);
+    const description = get(/<meta property="og:description" content="([^"]+)"/i)
+      || get(/<meta name="description" content="([^"]+)"/i);
+    const image = get(/<meta property="og:image" content="([^"]+)"/i);
+    const priceStr = get(/<meta property="product:price:amount" content="([^"]+)"/i)
+      || get(/<meta property="og:price:amount" content="([^"]+)"/i);
+    const brand = get(/<meta property="product:brand" content="([^"]+)"/i);
 
     return {
-      title: urlTitle,
-      description,
-      category,
-      brand,
-      price: undefined,
-      images: [],
-      bullets: [],
-      specifications: []
+      title: title.replace(/\s*[|\-–—].*$/, '').trim(),
+      description: description.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim(),
+      images: image ? [image] : [],
+      price: priceStr ? parseFloat(priceStr) : undefined,
+      brand: brand || undefined,
     };
   }
 
-  /**
-   * Extract Walmart product data from __NEXT_DATA__ JSON blob
-   */
-  private static extractWalmartFromNextData(html: string): AnalyzedUrlData | null {
+  /** Decode HTML entities and strip tags */
+  private static clean(s: string): string {
+    return s
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ')
+      .replace(/&ndash;/g, '-').replace(/&mdash;/g, '-')
+      .replace(/\s+/g, ' ').trim();
+  }
+
+  /** Extract title from URL slug as last-resort fallback */
+  private static slugTitle(url: string): string {
     try {
-      const match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
-      if (!match) return null;
+      const path = new URL(url).pathname;
+      const parts = path.split('/').filter(Boolean);
+      // Find the most descriptive segment (longest, not a pure number)
+      const best = parts
+        .filter(p => !/^\d+$/.test(p) && p.length > 3)
+        .sort((a, b) => b.length - a.length)[0] || parts[parts.length - 1] || '';
+      return best.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).trim();
+    } catch { return ''; }
+  }
 
-      const json = JSON.parse(match[1]);
+  /** Detect product category from text */
+  private static detectCategory(text: string): string {
+    const t = text.toLowerCase();
+    if (/curling|hair|straighten|flat iron|wand|shampoo|conditioner|blow dry/.test(t)) return 'Hair Care';
+    if (/keyboard|mouse|laptop|monitor|headphone|speaker|webcam|usb|bluetooth/.test(t)) return 'Electronics';
+    if (/shirt|pants|dress|jacket|shoes|sneaker|hoodie|jeans|clothing/.test(t)) return 'Clothing';
+    if (/toy|game|puzzle|lego|doll|action figure/.test(t)) return 'Toys';
+    if (/vitamin|supplement|protein|probiotic|omega/.test(t)) return 'Health';
+    if (/coffee|blender|air fryer|instant pot|cookware|knife|pan/.test(t)) return 'Kitchen';
+    if (/sofa|chair|desk|bed|mattress|shelf|lamp|furniture/.test(t)) return 'Home & Furniture';
+    if (/cream|serum|moisturizer|lotion|cleanser|sunscreen|makeup/.test(t)) return 'Beauty';
+    if (/dog|cat|pet|collar|leash|treat|aquarium/.test(t)) return 'Pet Supplies';
+    if (/book|novel|textbook|guide|manual/.test(t)) return 'Books';
+    if (/tire|car|truck|auto|vehicle|motor/.test(t)) return 'Automotive';
+    if (/yoga|gym|dumbbell|resistance|treadmill|bicycle/.test(t)) return 'Sports & Fitness';
+    return 'General';
+  }
 
-      // Navigate to product data — Walmart nests it under props.pageProps.initialData.data.product
+  // ─── AMAZON ──────────────────────────────────────────────────────────────
+
+  private static async analyzeAmazon(url: string): Promise<AnalyzedUrlData> {
+    const asin = url.match(/\/(?:dp|gp\/product|ASIN)\/([A-Z0-9]{10})/i)?.[1] || null;
+    const slugTitle = this.slugTitle(url);
+
+    try {
+      const res = await fetch(url.split('?')[0], { headers: baseHeaders() });
+      const html = await res.text();
+
+      // Bot check — Amazon CAPTCHA page is small and has specific markers
+      const isBlocked = html.includes('Enter the characters you see below') ||
+        html.includes('<title>Robot Check</title>') ||
+        html.includes('Type the characters you see in this image') ||
+        html.length < 5000;
+      if (isBlocked) {
+        return this.amazonFallback(slugTitle, asin);
+      }
+
+      // Try JSON-LD first
+      const ld = this.extractJsonLd(html);
+      if (ld?.title && ld.title.length > 10) {
+        return { ...ld, category: ld.category || this.detectCategory(ld.title) };
+      }
+
+      // HTML extraction
+      const title = this.clean(
+        html.match(/<span id="productTitle"[^>]*>([\s\S]*?)<\/span>/i)?.[1] ||
+        html.match(/<h1[^>]*id="title"[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || ''
+      ).replace(/^Amazon\.com\s*:\s*/i, '') || slugTitle;
+
+      const bullets: string[] = [];
+      const bulletsSection = html.match(/id="feature-bullets"[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/i)?.[1] || html;
+      let bm: RegExpExecArray | null;
+      const br = /<span class="a-list-item">([\s\S]*?)<\/span>/gi;
+      while ((bm = br.exec(bulletsSection)) !== null) {
+        const b = this.clean(bm[1]);
+        if (b.length > 20) bullets.push(b);
+      }
+
+      const descDiv = html.match(/<div id="productDescription"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i)?.[1];
+      const description = descDiv ? this.clean(descDiv).substring(0, 2000)
+        : bullets.join(' ').substring(0, 2000) || 'Amazon product';
+
+      const priceWhole = html.match(/class="a-price-whole">([\d,]+)</i)?.[1];
+      const price = priceWhole ? parseFloat(priceWhole.replace(/,/g, '')) : undefined;
+
+      const specs: Array<{ name: string; value: string }> = [];
+      const specRe = /<th[^>]*class="[^"]*prodDetSectionEntry[^"]*"[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*class="[^"]*prodDetAttrValue[^"]*"[^>]*>([\s\S]*?)<\/td>/gi;
+      let sm: RegExpExecArray | null;
+      while ((sm = specRe.exec(html)) !== null) {
+        const n = this.clean(sm[1]); const v = this.clean(sm[2]);
+        if (n && v) specs.push({ name: n, value: v });
+      }
+
+      const images: string[] = [];
+      let im: RegExpExecArray | null;
+      const ir = /"hiRes":"([^"]+)"/g;
+      while ((im = ir.exec(html)) !== null) images.push(im[1]);
+
+      const brand = this.clean(html.match(/<a id="bylineInfo"[^>]*>([\s\S]*?)<\/a>/i)?.[1] || '')
+        .replace(/^Visit the\s+/i, '').replace(/\s+Store$/i, '') || undefined;
+
+      return {
+        title: title || slugTitle || 'Amazon Product',
+        description,
+        price,
+        bullets: bullets.slice(0, 5),
+        images: images.slice(0, 6),
+        specifications: specs.slice(0, 10),
+        brand,
+        category: this.detectCategory(title),
+        rating: html.match(/<span class="a-icon-alt">([0-9.]+) out of 5/i)?.[1] ? parseFloat(html.match(/<span class="a-icon-alt">([0-9.]+) out of 5/i)![1]) : undefined,
+      };
+    } catch {
+      return this.amazonFallback(slugTitle, asin);
+    }
+  }
+
+  private static amazonFallback(slugTitle: string, asin: string | null): AnalyzedUrlData {
+    return {
+      title: slugTitle || `Amazon Product${asin ? ` (ASIN: ${asin})` : ''}`,
+      description: `${slugTitle || 'Amazon product'}. Amazon blocks automated access — the AI will optimize based on the product name.`,
+      category: this.detectCategory(slugTitle),
+      images: [], bullets: [], specifications: [],
+    };
+  }
+
+  // ─── WALMART ─────────────────────────────────────────────────────────────
+
+  private static async analyzeWalmart(url: string): Promise<AnalyzedUrlData> {
+    const cleanUrl = url.split('?')[0];
+    const itemId = url.match(/\/ip\/(?:[^/]+\/)?(\d+)/)?.[1] || null;
+    const slugTitle = this.slugTitle(cleanUrl);
+
+    try {
+      const res = await fetch(cleanUrl, { headers: baseHeaders() });
+      const html = await res.text();
+
+      // Bot detection check — must be specific, not just the word "robot"
+      const isBlocked = html.includes('Robot or human?') || 
+        html.includes('<title>Robot or human?</title>') ||
+        (html.includes('robot-check') && html.length < 20000) ||
+        html.length < 5000;
+      
+      if (isBlocked) {
+        console.warn('[UrlAnalyzer] Walmart bot-detection — using slug fallback');
+        return this.walmartSlugFallback(slugTitle, itemId);
+      }
+
+      // 1. Try __NEXT_DATA__ JSON (most reliable when available)
+      const nextData = this.extractWalmartNextData(html);
+      if (nextData) return nextData;
+
+      // 2. Try JSON-LD
+      const ld = this.extractJsonLd(html);
+      if (ld?.title && ld.title.length > 10) {
+        return { ...ld, category: ld.category || this.detectCategory(ld.title) };
+      }
+
+      // 3. Meta tags
+      const meta = this.extractMeta(html);
+      if (meta.title && meta.title.length > 10) {
+        return {
+          title: meta.title,
+          description: meta.description || `${meta.title} — available at Walmart.`,
+          price: meta.price,
+          images: meta.images || [],
+          brand: meta.brand,
+          category: this.detectCategory(meta.title),
+          bullets: [], specifications: [],
+        };
+      }
+
+      return this.walmartSlugFallback(slugTitle, itemId);
+    } catch {
+      return this.walmartSlugFallback(slugTitle, itemId);
+    }
+  }
+
+  private static extractWalmartNextData(html: string): AnalyzedUrlData | null {
+    try {
+      const raw = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i)?.[1];
+      if (!raw) return null;
+      const json = JSON.parse(raw);
+
+      // Try multiple paths Walmart uses
       const product =
         json?.props?.pageProps?.initialData?.data?.product ||
         json?.props?.pageProps?.initialData?.data?.idmlData ||
+        json?.props?.pageProps?.initialData?.data?.contentLayout?.modules
+          ?.find((m: any) => m?.configs?.product)?.configs?.product ||
         null;
 
-      if (!product) {
-        // Try alternate path
-        const altProduct = json?.props?.pageProps?.initialData?.data?.contentLayout?.modules
-          ?.find((m: any) => m?.type === 'ProductSummary' || m?.configs?.product)
-          ?.configs?.product;
-        if (!altProduct) return null;
-        return this.parseWalmartProduct(altProduct);
-      }
+      if (!product?.name) return null;
 
-      return this.parseWalmartProduct(product);
-    } catch {
-      return null;
-    }
+      const desc = (product.longDescription || product.shortDescription || product.description || '')
+        .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 2000);
+
+      let price: number | undefined;
+      const pi = product.priceInfo?.currentPrice || product.priceInfo;
+      if (pi?.price) price = parseFloat(pi.price);
+      else if (typeof pi === 'number') price = pi;
+
+      const images: string[] = [];
+      const allImgs = product.imageInfo?.allImages || product.images || [];
+      (Array.isArray(allImgs) ? allImgs : []).forEach((img: any) => {
+        const src = typeof img === 'string' ? img : img?.url || img?.src || '';
+        if (src?.startsWith('http')) images.push(src);
+      });
+      if (product.imageInfo?.thumbnailUrl) images.unshift(product.imageInfo.thumbnailUrl);
+
+      const specs: Array<{ name: string; value: string }> = [];
+      (product.specifications || product.productAttributes || []).forEach((s: any) => {
+        const n = s?.name || s?.key || ''; const v = s?.value || s?.values?.join(', ') || '';
+        if (n && v) specs.push({ name: n, value: v });
+      });
+
+      const bullets: string[] = [];
+      (product.keyFeatures || product.highlights || []).forEach((f: any) => {
+        const t = typeof f === 'string' ? f : f?.description || f?.text || '';
+        if (t) bullets.push(this.clean(t));
+      });
+
+      return {
+        title: product.name,
+        description: desc || `${product.name} — available at Walmart.`,
+        price,
+        brand: product.brand || product.brandName || undefined,
+        images: [...new Set(images)].slice(0, 6),
+        specifications: specs.slice(0, 10),
+        bullets: bullets.slice(0, 6),
+        category: product.category?.name || this.detectCategory(product.name),
+        rating: product.averageRating ? parseFloat(product.averageRating) : undefined,
+        reviewCount: product.numberOfReviews ? parseInt(product.numberOfReviews) : undefined,
+      };
+    } catch { return null; }
   }
 
-  /**
-   * Parse a Walmart product object into AnalyzedUrlData
-   */
-  private static parseWalmartProduct(p: any): AnalyzedUrlData | null {
-    const name = p?.name || p?.title || '';
-    if (!name) return null;
-
-    // Description — try multiple fields
-    const rawDesc = p?.longDescription || p?.shortDescription || p?.description || '';
-    const description = rawDesc
-      ? rawDesc.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().substring(0, 2000)
-      : '';
-
-    // Price
-    let price: number | undefined;
-    const priceInfo = p?.priceInfo?.currentPrice || p?.price || p?.priceInfo;
-    if (priceInfo?.price) price = parseFloat(priceInfo.price);
-    else if (typeof priceInfo === 'number') price = priceInfo;
-
-    // Brand
-    const brand = p?.brand || p?.brandName || undefined;
-
-    // Images
-    const images: string[] = [];
-    const imgArr = p?.imageInfo?.thumbnailUrl ? [p.imageInfo.thumbnailUrl] : [];
-    const allImages = p?.imageInfo?.allImages || p?.images || imgArr;
-    if (Array.isArray(allImages)) {
-      allImages.forEach((img: any) => {
-        const src = typeof img === 'string' ? img : img?.url || img?.src || '';
-        if (src && src.startsWith('http')) images.push(src);
-      });
-    }
-
-    // Specifications
-    const specs: Array<{ name: string; value: string }> = [];
-    const specArr = p?.specifications || p?.productAttributes || [];
-    if (Array.isArray(specArr)) {
-      specArr.forEach((s: any) => {
-        const name = s?.name || s?.key || '';
-        const value = s?.value || s?.values?.join(', ') || '';
-        if (name && value) specs.push({ name, value });
-      });
-    }
-
-    // Key features as bullets
-    const bullets: string[] = [];
-    const features = p?.keyFeatures || p?.highlights || [];
-    if (Array.isArray(features)) {
-      features.forEach((f: any) => {
-        const text = typeof f === 'string' ? f : f?.description || f?.text || '';
-        if (text) bullets.push(text.replace(/<[^>]+>/g, '').trim());
-      });
-    }
-
-    // Rating
-    const rating = p?.averageRating || p?.rating?.averageRating || undefined;
-    const reviewCount = p?.numberOfReviews || p?.rating?.numberOfReviews || undefined;
-
+  private static walmartSlugFallback(slugTitle: string, itemId: string | null): AnalyzedUrlData {
+    const category = this.detectCategory(slugTitle);
+    const brand = slugTitle.split(' ')[0] || '';
     return {
-      title: name,
-      description: description || `${name} — available at Walmart.`,
-      price,
+      title: slugTitle || `Walmart Product${itemId ? ` #${itemId}` : ''}`,
+      description: `Product: ${slugTitle}. Brand: ${brand}. Physical product sold at Walmart. Category: ${category}.`,
+      category,
       brand,
-      images: images.slice(0, 6),
-      specifications: specs.slice(0, 10),
-      bullets: bullets.slice(0, 6),
-      category: p?.category?.name || p?.categoryPath || 'Walmart Product',
-      rating: rating ? parseFloat(rating) : undefined,
-      reviewCount: reviewCount ? parseInt(reviewCount) : undefined
+      images: [], bullets: [], specifications: [],
     };
   }
 
-  /**
-   * Extract Walmart title (HTML fallback)
-   */
-  private static extractWalmartTitle(html: string): string {
-    const selectors = [
-      /<h1[^>]*itemprop="name"[^>]*>([^<]+)<\/h1>/i,
-      /<h1[^>]*class="[^"]*prod-ProductTitle[^"]*"[^>]*>([^<]+)<\/h1>/i,
-      /<h1[^>]*data-automation-id="product-title"[^>]*>([^<]+)<\/h1>/i,
-      /<meta property="og:title" content="([^"]+)"/i,
-      /<title>([^<|]+)/i
-    ];
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1].trim()) return match[1].trim().replace(/\s+/g, ' ');
-    }
-    return '';
-  }
+  // ─── ETSY ─────────────────────────────────────────────────────────────────
 
-  /**
-   * Extract Walmart description (HTML fallback)
-   */
-  private static extractWalmartDescription(html: string): string {
-    const selectors = [
-      /<div[^>]*itemprop="description"[^>]*>([\s\S]*?)<\/div>/i,
-      /<meta property="og:description" content="([^"]+)"/i,
-      /<meta name="description" content="([^"]+)"/i
-    ];
-    for (const selector of selectors) {
-      const match = html.match(selector);
-      if (match && match[1]) {
-        const desc = match[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-        if (desc.length > 50) return desc.substring(0, 2000);
-      }
-    }
-    return 'Product description';
-  }
+  private static async analyzeEtsy(url: string): Promise<AnalyzedUrlData> {
+    const cleanUrl = url.split('?')[0];
+    const slugTitle = this.slugTitle(cleanUrl);
 
-  /**
-   * Extract Walmart price (HTML fallback)
-   */
-  private static extractWalmartPrice(html: string): number | undefined {
-    const patterns = [
-      /<span[^>]*itemprop="price"[^>]*content="([0-9.]+)"/i,
-      /"currentPrice"\s*:\s*([0-9.]+)/,
-      /\$([0-9,.]+)/
-    ];
-    for (const p of patterns) {
-      const m = html.match(p);
-      if (m) {
-        const v = parseFloat(m[1].replace(/,/g, ''));
-        if (!isNaN(v) && v > 0) return v;
-      }
-    }
-    return undefined;
-  }
-
-  /**
-   * Analyze generic product URL
-   */
-  private static async analyzeGenericUrl(url: string): Promise<AnalyzedUrlData> {
     try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
-        }
-      });
+      const res = await fetch(cleanUrl, { headers: baseHeaders('https://www.etsy.com/') });
 
-      if (!response.ok) {
-        // Try to extract from URL slug as fallback
-        const urlObj = new URL(url);
-        const pathParts = urlObj.pathname.split('/').filter(Boolean);
-        const lastPart = pathParts[pathParts.length - 1] || '';
-        const urlTitle = lastPart.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-
-        return {
-          title: urlTitle || 'Product',
-          description: 'Could not fetch product page. Please paste the product details manually for best results.',
-          price: undefined,
-          images: []
-        };
+      if (res.status === 403 || res.status === 429 || res.status >= 500) {
+        return this.etsySlugFallback(cleanUrl, slugTitle);
       }
 
-      const html = await response.text();
+      const html = await res.text();
+      if (html.length < 3000 || html.includes('Access Denied')) return this.etsySlugFallback(cleanUrl, slugTitle);
+
+      // JSON-LD first
+      const ld = this.extractJsonLd(html);
+      if (ld?.title && ld.title.length > 10) {
+        return { ...ld, category: ld.category || 'Handmade' };
+      }
+
+      // Meta tags
+      const meta = this.extractMeta(html);
+      const title = (meta.title || slugTitle).replace(/\s*\|\s*Etsy.*$/i, '').trim();
+
+      const description = meta.description || '';
+      const price = meta.price;
+      const images: string[] = meta.images || [];
+
+      // Etsy-specific image extraction
+      const imgRe = /<img[^>]+src="([^"]+il_(?:fullxfull|1588xN|794xN)[^"]+)"[^>]*>/gi;
+      let im: RegExpExecArray | null;
+      while ((im = imgRe.exec(html)) !== null) {
+        if (!images.includes(im[1])) images.push(im[1]);
+      }
 
       return {
-        title: this.extractGenericTitle(html),
-        description: this.extractGenericDescription(html),
-        price: this.extractGenericPrice(html),
-        images: this.extractGenericImages(html)
+        title: title || slugTitle || 'Etsy Product',
+        description: description || `${title} — handmade product on Etsy.`,
+        price,
+        images: images.slice(0, 6),
+        category: 'Handmade',
+        brand: meta.brand,
+        bullets: [], specifications: [],
       };
-    } catch (error: any) {
-      throw new Error(`Generic URL analysis failed: ${error.message}`);
+    } catch {
+      return this.etsySlugFallback(cleanUrl, slugTitle);
     }
   }
 
-  /**
-   * Extract generic title (from meta tags or h1)
-   */
-  private static extractGenericTitle(html: string): string {
-    // Try og:title first
-    let match = html.match(/<meta property="og:title" content="([^"]+)"/i);
-    if (match) return match[1].trim();
-
-    // Try title tag
-    match = html.match(/<title>([^<]+)<\/title>/i);
-    if (match) return match[1].trim();
-
-    // Try h1
-    match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-    return match ? match[1].trim() : '';
+  private static etsySlugFallback(url: string, slugTitle: string): AnalyzedUrlData {
+    const productId = url.match(/\/listing\/(\d+)/)?.[1] || '';
+    return {
+      title: slugTitle || 'Etsy Product',
+      description: `${slugTitle || 'Handmade product'} on Etsy${productId ? ` (Listing #${productId})` : ''}. Handmade/digital product.`,
+      category: 'Handmade',
+      images: [], bullets: [], specifications: [],
+    };
   }
 
-  /**
-   * Extract generic description
-   */
-  private static extractGenericDescription(html: string): string {
-    // Try og:description
-    let match = html.match(/<meta property="og:description" content="([^"]+)"/i);
-    if (match) return match[1].trim();
+  // ─── EBAY ─────────────────────────────────────────────────────────────────
 
-    // Try meta description
-    match = html.match(/<meta name="description" content="([^"]+)"/i);
-    return match ? match[1].trim() : '';
-  }
+  private static async analyzeEbay(url: string): Promise<AnalyzedUrlData> {
+    const slugTitle = this.slugTitle(url);
+    try {
+      const res = await fetch(url, { headers: baseHeaders('https://www.ebay.com/') });
+      const html = await res.text();
 
-  /**
-   * Extract generic price
-   */
-  private static extractGenericPrice(html: string): number | undefined {
-    const priceMatch = html.match(/\$([0-9,.]+)/);
-    return priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : undefined;
-  }
-
-  /**
-   * Extract generic images
-   */
-  private static extractGenericImages(html: string): string[] {
-    const images: string[] = [];
-    
-    // Try og:image
-    const ogMatch = html.match(/<meta property="og:image" content="([^"]+)"/i);
-    if (ogMatch) images.push(ogMatch[1]);
-
-    // Try img tags
-    const imgRegex = /<img[^>]+src="([^"]+)"/gi;
-    let match;
-
-    while ((match = imgRegex.exec(html)) !== null) {
-      if (match[1].startsWith('http') && !match[1].includes('logo') && !match[1].includes('icon')) {
-        images.push(match[1]);
+      // JSON-LD first
+      const ld = this.extractJsonLd(html);
+      if (ld?.title && ld.title.length > 10) {
+        return { ...ld, category: ld.category || this.detectCategory(ld.title) };
       }
-    }
 
-    return images.slice(0, 6);
+      // Meta tags
+      const meta = this.extractMeta(html);
+      const title = meta.title || this.clean(
+        html.match(/<h1 class="x-item-title__mainTitle"[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || ''
+      ) || slugTitle;
+
+      const description = meta.description || this.clean(
+        html.match(/<div class="x-item-description"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || ''
+      ).substring(0, 2000);
+
+      const specs: Array<{ name: string; value: string }> = [];
+      const specRe = /<dt class="ux-labels-values__labels"[^>]*><span[^>]*>([^<]+)<\/span><\/dt>[\s\S]*?<dd class="ux-labels-values__values"[^>]*><span[^>]*>([^<]+)<\/span><\/dd>/gi;
+      let sm: RegExpExecArray | null;
+      while ((sm = specRe.exec(html)) !== null) {
+        const n = sm[1].trim(); const v = sm[2].trim();
+        if (n && v) specs.push({ name: n, value: v });
+      }
+
+      return {
+        title: title || slugTitle || 'eBay Product',
+        description: description || `${title} — available on eBay.`,
+        price: meta.price,
+        images: meta.images || [],
+        specifications: specs.slice(0, 15),
+        brand: meta.brand,
+        category: this.detectCategory(title),
+        bullets: [],
+      };
+    } catch {
+      return {
+        title: slugTitle || 'eBay Product',
+        description: `${slugTitle} — available on eBay.`,
+        category: this.detectCategory(slugTitle),
+        images: [], bullets: [], specifications: [],
+      };
+    }
+  }
+
+  // ─── GENERIC (Shopify, WooCommerce, any store) ────────────────────────────
+
+  private static async analyzeGeneric(url: string): Promise<AnalyzedUrlData> {
+    const slugTitle = this.slugTitle(url);
+    try {
+      // Try Shopify product JSON endpoint first
+      const shopifyJsonUrl = url.replace(/\?.*$/, '') + '.json';
+      try {
+        const sjRes = await fetch(shopifyJsonUrl, { headers: baseHeaders() });
+        if (sjRes.ok) {
+          const sj = await sjRes.json();
+          const p = sj?.product;
+          if (p?.title) {
+            const variant = p.variants?.[0];
+            const images = (p.images || []).map((i: any) => i.src).filter(Boolean);
+            const specs: Array<{ name: string; value: string }> = [];
+            if (p.options) {
+              p.options.forEach((o: any) => {
+                if (o.name && o.values?.length) specs.push({ name: o.name, value: o.values.join(', ') });
+              });
+            }
+            return {
+              title: p.title,
+              description: this.clean(p.body_html || '').substring(0, 2000) || `${p.title} — available in store.`,
+              price: variant?.price ? parseFloat(variant.price) : undefined,
+              images: images.slice(0, 6),
+              specifications: specs,
+              brand: p.vendor || undefined,
+              category: p.product_type || this.detectCategory(p.title),
+              bullets: [],
+            };
+          }
+        }
+      } catch { /* not Shopify */ }
+
+      // Generic HTML fetch
+      const res = await fetch(url, { headers: baseHeaders() });
+      if (!res.ok) return this.genericFallback(slugTitle);
+
+      const html = await res.text();
+
+      // JSON-LD
+      const ld = this.extractJsonLd(html);
+      if (ld?.title && ld.title.length > 10) {
+        return { ...ld, category: ld.category || this.detectCategory(ld.title) };
+      }
+
+      // Meta tags
+      const meta = this.extractMeta(html);
+      const title = meta.title || this.clean(html.match(/<h1[^>]*>([^<]+)<\/h1>/i)?.[1] || '') || slugTitle;
+
+      // Try WooCommerce-specific selectors
+      const wcDesc = html.match(/<div class="woocommerce-product-details__short-description"[^>]*>([\s\S]*?)<\/div>/i)?.[1];
+      const description = wcDesc ? this.clean(wcDesc).substring(0, 2000)
+        : meta.description || this.clean(html.match(/<div[^>]*class="[^"]*product[^"]*description[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || '').substring(0, 2000)
+        || `${title} — product available in store.`;
+
+      const specs: Array<{ name: string; value: string }> = [];
+      const attrRe = /<tr[^>]*>[\s\S]*?<th[^>]*>([^<]+)<\/th>[\s\S]*?<td[^>]*>([^<]+)<\/td>[\s\S]*?<\/tr>/gi;
+      let am: RegExpExecArray | null;
+      while ((am = attrRe.exec(html)) !== null) {
+        const n = this.clean(am[1]); const v = this.clean(am[2]);
+        if (n && v && n.length < 60) specs.push({ name: n, value: v });
+      }
+
+      const images: string[] = meta.images || [];
+      const imgRe = /<img[^>]+(?:src|data-src)="(https?:[^"]+)"[^>]*class="[^"]*(?:product|wp-post-image|attachment)[^"]*"/gi;
+      let imgM: RegExpExecArray | null;
+      while ((imgM = imgRe.exec(html)) !== null) {
+        if (!images.includes(imgM[1])) images.push(imgM[1]);
+      }
+
+      return {
+        title: title || slugTitle || 'Product',
+        description,
+        price: meta.price,
+        images: images.slice(0, 6),
+        specifications: specs.slice(0, 10),
+        brand: meta.brand,
+        category: this.detectCategory(title),
+        bullets: [],
+      };
+    } catch {
+      return this.genericFallback(slugTitle);
+    }
+  }
+
+  private static genericFallback(slugTitle: string): AnalyzedUrlData {
+    return {
+      title: slugTitle || 'Product',
+      description: `${slugTitle || 'Product'} — available in store.`,
+      category: this.detectCategory(slugTitle),
+      images: [], bullets: [], specifications: [],
+    };
   }
 }

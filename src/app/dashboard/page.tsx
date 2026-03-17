@@ -65,6 +65,8 @@ export default function DashboardPage() {
       return;
     }
 
+    setOptimizationResult(null);
+    setOriginalData(null);
     setSubmitting(true);
     setProgress({ stage: 'Analyzing your product...', percent: 10, isVisible: true });
     
@@ -83,6 +85,7 @@ export default function DashboardPage() {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify({
           mode: 'optimize-existing',
@@ -146,6 +149,8 @@ export default function DashboardPage() {
       return;
     }
 
+    setOptimizationResult(null);
+    setOriginalData(null);
     setSubmitting(true);
     setProgress({ stage: 'Analyzing product details...', percent: 15, isVisible: true });
     
@@ -165,6 +170,7 @@ export default function DashboardPage() {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify({
           mode: 'create-new',
@@ -225,6 +231,8 @@ export default function DashboardPage() {
       return;
     }
 
+    setOptimizationResult(null);
+    setOriginalData(null);
     setSubmitting(true);
     setProgress({ stage: 'Analyzing URL...', percent: 20, isVisible: true });
     
@@ -242,6 +250,7 @@ export default function DashboardPage() {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify(data),
       });

@@ -10,6 +10,7 @@ export interface AIGenerationRequest {
     description?: string;
     category?: string;
     price?: number;
+    brand?: string;
     specifications?: Array<{ name: string; value: string; unit?: string }>;
     keywords?: string[];
   };

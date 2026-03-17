@@ -126,9 +126,10 @@ export async function POST(request: NextRequest) {
             keywords: scrapedData.bullets || [],
             category: scrapedData.category,
             price: scrapedData.price,
-            specifications: scrapedData.specifications
+            specifications: scrapedData.specifications,
+            ...(scrapedData.brand ? { brand: scrapedData.brand } : {}),
           },
-          mode: 'analyze' // Use analyze mode for URL analysis
+          mode: 'analyze'
         }, {
           maxRetries: 1, // Reduce retries for faster response
           validateResponse: true,

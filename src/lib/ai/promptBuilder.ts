@@ -677,7 +677,8 @@ NOW GENERATE THE OUTPUT FOLLOWING ALL RULES ABOVE.`;
     if (productData.title) prompt += `Current Title: ${productData.title}\n`;
     if (productData.description) prompt += `Current Description: ${productData.description}\n`;
     if (productData.category) prompt += `Category: ${productData.category}\n`;
-    if (productData.price) prompt += `Price: ${productData.price}\n`;
+    if ((productData as any).brand) prompt += `Brand: ${(productData as any).brand}\n`;
+    if (productData.price) prompt += `Price: $${productData.price}\n`;
     
     if (productData.specifications?.length) {
       prompt += 'Specifications:\n';
