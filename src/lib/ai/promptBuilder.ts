@@ -9,6 +9,14 @@ import { PLATFORM_RULES } from '@/lib/utils/platform-rules';
 
 export class PromptBuilder {
   /**
+   * Alias used by AI providers — returns { systemInstruction, userPrompt }
+   */
+  static buildPrompt(request: AIGenerationRequest): { systemInstruction: string; userPrompt: string } {
+    const { system, user } = PromptBuilder.build(request);
+    return { systemInstruction: system, userPrompt: user };
+  }
+
+  /**
    * Build the full system + user prompt for a given request.
    */
   static build(request: AIGenerationRequest): { system: string; user: string } {

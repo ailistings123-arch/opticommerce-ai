@@ -267,7 +267,7 @@ export default function DashboardPage() {
           <div className="pt-1 border-t border-gray-50">
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">Current plan</span>
-              <span className="text-xs font-semibold text-blue-600 capitalize">{userData?.plan ?? 'Free'}</span>
+              <span className="text-xs font-semibold text-blue-600 capitalize">{userData?.tier ?? 'Free'}</span>
             </div>
           </div>
         </div>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Upgrade plans */}
-        {(userData?.plan === 'free' || !userData?.plan) && (
+        {(userData?.tier === 'free' || !userData?.tier) && (
           <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
             <div className="px-5 pt-5 pb-3">
               <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Upgrade Plan</p>
