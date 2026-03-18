@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmail, signInWithGoogle } from '@/lib/firebase/auth';
@@ -14,7 +14,7 @@ const features = [
   { icon: TrendingUp, title: 'Boost Conversions', desc: 'Up to 300% more visibility' },
 ];
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
@@ -95,7 +95,7 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
-        <p className="text-blue-300 text-xs relative z-10">© 2026 ListingOptimizer AI. All rights reserved.</p>
+        <p className="text-blue-300 text-xs relative z-10">Â© 2026 ListingOptimizer AI. All rights reserved.</p>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">
@@ -176,3 +176,12 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
