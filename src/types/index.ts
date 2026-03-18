@@ -94,6 +94,10 @@ export interface User {
   resetDate: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  teamMembers?: { email: string; name: string; role: 'viewer' | 'editor'; addedAt: string }[];
+  workspaceOwnerId?: string;
+  workspaceRole?: 'viewer' | 'editor';
+  notifications?: { id: string; title: string; message: string; time: string; read: boolean; type: string; actionUrl?: string }[];
 }
 
 // Enhanced User interface extending base User
@@ -473,9 +477,21 @@ export interface PlatformRules {
   name: string;
   titleRange: { min: number; max: number };
   minDescription: number;
+  minDescriptionWords?: number;       // Walmart: 150-word minimum
   maxTags: number;
   tagFormat: string;
   guidelines: string[];
+  // Per-platform constraints
+  bulletCount?: number;               // Amazon: exactly 5, Walmart: 3-10
+  maxBulletLength?: number;           // Amazon: 250, Walmart: 80
+  backendKeywordLimit?: number;       // Amazon: 249 bytes
+  seoMetaTitleMax?: number;           // Shopify/WooCommerce: 60 chars
+  titleCase?: boolean;
+  noAllCapsWords?: boolean;
+  prohibitedSymbols?: string[];
+  prohibitedPhrases?: string[];
+  requiredAttributes?: string[];      // Etsy: Occasion, Recipient, Style
+  focus?: string;                     // Platform focus summary
 }
 
 export interface TierLimits {

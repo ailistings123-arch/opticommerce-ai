@@ -63,7 +63,7 @@ export class ScoringSystem {
     platformRules: any
   ): QualityScore {
     const titleScore = this.scoreTitleQuality(response.title, platform, platformRules);
-    const bulletsScore = this.scoreBulletsQuality(response.bullets);
+    const bulletsScore = this.scoreBulletsQuality(response.bullets, platformRules);
     const descriptionScore = this.scoreDescriptionQuality(response.description, platformRules);
     const complianceScore = this.scoreCompliance(response, platformRules);
 
@@ -131,7 +131,7 @@ export class ScoringSystem {
   /**
    * Score bullets quality (IMPROVED - More lenient for 80+ scores)
    */
-  private static scoreBulletsQuality(bullets: string[]): BulletsScore {
+  private static scoreBulletsQuality(bullets: string[], platformRules?: any): BulletsScore {
     let score = 0;
     const maxScore = 30;
 
@@ -160,8 +160,9 @@ export class ScoringSystem {
       specificityRatio >= 0.2 ? 8 : 6; // Increased minimum from 2 to 6
     score += specificityScore;
 
-    // Optimal length (10 points) - MORE LENIENT range
-    const optimalLengthCount = bullets.filter(b => b.length >= 40 && b.length <= 250).length; // Expanded from 50-150 to 40-250
+    // Optimal length (10 points) — platform-aware: Amazon 250, Walmart 80, others 500
+    const maxBulletLen = platformRules?.maxBulletLength || 250;
+    const optimalLengthCount = bullets.filter(b => b.length >= 40 && b.length <= maxBulletLen).length;
     const lengthRatio = optimalLengthCount / bullets.length;
     const lengthScore = 
       lengthRatio >= 0.7 ? 10 :  // Lowered from 0.8 to 0.7
@@ -225,16 +226,21 @@ export class ScoringSystem {
     const maxScore = 10;
     const violations: string[] = [];
 
-    // Check for prohibited words (5 points)
+    // Check for prohibited words (5 points) — platform-specific phrases + global list
     const allText = `${response.title} ${response.description} ${response.bullets.join(' ')}`.toLowerCase();
     const prohibitedWords = TrainingContext.PROHIBITED_WORDS;
+    const platformProhibited: string[] = rules.prohibitedPhrases || [];
+    const allProhibited = [...prohibitedWords, ...platformProhibited];
     
     let hasProhibitedWords = false;
-    prohibitedWords.forEach(word => {
-      const regex = new RegExp(`\\b${word.toLowerCase()}\\b`, 'i');
+    allProhibited.forEach(word => {
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = word.includes(' ')
+        ? new RegExp(escaped, 'i')
+        : new RegExp(`\\b${escaped}\\b`, 'i');
       if (regex.test(allText)) {
         hasProhibitedWords = true;
-        violations.push(`Contains prohibited word: "${word}"`);
+        violations.push(`Contains prohibited word/phrase: "${word}"`);
       }
     });
 

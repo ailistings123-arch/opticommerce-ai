@@ -51,8 +51,8 @@ export class ResponseValidator {
       }
     }
 
-    // Validate bullets
-    const bulletsValidation = this.validateBullets(sanitized.bullets);
+    // Validate bullets (pass rules for platform-specific count/length)
+    const bulletsValidation = this.validateBullets(sanitized.bullets, rules);
     errors.push(...bulletsValidation.errors);
     warnings.push(...bulletsValidation.warnings);
     if (bulletsValidation.sanitized) {
@@ -116,7 +116,7 @@ export class ResponseValidator {
   }
 
   /**
-   * Validate title
+   * Validate title — enforces platform-specific rules (symbols, case, length)
    */
   private static validateTitle(title: string, rules: any): {
     errors: string[];
@@ -127,15 +127,28 @@ export class ResponseValidator {
     const warnings: string[] = [];
     let sanitized = title.trim();
 
-    // Check if empty
     if (!sanitized) {
       errors.push('Title is empty');
       return { errors, warnings };
     }
 
-    // Check length
+    // Decode HTML entities
+    sanitized = sanitized
+      .replace(/&ndash;/g, '–')
+      .replace(/&mdash;/g, '—')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&[a-z]+;/gi, '');
+
+    // Remove stray special chars
+    sanitized = sanitized.replace(/[<>{}[\]\\]/g, '').replace(/\s{2,}/g, ' ').trim();
+
+    // Enforce max length
     if (sanitized.length > rules.titleRange.max) {
-      // Auto-fix: truncate to max, then back to last word boundary
       sanitized = sanitized.substring(0, rules.titleRange.max).trim();
       const lastSpace = sanitized.lastIndexOf(' ');
       if (lastSpace > rules.titleRange.max * 0.7) {
@@ -145,46 +158,46 @@ export class ResponseValidator {
     }
 
     if (sanitized.length < rules.titleRange.min) {
-      warnings.push(`Title is below recommended minimum of ${rules.titleRange.min} characters (current: ${sanitized.length})`);
+      warnings.push(`Title below minimum ${rules.titleRange.min} chars (current: ${sanitized.length})`);
     }
 
-    // CRITICAL: Check character utilization (must be 90-100%)
+    // Amazon: strip prohibited symbols (™ ! * © ®)
+    if (rules.prohibitedSymbols?.length) {
+      const before = sanitized;
+      rules.prohibitedSymbols.forEach((sym: string) => {
+        sanitized = sanitized.split(sym).join('');
+      });
+      if (sanitized !== before) {
+        sanitized = sanitized.replace(/\s{2,}/g, ' ').trim();
+        warnings.push(`Removed prohibited symbols: ${rules.prohibitedSymbols.join(' ')}`);
+      }
+    }
+
+    // Amazon: no ALL-CAPS words
+    if (rules.noAllCapsWords && /\b[A-Z]{3,}\b/.test(sanitized)) {
+      sanitized = sanitized.replace(/\b([A-Z]{3,})\b/g, (w) =>
+        w.charAt(0) + w.slice(1).toLowerCase()
+      );
+      warnings.push('Auto-fixed: converted ALL-CAPS words to Title Case');
+    }
+
+    // Amazon/Walmart: enforce Title Case
+    if (rules.titleCase) {
+      sanitized = sanitized.replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
     const utilization = (sanitized.length / rules.titleRange.max) * 100;
-    if (utilization < 90) {
-      warnings.push(`Title utilization: ${Math.round(utilization)}% (target: 90-100%). Current: ${sanitized.length}/${rules.titleRange.max} chars`);
-    }
-
-    return { errors, warnings, sanitized };
-
-    // Check for HTML entities and decode them
-    if (/&[a-z]+;/i.test(sanitized)) {
-      warnings.push('Title contains HTML entities - converting to plain text');
-      // Decode common HTML entities
-      sanitized = sanitized
-        .replace(/&ndash;/g, '-')
-        .replace(/&mdash;/g, '-')
-        .replace(/&amp;/g, '&')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&[a-z]+;/gi, ''); // Remove any remaining entities
-    }
-
-    // Check for special characters
-    if (/[<>{}[\]\\]/.test(sanitized)) {
-      warnings.push('Title contains special characters');
-      sanitized = sanitized.replace(/[<>{}[\]\\]/g, '');
+    if (utilization < 80) {
+      warnings.push(`Title utilization: ${Math.round(utilization)}% (target: 90%+). ${sanitized.length}/${rules.titleRange.max} chars`);
     }
 
     return { errors, warnings, sanitized };
   }
 
   /**
-   * Validate bullets
+   * Validate bullets — enforces platform-specific count and length limits
    */
-  private static validateBullets(bullets: string[]): {
+  private static validateBullets(bullets: string[], rules?: any): {
     errors: string[];
     warnings: string[];
     sanitized?: string[];
@@ -203,23 +216,22 @@ export class ResponseValidator {
       return { errors, warnings };
     }
 
+    const maxLen = rules?.maxBulletLength || 500;
+    const requiredCount = rules?.bulletCount;
+
+    if (requiredCount && bullets.length !== requiredCount) {
+      warnings.push(`Expected exactly ${requiredCount} bullets, got ${bullets.length}`);
+    }
+
     bullets.forEach((bullet, index) => {
       if (typeof bullet !== 'string') {
         errors.push(`Bullet ${index + 1} is not a string`);
         return;
       }
 
-      const trimmed = bullet.trim();
-      
-      if (!trimmed) {
-        warnings.push(`Bullet ${index + 1} is empty`);
-        return;
-      }
-
-      // Decode HTML entities
-      let cleaned = trimmed
-        .replace(/&ndash;/g, '-')
-        .replace(/&mdash;/g, '-')
+      let cleaned = bullet.trim()
+        .replace(/&ndash;/g, '–')
+        .replace(/&mdash;/g, '—')
         .replace(/&amp;/g, '&')
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'")
@@ -228,12 +240,23 @@ export class ResponseValidator {
         .replace(/&nbsp;/g, ' ')
         .replace(/&[a-z]+;/gi, '');
 
-      if (cleaned.length < 20) {
-        warnings.push(`Bullet ${index + 1} is too short (${cleaned.length} chars)`);
+      if (!cleaned) {
+        warnings.push(`Bullet ${index + 1} is empty`);
+        return;
       }
 
-      if (cleaned.length > 500) {
-        warnings.push(`Bullet ${index + 1} is too long (${cleaned.length} chars)`);
+      if (cleaned.length < 20) {
+        warnings.push(`Bullet ${index + 1} too short (${cleaned.length} chars)`);
+      }
+
+      if (cleaned.length > maxLen) {
+        cleaned = cleaned.substring(0, maxLen).trim();
+        warnings.push(`Bullet ${index + 1} auto-truncated to ${maxLen} chars`);
+      }
+
+      // Amazon: remove ending punctuation from bullets
+      if (rules?.bulletCount === 5 && rules?.maxBulletLength === 250) {
+        cleaned = cleaned.replace(/[.!?]+$/, '');
       }
 
       sanitized.push(cleaned);
