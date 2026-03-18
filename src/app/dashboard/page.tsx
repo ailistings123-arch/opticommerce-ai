@@ -297,13 +297,6 @@ export default function DashboardPage() {
               </div>
               <span className="text-sm text-gray-700 group-hover:text-purple-700 font-medium">Analyze URL</span>
             </button>
-            <button onClick={() => router.push('/dashboard/history')}
-              className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors group flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <AlertCircle size={13} className="text-gray-500" />
-              </div>
-              <span className="text-sm text-gray-700 group-hover:text-gray-900 font-medium">View History</span>
-            </button>
           </div>
         </div>
 

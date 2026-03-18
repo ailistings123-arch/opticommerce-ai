@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from '@/lib/firebase/auth';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { Sparkles, PlusCircle, Search, History, Settings, LogOut, ChevronRight, ChevronLeft, HelpCircle, MessageCircle } from 'lucide-react';
+import { Sparkles, PlusCircle, Search, Settings, LogOut, ChevronRight, ChevronLeft, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export type OptimizationMode = 'optimize-existing' | 'create-new' | 'analyze-url';
@@ -29,7 +29,6 @@ export default function DashboardSidebar({ mode, onModeChange, collapsed, onTogg
   const handleSignOut = async () => { await signOut(); router.push('/'); };
 
   const isDashboard = pathname === '/dashboard';
-  const isHistory  = pathname === '/dashboard/history';
   const isSettings = pathname === '/dashboard/settings';
 
   const usagePct = userData ? Math.min((userData.usageCount / userData.usageLimit) * 100, 100) : 0;
@@ -102,11 +101,6 @@ export default function DashboardSidebar({ mode, onModeChange, collapsed, onTogg
       <div className="px-2 pb-2 flex-shrink-0">
         {!collapsed && <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">Account</p>}
         <nav className="space-y-0.5">
-          <Link href="/dashboard/history" title={collapsed ? 'History' : undefined}
-            className={navItem(isHistory, collapsed)}>
-            <History size={18} className="flex-shrink-0" />
-            {!collapsed && 'History'}
-          </Link>
           <Link href="/dashboard/settings" title={collapsed ? 'Settings' : undefined}
             className={navItem(isSettings, collapsed)}>
             <Settings size={18} className="flex-shrink-0" />
