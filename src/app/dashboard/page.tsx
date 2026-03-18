@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { trackEvent, trackOptimization, trackUrlAnalysis, trackPlatformSelection, trackModeSelection } from '@/lib/firebase/analytics';
@@ -18,7 +18,7 @@ import Button from '@/components/ui/Button';
 import { Sparkles, AlertCircle, AlertTriangle, FileEdit, PlusCircle, Users } from 'lucide-react';
 import OnboardingModal from '@/components/dashboard/OnboardingModal';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, userData, loading, refreshUserData } = useAuth();
@@ -185,12 +185,12 @@ export default function DashboardPage() {
             <div>
               <p className="text-white font-semibold text-sm">Welcome to your Enterprise workspace!</p>
               <p className="text-blue-100 text-xs mt-0.5">
-                You now have Enterprise access — unlimited optimizations, all platforms, and full feature access.
+                You now have Enterprise access â€” unlimited optimizations, all platforms, and full feature access.
                 {(userData as any).workspaceRole && <span className="ml-1 capitalize">Your role: <strong>{(userData as any).workspaceRole}</strong></span>}
               </p>
             </div>
           </div>
-          <button onClick={() => setShowWorkspaceBanner(false)} className="text-white/60 hover:text-white text-xl leading-none flex-shrink-0">×</button>
+          <button onClick={() => setShowWorkspaceBanner(false)} className="text-white/60 hover:text-white text-xl leading-none flex-shrink-0">Ã—</button>
         </div>
       )}
 
@@ -204,7 +204,7 @@ export default function DashboardPage() {
               <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline font-medium">Enable Firestore now</a>
             </span>
           </div>
-          <button onClick={() => setShowSetupNotice(false)} className="text-yellow-600 hover:text-yellow-800 text-lg leading-none flex-shrink-0">�</button>
+          <button onClick={() => setShowSetupNotice(false)} className="text-yellow-600 hover:text-yellow-800 text-lg leading-none flex-shrink-0">ï¿½</button>
         </div>
       )}
 
@@ -214,13 +214,13 @@ export default function DashboardPage() {
           {mode === 'optimize-existing' && (
             <div className="mb-5 pb-5 border-b border-gray-100">
               <h2 className="text-base font-bold text-gray-900 mb-1">Optimize Existing Listing</h2>
-              <p className="text-sm text-gray-600">Paste your current title &amp; description � our AI rewrites it with better keywords, structure, and SEO to boost visibility and conversions.</p>
+              <p className="text-sm text-gray-600">Paste your current title &amp; description ï¿½ our AI rewrites it with better keywords, structure, and SEO to boost visibility and conversions.</p>
             </div>
           )}
           {mode === 'create-new' && (
             <div className="mb-5 pb-5 border-b border-gray-100">
               <h2 className="text-base font-bold text-gray-900 mb-1">Create New Product Listing</h2>
-              <p className="text-sm text-gray-600">Describe your product and choose a platform. We'll generate a complete, conversion-optimized listing from scratch � ready to publish.</p>
+              <p className="text-sm text-gray-600">Describe your product and choose a platform. We'll generate a complete, conversion-optimized listing from scratch ï¿½ ready to publish.</p>
             </div>
           )}
           {mode === 'analyze-url' && (
@@ -315,7 +315,7 @@ export default function DashboardPage() {
               >
                 <div>
                   <p className="text-xs font-semibold text-gray-700 group-hover:text-gray-900">Standard</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">25 opts � All platforms</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">25 opts ï¿½ All platforms</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-900">$25</p>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
                 <span className="absolute top-2 right-2 text-[9px] font-bold text-blue-200 uppercase tracking-wide">Popular</span>
                 <div>
                   <p className="text-xs font-semibold text-white">Pro</p>
-                  <p className="text-[11px] text-blue-200 mt-0.5">50 opts � Bulk � API � Team</p>
+                  <p className="text-[11px] text-blue-200 mt-0.5">50 opts ï¿½ Bulk ï¿½ API ï¿½ Team</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-white">$49</p>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
               >
                 <div>
                   <p className="text-xs font-semibold text-gray-700 group-hover:text-gray-900">Enterprise</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Unlimited � White-label</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Unlimited ï¿½ White-label</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-900">$150</p>
@@ -403,9 +403,9 @@ export default function DashboardPage() {
               <p className="text-gray-700 text-sm text-center whitespace-pre-wrap">{errorModal.message}</p>
               {errorModal.title === 'No Credits Remaining' ? (
                 <div className="space-y-2">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => { setErrorModal({ ...errorModal, isOpen: false }); router.push('/dashboard/checkout?plan=starter'); }}>Upgrade to Starter � $25/mo</Button>
-                  <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => { setErrorModal({ ...errorModal, isOpen: false }); router.push('/dashboard/checkout?plan=professional'); }}>Upgrade to Professional � $49/mo</Button>
-                  <Button className="w-full bg-orange-600 hover:bg-orange-700" onClick={() => { setErrorModal({ ...errorModal, isOpen: false }); router.push('/dashboard/checkout?plan=enterprise'); }}>Upgrade to Enterprise � $150/mo</Button>
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => { setErrorModal({ ...errorModal, isOpen: false }); router.push('/dashboard/checkout?plan=starter'); }}>Upgrade to Starter ï¿½ $25/mo</Button>
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700" onClick={() => { setErrorModal({ ...errorModal, isOpen: false }); router.push('/dashboard/checkout?plan=professional'); }}>Upgrade to Professional ï¿½ $49/mo</Button>
+                  <Button className="w-full bg-orange-600 hover:bg-orange-700" onClick={() => { setErrorModal({ ...errorModal, isOpen: false }); router.push('/dashboard/checkout?plan=enterprise'); }}>Upgrade to Enterprise ï¿½ $150/mo</Button>
                   <Button variant="outline" className="w-full" onClick={() => setErrorModal({ ...errorModal, isOpen: false })}>Close</Button>
                 </div>
               ) : (
@@ -418,3 +418,12 @@ export default function DashboardPage() {
     </DashboardLayout>
   );
 }
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
